@@ -1,0 +1,408 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── ENUMS ───────────────────────────────────────────────────────────────────
+
+enum Role {
+  STUDENT
+  INSTRUCTOR
+  ADMIN
+}
+
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum LessonType {
+  VIDEO
+  PDF
+  TEXT
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  DROPPED
+}
+
+enum MeetingStatus {
+  SCHEDULED
+  LIVE
+  ENDED
+  CANCELLED
+}
+
+enum AnnouncementTarget {
+  ALL
+  STUDENTS
+  INSTRUCTORS
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+}
+
+enum OTPPurpose {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+// ─── USER ────────────────────────────────────────────────────────────────────
+
+model User {
+  id              String    @id @default(uuid())
+  name            String
+  email           String    @unique
+  password        String
+  role            Role      @default(STUDENT)
+  avatar          String?
+  bio             String?
+  phone           String?
+  isVerified      Boolean   @default(false)
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  refreshTokens   RefreshToken[]
+  enrollments     Enrollment[]
+  certificates    Certificate[]
+  notifications   Notification[]
+  attendance      Attendance[]
+  otpVerifications OTPVerification[]
+
+  // Instructor specific
+  courses         Course[]         @relation("InstructorCourses")
+  zoomMeetings    ZoomMeeting[]    @relation("InstructorMeetings")
+  announcements   Announcement[]   @relation("AuthoredAnnouncements")
+  lessonProgress  LessonProgress[]
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+// ─── REFRESH TOKEN ───────────────────────────────────────────────────────────
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@map("refresh_tokens")
+}
+
+// ─── OTP VERIFICATION ────────────────────────────────────────────────────────
+
+model OTPVerification {
+  id        String     @id @default(uuid())
+  email     String
+  otp       String
+  purpose   OTPPurpose
+  expiresAt DateTime
+  userId    String?
+  createdAt DateTime   @default(now())
+
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@index([otp])
+  @@map("otp_verifications")
+}
+
+// ─── CATEGORY ────────────────────────────────────────────────────────────────
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  icon        String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  courses     Course[]
+
+  @@index([slug])
+  @@map("categories")
+}
+
+// ─── COURSE ──────────────────────────────────────────────────────────────────
+
+model Course {
+  id               String       @id @default(uuid())
+  title            String
+  slug             String       @unique
+  description      String
+  shortDescription String?
+  thumbnail        String?
+  categoryId       String
+  instructorId     String
+  status           CourseStatus @default(DRAFT)
+  level            CourseLevel  @default(BEGINNER)
+  price            Decimal      @default(0) @db.Decimal(10, 2)
+  isFree           Boolean      @default(true)
+  duration         Int?         // Total duration in minutes
+  totalLessons     Int          @default(0)
+  learningOutcomes String[]
+  prerequisites    String[]
+  language         String       @default("English")
+  certificate      Boolean      @default(true)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  category         Category     @relation(fields: [categoryId], references: [id])
+  instructor       User         @relation("InstructorCourses", fields: [instructorId], references: [id])
+  modules          Module[]
+  enrollments      Enrollment[]
+  zoomMeetings     ZoomMeeting[]
+  announcements    Announcement[]
+  certificates     Certificate[]
+
+  @@index([slug])
+  @@index([categoryId])
+  @@index([instructorId])
+  @@index([status])
+  @@map("courses")
+}
+
+// ─── MODULE ──────────────────────────────────────────────────────────────────
+
+model Module {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  courseId    String
+  order       Int
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons     Lesson[]
+
+  @@index([courseId])
+  @@map("modules")
+}
+
+// ─── LESSON ──────────────────────────────────────────────────────────────────
+
+model Lesson {
+  id          String     @id @default(uuid())
+  title       String
+  description String?
+  moduleId    String
+  type        LessonType @default(VIDEO)
+  content     String?    // Text content or embed URL
+  videoUrl    String?
+  duration    Int?       // Duration in seconds
+  order       Int
+  isFree      Boolean    @default(false)
+  isPublished Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  module      Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  resources   Resource[]
+  progress    LessonProgress[]
+
+  @@index([moduleId])
+  @@map("lessons")
+}
+
+// ─── RESOURCE ────────────────────────────────────────────────────────────────
+
+model Resource {
+  id        String   @id @default(uuid())
+  name      String
+  fileUrl   String
+  fileType  String
+  fileSize  Int?
+  lessonId  String
+  createdAt DateTime @default(now())
+
+  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId])
+  @@map("resources")
+}
+
+// ─── ENROLLMENT ──────────────────────────────────────────────────────────────
+
+model Enrollment {
+  id          String           @id @default(uuid())
+  studentId   String
+  courseId    String
+  status      EnrollmentStatus @default(ACTIVE)
+  progress    Float            @default(0) // Percentage 0-100
+  enrolledAt  DateTime         @default(now())
+  completedAt DateTime?
+  updatedAt   DateTime         @updatedAt
+
+  student     User             @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  course      Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessonProgress LessonProgress[]
+
+  @@unique([studentId, courseId])
+  @@index([studentId])
+  @@index([courseId])
+  @@map("enrollments")
+}
+
+// ─── LESSON PROGRESS ─────────────────────────────────────────────────────────
+
+model LessonProgress {
+  id             String     @id @default(uuid())
+  enrollmentId   String
+  lessonId       String
+  userId         String
+  isCompleted    Boolean    @default(false)
+  watchedSeconds Int        @default(0)
+  completedAt    DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  enrollment     Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  lesson         Lesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([enrollmentId, lessonId])
+  @@index([enrollmentId])
+  @@index([lessonId])
+  @@map("lesson_progress")
+}
+
+// ─── ZOOM MEETING ─────────────────────────────────────────────────────────────
+
+model ZoomMeeting {
+  id           String        @id @default(uuid())
+  courseId     String
+  instructorId String
+  meetingId    String        @unique
+  topic        String
+  agenda       String?
+  startTime    DateTime
+  duration     Int           // Duration in minutes
+  joinUrl      String
+  startUrl     String?
+  password     String?
+  status       MeetingStatus @default(SCHEDULED)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  course       Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  instructor   User          @relation("InstructorMeetings", fields: [instructorId], references: [id])
+  attendance   Attendance[]
+
+  @@index([courseId])
+  @@index([instructorId])
+  @@index([status])
+  @@map("zoom_meetings")
+}
+
+// ─── ATTENDANCE ──────────────────────────────────────────────────────────────
+
+model Attendance {
+  id        String      @id @default(uuid())
+  meetingId String
+  studentId String
+  joinedAt  DateTime    @default(now())
+  leftAt    DateTime?
+  duration  Int?        // Duration in minutes
+
+  meeting   ZoomMeeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  student   User        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([meetingId, studentId])
+  @@index([meetingId])
+  @@index([studentId])
+  @@map("attendance")
+}
+
+// ─── CERTIFICATE ─────────────────────────────────────────────────────────────
+
+model Certificate {
+  id               String   @id @default(uuid())
+  studentId        String
+  courseId         String
+  issuedAt         DateTime @default(now())
+  certificateUrl   String?
+  verificationCode String   @unique @default(uuid())
+
+  student          User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  course           Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, courseId])
+  @@index([studentId])
+  @@index([courseId])
+  @@index([verificationCode])
+  @@map("certificates")
+}
+
+// ─── ANNOUNCEMENT ────────────────────────────────────────────────────────────
+
+model Announcement {
+  id          String             @id @default(uuid())
+  title       String
+  body        String
+  authorId    String
+  courseId    String?            // null = platform-wide
+  targetRole  AnnouncementTarget @default(ALL)
+  isPublished Boolean            @default(false)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  author      User               @relation("AuthoredAnnouncements", fields: [authorId], references: [id])
+  course      Course?            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([authorId])
+  @@index([courseId])
+  @@index([isPublished])
+  @@map("announcements")
+}
+
+// ─── NOTIFICATION ────────────────────────────────────────────────────────────
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  type      NotificationType @default(INFO)
+  isRead    Boolean          @default(false)
+  link      String?
+  createdAt DateTime         @default(now())
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@map("notifications")
+}
