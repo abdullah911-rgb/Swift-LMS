@@ -267,9 +267,14 @@ const CoursesPage = () => {
                             <span className="text-[11px] text-slate-500 font-semibold">{course.instructor?.name}</span>
                           </div>
                           
-                          <span className="text-xs sm:text-sm font-bold text-slate-850 text-slate-800">
-                            {course.isFree ? 'Free' : `$${course.price}`}
-                          </span>
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs sm:text-sm font-bold text-slate-800">
+                              {course.isFree ? 'Free' : `$${course.price}`}
+                            </span>
+                            <Link to={`/courses/${course.slug}`} className="text-xs font-bold text-primary-600 hover:text-primary-700 transition-colors">
+                              View Details →
+                            </Link>
+                          </div>
                         </div>
                       </div>
                     </Card>

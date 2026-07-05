@@ -68,7 +68,7 @@ const adminController = {
           avatar: true,
           isActive: true,
           createdAt: true,
-          _count: { select: { enrollments: true, instructorCourses: true } },
+          _count: { select: { enrollments: true, courses: true } },
         },
       }),
       prisma.user.count({ where }),
@@ -187,6 +187,7 @@ const adminController = {
         phone: true,
         isActive: true,
         createdAt: true,
+        _count: { select: { courses: true } },
       },
     });
     sendSuccess(res, 'Pending instructors fetched.', { instructors: pending });

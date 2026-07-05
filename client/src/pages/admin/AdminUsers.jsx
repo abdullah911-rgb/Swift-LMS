@@ -191,7 +191,7 @@ const AdminUsers = () => {
                         </span>
                         {user.role === 'INSTRUCTOR' && (
                           <span className="flex items-center gap-1">
-                            <IoPersonOutline size={12} /> {user._count?.instructorCourses || 0} created
+                            <IoPersonOutline size={12} /> {user._count?.courses || 0} created
                           </span>
                         )}
                       </div>
