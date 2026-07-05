@@ -174,6 +174,122 @@ const adminController = {
     });
     sendSuccess(res, 'Enrollments fetched.', { enrollments });
   }),
+
+  // GET /api/admin/instructors/pending — List all pending instructors
+  getPendingInstructors: asyncHandler(async (req, res) => {
+    const pending = await prisma.user.findMany({
+      where: { role: 'INSTRUCTOR', instructorApproval: 'PENDING' },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        isActive: true,
+        createdAt: true,
+      },
+    });
+    sendSuccess(res, 'Pending instructors fetched.', { instructors: pending });
+  }),
+
+  // PATCH /api/admin/instructors/:id/approve — Approve instructor
+  approveInstructor: asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user || user.role !== 'INSTRUCTOR') {
+      return sendError(res, 'Instructor not found.', 404);
+    }
+    const updated = await prisma.user.update({
+      where: { id },
+      data: { instructorApproval: 'APPROVED', isActive: true },
+    });
+    sendSuccess(res, 'Instructor approved successfully.', { user: updated });
+  }),
+
+  // PATCH /api/admin/instructors/:id/reject — Reject instructor
+  rejectInstructor: asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const { reason } = req.body;
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user || user.role !== 'INSTRUCTOR') {
+      return sendError(res, 'Instructor not found.', 404);
+    }
+    const updated = await prisma.user.update({
+      where: { id },
+      data: { instructorApproval: 'REJECTED', isActive: false, instructorRejectedNote: reason || null },
+    });
+    sendSuccess(res, 'Instructor registration rejected.', { user: updated });
+  }),
+
+  // GET /api/admin/instructors — List all instructors with courses and enrollment counts
+  getInstructors: asyncHandler(async (req, res) => {
+    const instructors = await prisma.user.findMany({
+      where: { role: 'INSTRUCTOR' },
+      include: {
+        courses: {
+          where: { status: { not: 'ARCHIVED' } },
+          include: {
+            category: { select: { name: true } },
+            _count: { select: { enrollments: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    sendSuccess(res, 'Instructors fetched successfully.', { instructors });
+  }),
+
+  // POST /api/admin/announcements — Create platform announcement
+  createAnnouncement: asyncHandler(async (req, res) => {
+    const { title, body, type, target, expiresAt } = req.body;
+    if (!title || !body) return sendError(res, 'Title and body are required.', 400);
+
+    const announcement = await prisma.platformAnnouncement.create({
+      data: {
+        title,
+        body,
+        type: type || 'INFO',
+        target: target || 'ALL',
+        expiresAt: expiresAt ? new Date(expiresAt) : null,
+        authorId: req.user.id,
+      },
+    });
+    sendSuccess(res, 'Announcement created successfully.', { announcement }, 201);
+  }),
+
+  // GET /api/admin/announcements — List all platform announcements (admin view)
+  getAnnouncements: asyncHandler(async (req, res) => {
+    const announcements = await prisma.platformAnnouncement.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        author: { select: { name: true } },
+      },
+    });
+    sendSuccess(res, 'Announcements fetched.', { announcements });
+  }),
+
+  // DELETE /api/admin/announcements/:id — Delete platform announcement
+  deleteAnnouncement: asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    await prisma.platformAnnouncement.delete({ where: { id } });
+    sendSuccess(res, 'Announcement deleted successfully.');
+  }),
+
+  // GET /api/admin/announcements/active — Get active announcements for banners
+  getActiveAnnouncements: asyncHandler(async (req, res) => {
+    const now = new Date();
+    const announcements = await prisma.platformAnnouncement.findMany({
+      where: {
+        isActive: true,
+        OR: [
+          { expiresAt: null },
+          { expiresAt: { gt: now } },
+        ],
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    sendSuccess(res, 'Active announcements fetched.', { announcements });
+  }),
 };
 
 module.exports = adminController;

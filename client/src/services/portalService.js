@@ -105,6 +105,12 @@ export const adminService = {
   changeUserRole: (userId, role) => api.patch(`/admin/users/${userId}/role`, { role }),
   deleteUser: (userId) => api.delete(`/admin/users/${userId}`),
 
+  // Instructor approvals & management
+  getPendingInstructors: () => api.get('/admin/instructors/pending'),
+  approveInstructor: (id) => api.patch(`/admin/instructors/${id}/approve`),
+  rejectInstructor: (id, reason) => api.patch(`/admin/instructors/${id}/reject`, { reason }),
+  getInstructors: () => api.get('/admin/instructors'),
+
   // Courses
   getAllCourses: (params) => api.get('/admin/courses', { params }),
   getPendingCourses: () => api.get('/courses/admin/pending'),
@@ -114,4 +120,10 @@ export const adminService = {
 
   // Enrollments
   getRecentEnrollments: () => api.get('/admin/enrollments'),
+
+  // Platform Announcements
+  createAnnouncement: (data) => api.post('/admin/announcements', data),
+  getAnnouncements: () => api.get('/admin/announcements'),
+  deleteAnnouncement: (id) => api.delete(`/admin/announcements/${id}`),
+  getActiveAnnouncements: () => api.get('/admin/announcements/active/banner'),
 };

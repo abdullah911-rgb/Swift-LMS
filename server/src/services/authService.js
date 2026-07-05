@@ -28,8 +28,15 @@ const authService = {
 
     const hashed = await bcrypt.hash(password, 12);
     const user = await prisma.user.create({
-      data: { name, email, password: hashed, role },
-      select: { id: true, name: true, email: true, role: true },
+      data: { 
+        name, 
+        email, 
+        password: hashed, 
+        role,
+        isActive: role === 'INSTRUCTOR' ? false : true,
+        instructorApproval: role === 'INSTRUCTOR' ? 'PENDING' : 'APPROVED'
+      },
+      select: { id: true, name: true, email: true, role: true, isActive: true, instructorApproval: true },
     });
 
     // Generate and send OTP
@@ -136,6 +143,15 @@ const authService = {
     }
 
     if (!user.isActive) {
+      if (user.role === 'INSTRUCTOR' && user.instructorApproval === 'PENDING') {
+        const err = new Error('Your instructor registration is pending approval by the admin.');
+        err.statusCode = 403;
+        throw err;
+      } else if (user.role === 'INSTRUCTOR' && user.instructorApproval === 'REJECTED') {
+        const err = new Error(`Your instructor registration was rejected. Reason: ${user.instructorRejectedNote || 'No reason provided.'}`);
+        err.statusCode = 403;
+        throw err;
+      }
       const err = new Error('Your account has been deactivated. Contact support.');
       err.statusCode = 403;
       throw err;

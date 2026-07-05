@@ -7,6 +7,7 @@ import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Spinner from '../../components/ui/Spinner';
+import { enrollmentService, resourceService } from '../../services/portalService';
 import toast from 'react-hot-toast';
 import { 
   IoCheckmarkCircleSharp, 
@@ -17,7 +18,8 @@ import {
   IoRibbonOutline,
   IoChevronUpOutline,
   IoPlayCircleOutline,
-  IoDocumentTextOutline
+  IoDocumentTextOutline,
+  IoCloudDownloadOutline
 } from 'react-icons/io5';
 
 const CourseDetailPage = () => {
@@ -26,6 +28,7 @@ const CourseDetailPage = () => {
   const navigate = useNavigate();
   const [course, setCourse] = useState(null);
   const [isEnrolled, setIsEnrolled] = useState(false);
+  const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [enrollSubmitting, setEnrollSubmitting] = useState(false);
   
@@ -38,6 +41,13 @@ const CourseDetailPage = () => {
         const { data } = await api.get(`/courses/${slug}`);
         setCourse(data.data.course);
         setIsEnrolled(data.data.isEnrolled);
+
+        if (data.data.isEnrolled) {
+          const res = await resourceService.getByCourse(data.data.course.id);
+          if (res.data?.data?.resources) {
+            setResources(res.data.data.resources);
+          }
+        }
       } catch (err) {
         console.error('Failed to fetch course details:', err);
         toast.error('Failed to load course details. It may be draft or private.');
@@ -57,11 +67,15 @@ const CourseDetailPage = () => {
 
     setEnrollSubmitting(true);
     try {
-      // Direct enrollment simulation (Phase 2 core action)
-      // For now, call a placeholder server route or simulate successful database entry
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await enrollmentService.enroll(course.id);
       setIsEnrolled(true);
       toast.success('Successfully enrolled! Welcome to the course.');
+      
+      // Load resources after enrolling
+      const res = await resourceService.getByCourse(course.id);
+      if (res.data?.data?.resources) {
+        setResources(res.data.data.resources);
+      }
       navigate(ROUTES.STUDENT_DASHBOARD);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Enrollment failed.');
@@ -235,6 +249,37 @@ const CourseDetailPage = () => {
                 </div>
               </Card>
             </div>
+
+            {/* Course Resources (visible to enrolled students only) */}
+            {isEnrolled && resources.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-heading font-bold text-slate-800">Course Materials & Guides</h3>
+                <Card hover={false} className="border border-slate-100 p-6 bg-white space-y-3">
+                  <p className="text-xs text-slate-500 mb-2">As an enrolled student, you have access to download the following materials:</p>
+                  <div className="space-y-2">
+                    {resources.map(res => (
+                      <div key={res.id} className="flex items-center justify-between p-3 border border-slate-55 border-slate-100 rounded-xl bg-slate-50/50">
+                        <div className="flex items-center gap-3">
+                          <IoCloudDownloadOutline size={18} className="text-primary-500" />
+                          <div>
+                            <p className="text-xs font-bold text-slate-800">{res.name}</p>
+                            <p className="text-[10px] text-slate-500">{res.fileType} · {res.fileSize ? `${(res.fileSize / 1024).toFixed(1)} KB` : ''}</p>
+                          </div>
+                        </div>
+                        <a
+                          href={`http://localhost:5000${res.fileUrl}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-[10px] font-bold transition-all"
+                        >
+                          Download
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </div>
+            )}
 
           </div>
 

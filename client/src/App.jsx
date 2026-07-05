@@ -43,6 +43,8 @@ import AdminApprovals from './pages/admin/AdminApprovals';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminCourses from './pages/admin/AdminCourses';
 import AdminEnrollments from './pages/admin/AdminEnrollments';
+import AdminInstructors from './pages/admin/AdminInstructors';
+import AdminAnnouncements from './pages/admin/AdminAnnouncements';
 
 function App() {
   return (
@@ -135,6 +137,8 @@ function App() {
             <Route path="users" element={<AdminUsers />} />
             <Route path="courses" element={<AdminCourses />} />
             <Route path="enrollments" element={<AdminEnrollments />} />
+            <Route path="instructors" element={<AdminInstructors />} />
+            <Route path="announcements" element={<AdminAnnouncements />} />
           </Route>
 
         </Routes>

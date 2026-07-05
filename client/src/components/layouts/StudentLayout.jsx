@@ -3,6 +3,7 @@ import { Outlet, Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROUTES } from '../../constants';
 import { IoLogOutOutline, IoHomeOutline, IoBookOutline, IoPersonOutline, IoSchoolOutline } from 'react-icons/io5';
+import AnnouncementBanner from '../common/AnnouncementBanner';
 
 const StudentLayout = () => {
   const { user, logout } = useAuth();
@@ -72,6 +73,7 @@ const StudentLayout = () => {
 
         {/* Content Outlet */}
         <main className="flex-1 overflow-y-auto p-8">
+          <AnnouncementBanner />
           <Outlet />
         </main>
       </div>

@@ -32,6 +32,8 @@ export const ROUTES = {
   ADMIN_USERS: '/admin/users',
   ADMIN_APPROVALS: '/admin/approvals',
   ADMIN_ENROLLMENTS: '/admin/enrollments',
+  ADMIN_INSTRUCTORS: '/admin/instructors',
+  ADMIN_ANNOUNCEMENTS: '/admin/announcements',
 };
 
 export const ROLES = {

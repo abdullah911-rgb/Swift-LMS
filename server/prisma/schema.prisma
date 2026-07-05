@@ -18,6 +18,12 @@ enum Role {
   ADMIN
 }
 
+enum InstructorApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum CourseStatus {
   DRAFT
   PUBLISHED
@@ -55,6 +61,12 @@ enum AnnouncementTarget {
   INSTRUCTORS
 }
 
+enum AnnouncementType {
+  INFO
+  WARNING
+  ALERT
+}
+
 enum NotificationType {
   INFO
   SUCCESS
@@ -67,29 +79,40 @@ enum OTPPurpose {
   PASSWORD_RESET
 }
 
+enum QuestionType {
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+}
+
 // ─── USER ────────────────────────────────────────────────────────────────────
 
 model User {
-  id              String    @id @default(uuid())
-  name            String
-  email           String    @unique
-  password        String
-  role            Role      @default(STUDENT)
-  avatar          String?
-  bio             String?
-  phone           String?
-  isVerified      Boolean   @default(false)
-  isActive        Boolean   @default(true)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id                     String                   @id @default(uuid())
+  name                   String
+  email                  String                   @unique
+  password               String
+  role                   Role                     @default(STUDENT)
+  avatar                 String?
+  bio                    String?
+  phone                  String?
+  isVerified             Boolean                  @default(false)
+  isActive               Boolean                  @default(true)
+  // Instructor approval fields
+  instructorApproval     InstructorApprovalStatus @default(APPROVED)
+  instructorRejectedNote String?
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
 
   // Relations
-  refreshTokens   RefreshToken[]
-  enrollments     Enrollment[]
-  certificates    Certificate[]
-  notifications   Notification[]
-  attendance      Attendance[]
-  otpVerifications OTPVerification[]
+  refreshTokens        RefreshToken[]
+  enrollments          Enrollment[]
+  certificates         Certificate[]
+  notifications        Notification[]
+  attendance           Attendance[]
+  otpVerifications     OTPVerification[]
+  quizAttempts         QuizAttempt[]
+  platformAnnouncements PlatformAnnouncement[] @relation("AdminAnnouncements")
 
   // Instructor specific
   courses         Course[]         @relation("InstructorCourses")
@@ -211,6 +234,7 @@ model Module {
 
   course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   lessons     Lesson[]
+  quiz        Quiz?
 
   @@index([courseId])
   @@map("modules")
@@ -273,8 +297,8 @@ model Enrollment {
   completedAt DateTime?
   updatedAt   DateTime         @updatedAt
 
-  student     User             @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  course      Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  student        User             @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  course         Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
   lessonProgress LessonProgress[]
 
   @@unique([studentId, courseId])
@@ -304,6 +328,61 @@ model LessonProgress {
   @@index([enrollmentId])
   @@index([lessonId])
   @@map("lesson_progress")
+}
+
+// ─── QUIZ ─────────────────────────────────────────────────────────────────────
+
+model Quiz {
+  id          String       @id @default(uuid())
+  moduleId    String       @unique
+  title       String
+  description String?
+  passMark    Int          @default(60) // Percentage required to pass
+  timeLimit   Int?         // Minutes — null = no limit
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  module      Module       @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  questions   QuizQuestion[]
+  attempts    QuizAttempt[]
+
+  @@map("quizzes")
+}
+
+model QuizQuestion {
+  id            String       @id @default(uuid())
+  quizId        String
+  question      String
+  type          QuestionType @default(SINGLE_CHOICE)
+  options       Json         // Array of { id, text } objects
+  correctAnswer Json         // Array of correct option IDs
+  explanation   String?
+  order         Int
+  marks         Int          @default(1)
+  createdAt     DateTime     @default(now())
+
+  quiz          Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@index([quizId])
+  @@map("quiz_questions")
+}
+
+model QuizAttempt {
+  id          String    @id @default(uuid())
+  quizId      String
+  userId      String
+  answers     Json      // { questionId: [selectedOptionIds] }
+  score       Float     // Percentage
+  passed      Boolean
+  timeTaken   Int?      // Seconds
+  completedAt DateTime  @default(now())
+
+  quiz        Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([quizId])
+  @@index([userId])
+  @@map("quiz_attempts")
 }
 
 // ─── ZOOM MEETING ─────────────────────────────────────────────────────────────
@@ -373,7 +452,28 @@ model Certificate {
   @@map("certificates")
 }
 
-// ─── ANNOUNCEMENT ────────────────────────────────────────────────────────────
+// ─── PLATFORM ANNOUNCEMENT ───────────────────────────────────────────────────
+
+model PlatformAnnouncement {
+  id         String           @id @default(uuid())
+  title      String
+  body       String
+  type       AnnouncementType @default(INFO)
+  target     AnnouncementTarget @default(ALL)
+  isActive   Boolean          @default(true)
+  authorId   String
+  expiresAt  DateTime?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  author     User             @relation("AdminAnnouncements", fields: [authorId], references: [id])
+
+  @@index([isActive])
+  @@index([authorId])
+  @@map("platform_announcements")
+}
+
+// ─── ANNOUNCEMENT (course-level) ─────────────────────────────────────────────
 
 model Announcement {
   id          String             @id @default(uuid())
