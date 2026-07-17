@@ -67,10 +67,6 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    // #region agent log
-    fetch('http://127.0.0.1:7426/ingest/3c625e6b-f1af-45ab-a819-1fb708d0e578',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'947982'},body:JSON.stringify({sessionId:'947982',runId:'initial',hypothesisId:'H1',location:'api.js:responseError',message:'API interceptor received error',data:{message:error?.message||null,status:error?.response?.status||null,hasConfig:Boolean(originalRequest),url:originalRequest?.url||null,hasHeaders:Boolean(originalRequest?.headers)},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
-
     if (!originalRequest?.url) {
       return Promise.reject(error);
     }

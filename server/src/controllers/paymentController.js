@@ -251,7 +251,7 @@ const paymentController = {
 
   // ── ADMIN: GET /api/payments/admin/revenue ────────────────────────────────
   getRevenue: asyncHandler(async (req, res) => {
-    const [totalResult, pendingCount, monthlyRaw, byCourseRaw] = await Promise.all([
+    const [totalResult, pendingCount, approvedRequests] = await Promise.all([
       // Total approved revenue
       prisma.paymentRequest.aggregate({
         where: { status: 'APPROVED' },
@@ -260,40 +260,68 @@ const paymentController = {
       }),
       // Pending count
       prisma.paymentRequest.count({ where: { status: 'PENDING' } }),
-      // Monthly breakdown (last 6 months)
-      prisma.$queryRaw`
-        SELECT
-          TO_CHAR("reviewed_at", 'Mon YYYY') AS month,
-          DATE_TRUNC('month', "reviewed_at") AS month_start,
-          COUNT(*)::int AS count,
-          SUM(amount)::float AS revenue
-        FROM payment_requests
-        WHERE status = 'APPROVED' AND "reviewed_at" >= NOW() - INTERVAL '6 months'
-        GROUP BY month, month_start
-        ORDER BY month_start ASC
-      `,
-      // Top paying courses
-      prisma.$queryRaw`
-        SELECT
-          pr.course_id,
-          c.title,
-          COUNT(pr.id)::int AS enrollments,
-          SUM(pr.amount)::float AS revenue
-        FROM payment_requests pr
-        JOIN courses c ON c.id = pr.course_id
-        WHERE pr.status = 'APPROVED'
-        GROUP BY pr.course_id, c.title
-        ORDER BY revenue DESC
-        LIMIT 10
-      `,
+      // All approved requests with course details (for monthly + course breakdown)
+      prisma.paymentRequest.findMany({
+        where: { status: 'APPROVED' },
+        select: {
+          id: true,
+          amount: true,
+          reviewedAt: true,
+          courseId: true,
+          course: { select: { id: true, title: true } },
+        },
+        orderBy: { reviewedAt: 'asc' },
+      }),
     ]);
+
+    // Build monthly revenue for the last 6 months using JS
+    const now = new Date();
+    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+    const monthlyMap = {};
+    for (let i = 0; i <= 5; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      monthlyMap[key] = { month: `${monthNames[d.getMonth()]} ${d.getFullYear()}`, count: 0, revenue: 0 };
+    }
+
+    approvedRequests.forEach((r) => {
+      if (!r.reviewedAt) return;
+      const d = new Date(r.reviewedAt);
+      if (d < sixMonthsAgo) return;
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      if (monthlyMap[key]) {
+        monthlyMap[key].count += 1;
+        monthlyMap[key].revenue += Number(r.amount || 0);
+      }
+    });
+    const monthlyRevenue = Object.values(monthlyMap);
+
+    // Build top courses breakdown using JS
+    const courseMap = {};
+    approvedRequests.forEach((r) => {
+      const cid = r.courseId;
+      if (!courseMap[cid]) {
+        courseMap[cid] = {
+          course_id: cid,
+          title: r.course?.title || 'Unknown',
+          enrollments: 0,
+          revenue: 0,
+        };
+      }
+      courseMap[cid].enrollments += 1;
+      courseMap[cid].revenue += Number(r.amount || 0);
+    });
+    const topCourses = Object.values(courseMap)
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 10);
 
     sendSuccess(res, 'Revenue data retrieved.', {
       totalRevenue: Number(totalResult._sum.amount || 0),
       totalApproved: totalResult._count,
       pendingCount,
-      monthlyRevenue: monthlyRaw,
-      topCourses: byCourseRaw,
+      monthlyRevenue,
+      topCourses,
     });
   }),
 };

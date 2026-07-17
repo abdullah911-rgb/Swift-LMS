@@ -59,18 +59,7 @@ const AdminUsers = () => {
     }
   };
 
-  const handleChangeRole = async (userId, role) => {
-    setActionId(userId);
-    try {
-      await adminService.changeUserRole(userId, role);
-      toast.success('Role updated.');
-      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, role } : u)));
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed.');
-    } finally {
-      setActionId(null);
-    }
-  };
+
 
   const handleDelete = async (userId) => {
     if (!window.confirm('Are you sure? This will permanently delete the user.')) return;
@@ -173,16 +162,9 @@ const AdminUsers = () => {
                       </div>
                     </td>
                     <td className="px-5 py-4">
-                      <select
-                        value={user.role}
-                        onChange={(e) => handleChangeRole(user.id, e.target.value)}
-                        disabled={actionId === user.id}
-                        className={`px-2.5 py-1 rounded-lg text-xs font-bold border cursor-pointer focus:outline-none ${roleBadge[user.role] || ''}`}
-                      >
-                        <option value="STUDENT">Student</option>
-                        <option value="INSTRUCTOR">Instructor</option>
-                        <option value="ADMIN">Admin</option>
-                      </select>
+                      <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${roleBadge[user.role] || ''}`}>
+                        {user.role === 'STUDENT' ? 'Student' : user.role === 'INSTRUCTOR' ? 'Instructor' : 'Admin'}
+                      </span>
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex gap-3 text-xs text-slate-500">

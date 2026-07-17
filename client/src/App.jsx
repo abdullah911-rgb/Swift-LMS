@@ -13,6 +13,7 @@ import AdminLayout from './components/layouts/AdminLayout';
 // Protected Route Guard
 import ProtectedRoute from './components/common/ProtectedRoute';
 import AuthPortalGuard from './components/common/AuthPortalGuard';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Public Pages
 import HomePage from './pages/public/HomePage';
@@ -82,6 +83,7 @@ function App() {
           }}
         />
 
+        <ErrorBoundary>
         <Routes>
           {/* Public Website Layout */}
           <Route path="/" element={<PublicLayout />}>
@@ -126,7 +128,7 @@ function App() {
           <Route 
             path="/instructor" 
             element={
-              <ProtectedRoute allowedRoles={[ROLES.INSTRUCTOR, ROLES.ADMIN]}>
+              <ProtectedRoute allowedRoles={[ROLES.INSTRUCTOR]}>
                 <InstructorLayout />
               </ProtectedRoute>
             }
@@ -173,6 +175,7 @@ function App() {
           />
 
         </Routes>
+        </ErrorBoundary>
       </AuthProvider>
     </BrowserRouter>
   );

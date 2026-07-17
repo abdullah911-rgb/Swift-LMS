@@ -89,9 +89,22 @@ export default function ZoomClassroom() {
         const ZoomMtgEmbedded = getZoomEmbedded();
         if (!isMounted) return;
 
+        // 2. Wait for container to have real dimensions (Zoom SDK needs this)
+        await new Promise((resolve) => {
+          let tries = 0;
+          const check = () => {
+            const el = containerRef.current;
+            if (el && el.offsetWidth > 0) return resolve();
+            if (++tries > 40) return resolve(); // give up after 2s
+            setTimeout(check, 50);
+          };
+          check();
+        });
+        if (!isMounted) return;
+
         setStatus('joining');
 
-        // 2. Fetch signature from backend
+        // 3. Fetch signature from backend
         //    role: 1 = host (instructor/admin), 0 = attendee (student)
         const sdkRole = isHost ? 1 : 0;
         const { data: sigResp } = await zoomService.getSignature(meetingId, sdkRole);
@@ -109,7 +122,7 @@ export default function ZoomClassroom() {
 
         if (!isMounted) return;
 
-        // 3. Create client and register connection listener
+        // 4. Create client and register connection listener
         const client = ZoomMtgEmbedded.createClient();
         clientRef.current = client;
 
@@ -125,32 +138,37 @@ export default function ZoomClassroom() {
           }
         });
 
-        // 4. Init — only pass options supported by SDK v3.x
+        // 5. Init — wrap in try/catch to handle SDK-internal crashes
         const containerEl = containerRef.current;
         if (!containerEl) throw new Error('Meeting container element not found.');
 
-        await client.init({
-          zoomAppRoot: containerEl,
-          language: 'en-US',
-          customize: {
-            video: {
-              isResizable: true,
-              viewSizes: {
-                default: { width: containerEl.offsetWidth || 1200, height: 600 },
+        try {
+          await client.init({
+            zoomAppRoot: containerEl,
+            language: 'en-US',
+            customize: {
+              video: {
+                isResizable: true,
+                viewSizes: {
+                  default: { width: Math.max(containerEl.offsetWidth || 0, 800), height: 600 },
+                },
               },
             },
-            meetingInfo: ['topic', 'host', 'participant', 'dc', 'enctype'],
-            toolbar: {
-              buttons: [
-                { text: 'Leave Class', className: 'zm-btn-leave', onClick: handleLeave },
-              ],
-            },
-          },
-        });
+          });
+        } catch (initErr) {
+          // Catch SDK-internal errors (e.g. "Cannot read properties of undefined (reading 'includes')")
+          const msg = initErr?.message || String(initErr);
+          console.error('[Zoom] client.init() failed:', msg);
+          throw new Error(
+            msg.includes("Cannot read properties") || msg.includes("undefined")
+              ? 'Zoom SDK failed to initialize. Please try refreshing the page.'
+              : msg
+          );
+        }
 
         if (!isMounted) return;
 
-        // 5. Join — do NOT pass `role` here; it is already encoded in the signature
+        // 6. Join — do NOT pass `role` here; it is already encoded in the signature
         await client.join({
           signature,
           sdkKey,
@@ -164,7 +182,7 @@ export default function ZoomClassroom() {
         hasJoinedRef.current = true;
         setStatus('live');
 
-        // 6. Record attendance
+        // 7. Record attendance
         try {
           await zoomService.joinAttendance(meetingId);
           attendanceRecorded.current = true;

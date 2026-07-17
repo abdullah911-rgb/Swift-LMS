@@ -87,21 +87,7 @@ const HomePage = () => {
                 </Link>
               </div>
 
-              {/* Trust Indicators */}
-              <div className="pt-6 grid grid-cols-3 gap-4 max-w-md mx-auto lg:mx-0 text-left border-t border-slate-100">
-                <div>
-                  <h4 className="text-xl font-heading font-bold text-slate-800">99.8%</h4>
-                  <p className="text-xs text-slate-400 font-semibold">Satisfaction Rate</p>
-                </div>
-                <div>
-                  <h4 className="text-xl font-heading font-bold text-slate-800">10k+</h4>
-                  <p className="text-xs text-slate-400 font-semibold">Enrolled Students</p>
-                </div>
-                <div>
-                  <h4 className="text-xl font-heading font-bold text-slate-800">200+</h4>
-                  <p className="text-xs text-slate-400 font-semibold">Skill Modules</p>
-                </div>
-              </div>
+
 
             </motion.div>
 

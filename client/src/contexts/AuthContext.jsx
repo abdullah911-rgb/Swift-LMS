@@ -43,7 +43,19 @@ export const AuthProvider = ({ children }) => {
   }, [navigate]);
 
   // Load user profile on startup — retry refresh before clearing session
+  // Also enforces that the current URL is consistent with the restored user's role.
   useEffect(() => {
+    const PORTAL_PREFIXES = {
+      ADMIN: '/admin',
+      INSTRUCTOR: '/instructor',
+      STUDENT: '/student',
+    };
+    const PORTAL_HOMES = {
+      ADMIN: '/admin/dashboard',
+      INSTRUCTOR: '/instructor/dashboard',
+      STUDENT: '/student/dashboard',
+    };
+
     const fetchUser = async () => {
       const token = localStorage.getItem('accessToken');
       if (!token) {
@@ -53,7 +65,20 @@ export const AuthProvider = ({ children }) => {
 
       try {
         const { data } = await api.get('/auth/me');
-        setUser(data.data.user);
+        const restoredUser = data.data.user;
+        setUser(restoredUser);
+
+        // After restoring the session, check if current path belongs to the right portal.
+        // If not, silently redirect so the user always lands on their own portal.
+        const currentPath = window.location.pathname;
+        const ownPrefix = PORTAL_PREFIXES[restoredUser.role];
+        const otherPrefixes = Object.entries(PORTAL_PREFIXES)
+          .filter(([role]) => role !== restoredUser.role)
+          .map(([, prefix]) => prefix);
+        const isOnWrongPortal = otherPrefixes.some((p) => currentPath.startsWith(p));
+        if (isOnWrongPortal && ownPrefix) {
+          navigate(PORTAL_HOMES[restoredUser.role], { replace: true });
+        }
       } catch (err) {
         const status = err.response?.status;
 
@@ -70,7 +95,18 @@ export const AuthProvider = ({ children }) => {
             if (newToken) {
               localStorage.setItem('accessToken', newToken);
               const { data: meData } = await api.get('/auth/me');
-              setUser(meData.data.user);
+              const restoredUser = meData.data.user;
+              setUser(restoredUser);
+
+              const currentPath = window.location.pathname;
+              const ownPrefix = PORTAL_PREFIXES[restoredUser.role];
+              const otherPrefixes = Object.entries(PORTAL_PREFIXES)
+                .filter(([role]) => role !== restoredUser.role)
+                .map(([, prefix]) => prefix);
+              const isOnWrongPortal = otherPrefixes.some((p) => currentPath.startsWith(p));
+              if (isOnWrongPortal && ownPrefix) {
+                navigate(PORTAL_HOMES[restoredUser.role], { replace: true });
+              }
               setLoading(false);
               return;
             }
@@ -89,6 +125,7 @@ export const AuthProvider = ({ children }) => {
       }
     };
     fetchUser();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Sync React state when interceptor clears an expired session
