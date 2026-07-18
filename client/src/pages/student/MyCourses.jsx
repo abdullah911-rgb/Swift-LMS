@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../constants/index';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Card from '../../components/ui/Card';
@@ -5,7 +6,6 @@ import Button from '../../components/ui/Button';
 import { enrollmentService } from '../../services/portalService';
 import { ROUTES } from '../../constants';
 import { IoBookOutline, IoTimeOutline, IoRibbonOutline } from 'react-icons/io5';
-import { getImageUrl } from '../../constants/index';
 
 const MyCourses = () => {
   const [enrollments, setEnrollments] = useState([]);

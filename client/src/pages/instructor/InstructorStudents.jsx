@@ -1,9 +1,9 @@
+import { getImageUrl } from '../../constants/index';
 import React, { useEffect, useState } from 'react';
 import Card from '../../components/ui/Card';
 import { instructorService } from '../../services/portalService';
 import { IoPeopleOutline, IoBookOutline } from 'react-icons/io5';
 import toast from 'react-hot-toast';
-import { getImageUrl } from '../../constants/index';
 
 const InstructorStudents = () => {
   const [courses, setCourses] = useState([]);

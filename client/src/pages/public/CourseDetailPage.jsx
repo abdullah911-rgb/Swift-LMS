@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../constants/index';
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
@@ -11,7 +12,6 @@ import { enrollmentService, resourceService } from '../../services/portalService
 import ReviewsSection from '../../components/common/ReviewsSection';
 import toast from 'react-hot-toast';
 import { 
-import { getImageUrl } from '../../constants/index';
   IoCheckmarkCircleSharp, 
   IoChevronDownOutline, 
   IoBookOutline, 

@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../constants/index';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ROUTES } from '../../constants';
@@ -6,7 +7,6 @@ import Card from '../../components/ui/Card';
 import api from '../../services/api';
 import { motion } from 'framer-motion';
 import { 
-import { getImageUrl } from '../../constants/index';
   IoBookOutline, 
   IoPeopleOutline, 
   IoRibbonOutline, 

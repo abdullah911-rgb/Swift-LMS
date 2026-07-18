@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../constants/index';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Card from '../../components/ui/Card';
@@ -6,7 +7,6 @@ import { instructorService } from '../../services/portalService';
 import { ROUTES } from '../../constants';
 import { IoAddOutline, IoCreateOutline, IoTrashOutline, IoPeopleOutline, IoLayersOutline } from 'react-icons/io5';
 import toast from 'react-hot-toast';
-import { getImageUrl } from '../../constants/index';
 
 const InstructorCourses = () => {
   const [courses, setCourses] = useState([]);

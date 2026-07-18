@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../constants/index';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Card from '../../components/ui/Card';
@@ -22,7 +23,6 @@ import {
   IoTimeOutline
 } from 'react-icons/io5';
 import toast from 'react-hot-toast';
-import { getImageUrl } from '../../constants/index';
 
 const CourseForm = () => {
   const { courseId } = useParams();

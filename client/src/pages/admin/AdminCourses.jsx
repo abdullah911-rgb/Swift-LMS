@@ -1,9 +1,9 @@
+import { getImageUrl } from '../../constants/index';
 import React, { useEffect, useState } from 'react';
 import Card from '../../components/ui/Card';
 import { adminService } from '../../services/portalService';
 import toast from 'react-hot-toast';
 import {
-import { getImageUrl } from '../../constants/index';
   IoBookOutline,
   IoLayersOutline,
   IoPersonOutline,

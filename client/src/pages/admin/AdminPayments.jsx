@@ -1,7 +1,7 @@
+import { getImageUrl } from '../../constants/index';
 import React, { useState, useEffect, useCallback } from 'react';
 import { paymentService } from '../../services/portalService';
 import toast from 'react-hot-toast';
-import { getImageUrl } from '../../constants/index';
 
 const METHOD_TYPES = [
   { value: 'BANK_TRANSFER', label: '🏦 Bank Transfer', color: '#3b82f6' },

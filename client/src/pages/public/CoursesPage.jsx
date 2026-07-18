@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../constants/index';
 import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import api from '../../services/api';
@@ -7,7 +8,6 @@ import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Spinner from '../../components/ui/Spinner';
 import { IoSearchOutline, IoFilterOutline } from 'react-icons/io5';
-import { getImageUrl } from '../../constants/index';
 
 const CoursesPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
