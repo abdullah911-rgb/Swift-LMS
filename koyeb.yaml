@@ -1,0 +1,26 @@
+# Koyeb Configuration File
+# Learn more: https://www.koyeb.com/docs/deploy/koyeb-yaml
+
+version: "1"
+services:
+  - name: lms-backend
+    type: web
+    git:
+      repository: github.com/abdullah911-rgb/lms-project
+      branch: main
+      workdir: server
+      build_command: npm install && npx prisma generate
+      run_command: npx prisma migrate deploy && node index.js
+    ports:
+      - port: 5000
+        protocol: http
+    routes:
+      - path: /
+        port: 5000
+    regions:
+      - fra # Frankfurt (default free region)
+    env:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "5000"
