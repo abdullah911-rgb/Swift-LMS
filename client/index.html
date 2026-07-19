@@ -8,6 +8,19 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <title>Swift</title>
+    <!--
+      Node.js global shims — MUST run before the app bundle.
+      @zoom/meetingsdk references `global` and `process` internally.
+      Without this, it throws "Cannot read properties of undefined (reading 'includes')".
+    -->
+    <script>
+      window.global    = window.globalThis || window;
+      window.process   = window.process   || {};
+      window.process.env         = window.process.env         || {};
+      window.process.env.NODE_ENV = window.process.env.NODE_ENV || 'production';
+      window.process.browser     = true;
+      window.process.version     = window.process.version     || 'v18.0.0';
+    </script>
   </head>
   <body>
     <div id="root"></div>
