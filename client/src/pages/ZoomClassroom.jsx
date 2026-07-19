@@ -146,14 +146,6 @@ export default function ZoomClassroom() {
           await client.init({
             zoomAppRoot: containerEl,
             language: 'en-US',
-            customize: {
-              video: {
-                isResizable: true,
-                viewSizes: {
-                  default: { width: Math.max(containerEl.offsetWidth || 0, 800), height: 600 },
-                },
-              },
-            },
           });
         } catch (initErr) {
           // Catch SDK-internal errors (e.g. "Cannot read properties of undefined (reading 'includes')")
