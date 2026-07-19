@@ -219,6 +219,10 @@ const zoomController = {
       return sendError(res, 'This class has not been approved yet.', 403);
     }
 
+    // Strip any non-numeric characters — Zoom meetingId must be pure digits
+    const cleanMeetingNumber = String(meetingId).replace(/\D/g, '');
+    if (!cleanMeetingNumber) return sendError(res, 'Invalid meeting number.', 400);
+
     const sdkRole =
       (req.user.role === 'INSTRUCTOR' || req.user.role === 'ADMIN') ? parseInt(role) : 0;
 
@@ -231,7 +235,7 @@ const zoomController = {
 
     let signature;
     try {
-      signature = generateZoomSignature(meetingId, sdkRole);
+      signature = generateZoomSignature(cleanMeetingNumber, sdkRole);
     } catch (sigErr) {
       return sendError(res, sigErr.message, 500);
     }
@@ -239,7 +243,7 @@ const zoomController = {
     sendSuccess(res, 'Signature generated.', {
       signature,
       sdkKey,
-      meetingNumber: String(meetingId).replace(/\D/g, ''),
+      meetingNumber: cleanMeetingNumber,
       role: sdkRole,
       password: meeting.password || '',
     });
