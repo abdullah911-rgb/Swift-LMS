@@ -234,8 +234,14 @@ const zoomController = {
     }
 
     let signature;
+    let zakToken = null;
     try {
       signature = generateZoomSignature(cleanMeetingNumber, sdkRole);
+
+      // If they are joining as host (sdkRole === 1), they need a ZAK token
+      if (sdkRole === 1) {
+        zakToken = await zoomApiService.getUserZAK('me');
+      }
     } catch (sigErr) {
       return sendError(res, sigErr.message, 500);
     }
@@ -245,6 +251,7 @@ const zoomController = {
       sdkKey,
       meetingNumber: cleanMeetingNumber,
       role: sdkRole,
+      zak: zakToken,
       password: meeting.password || '',
     });
   }),

@@ -154,6 +154,16 @@ const zoomApiService = {
   async getMeeting(meetingId) {
     return zoomRequest('GET', `/v2/meetings/${meetingId}`);
   },
+
+  /**
+   * Fetch a ZAK (Zoom Access Key) token for a user.
+   * Required for a host to start a meeting via the Meeting SDK.
+   * @param {string} userId - User ID or 'me'
+   */
+  async getUserZAK(userId = 'me') {
+    const data = await zoomRequest('GET', `/v2/users/${userId}/token?type=zak`);
+    return data.token;
+  },
 };
 
 module.exports = zoomApiService;

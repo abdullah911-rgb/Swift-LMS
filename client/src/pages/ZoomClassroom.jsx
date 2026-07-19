@@ -118,7 +118,7 @@ export default function ZoomClassroom() {
           );
         }
 
-        const { signature, sdkKey, meetingNumber, password } = payload;
+        const { signature, sdkKey, meetingNumber, password, zak } = payload;
 
         if (!isMounted) return;
 
@@ -176,6 +176,7 @@ export default function ZoomClassroom() {
           password: password || '',
           userName: user?.name || 'Guest',
           userEmail: user?.email || '',
+          ...(zak && { zak }), // Pass the ZAK token for hosts
         });
 
         if (!isMounted) return;
