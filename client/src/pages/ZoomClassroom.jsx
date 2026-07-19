@@ -37,6 +37,7 @@ export default function ZoomClassroom() {
 
   const [status, setStatus] = useState('loading');
   const [errorMsg, setErrorMsg] = useState('');
+  const [joinUrl, setJoinUrl] = useState(null);
 
   const isHost = user?.role === 'INSTRUCTOR' || user?.role === 'ADMIN';
 
@@ -119,7 +120,8 @@ export default function ZoomClassroom() {
           );
         }
 
-        const { signature, sdkKey, meetingNumber, password, zak } = payload;
+        const { signature, sdkKey, meetingNumber, password, zak, joinUrl: meetingJoinUrl } = payload;
+        if (meetingJoinUrl) setJoinUrl(meetingJoinUrl);
 
         if (!isMounted) return;
 
@@ -149,29 +151,38 @@ export default function ZoomClassroom() {
             language: 'en-US',
           });
         } catch (initErr) {
-          // Catch SDK-internal errors (e.g. "Cannot read properties of undefined (reading 'includes')")
           const msg = initErr?.message || String(initErr);
           console.error('[Zoom] client.init() failed:', msg);
-          throw new Error(
-            msg.includes("Cannot read properties") || msg.includes("undefined")
-              ? 'Zoom SDK failed to initialize. Please try refreshing the page.'
-              : msg
-          );
+          // SDK crashed internally — show fallback with joinUrl
+          if (!isMounted) return;
+          setStatus('error');
+          setErrorMsg('Zoom SDK could not initialize in this browser.');
+          return;
         }
 
         if (!isMounted) return;
 
-        // 6. Join — do NOT pass `role` here; it is already encoded in the signature
+        // 6. Join — do NOT pass `role`; it is already encoded in the signature
         const safeEmail = (user?.email && user.email.includes('@')) ? user.email : 'student@lms.com';
-        await client.join({
-          signature,
-          sdkKey,
-          meetingNumber: String(meetingNumber),
-          password: password || '',
-          userName: user?.name || 'Guest User',
-          userEmail: safeEmail,
-          ...(zak && { zak }), // Pass the ZAK token for hosts
-        });
+        try {
+          await client.join({
+            signature,
+            sdkKey,
+            meetingNumber: String(meetingNumber),
+            password: password || '',
+            userName: user?.name || 'Guest User',
+            userEmail: safeEmail,
+            ...(zak && { zak }),
+          });
+        } catch (joinErr) {
+          const msg = joinErr?.message || String(joinErr);
+          console.error('[Zoom] client.join() failed:', msg);
+          // Join crashed — show fallback with joinUrl
+          if (!isMounted) return;
+          setStatus('error');
+          setErrorMsg('Zoom embedded classroom could not connect. Use the button below to join via the Zoom app.');
+          return;
+        }
 
         if (!isMounted) return;
         hasJoinedRef.current = true;
@@ -356,16 +367,33 @@ export default function ZoomClassroom() {
           <p style={{ color: '#94a3b8', textAlign: 'center', maxWidth: 480, margin: 0 }}>
             {errorMsg}
           </p>
-          <button
-            onClick={goBack}
-            style={{
-              marginTop: 8, background: '#3b82f6', color: '#fff',
-              border: 'none', borderRadius: 8, padding: '10px 24px',
-              fontWeight: 600, cursor: 'pointer', fontSize: 14,
-            }}
-          >
-            Go Back
-          </button>
+          <div style={{ display: 'flex', gap: 12, marginTop: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+            {joinUrl && (
+              <a
+                href={joinUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  background: '#2563eb', color: '#fff',
+                  border: 'none', borderRadius: 8, padding: '10px 24px',
+                  fontWeight: 600, cursor: 'pointer', fontSize: 14,
+                  textDecoration: 'none', display: 'inline-block',
+                }}
+              >
+                🔗 Join via Zoom App
+              </a>
+            )}
+            <button
+              onClick={goBack}
+              style={{
+                background: '#334155', color: '#e2e8f0',
+                border: 'none', borderRadius: 8, padding: '10px 24px',
+                fontWeight: 600, cursor: 'pointer', fontSize: 14,
+              }}
+            >
+              Go Back
+            </button>
+          </div>
         </div>
       )}
 

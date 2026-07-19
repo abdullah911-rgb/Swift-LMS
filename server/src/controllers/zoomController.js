@@ -258,6 +258,7 @@ const zoomController = {
       role: sdkRole,
       zak: zakToken,
       password: meeting.password || '',
+      joinUrl: meeting.joinUrl || null,
     });
   }),
 
