@@ -3,6 +3,7 @@ const config = require('../config/env');
 const asyncHandler = require('../utils/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/apiResponse');
 const zoomApiService = require('../services/zoomApiService');
+const zoomOAuthService = require('../services/zoomOAuthService');
 const { generateZoomSignature } = require('../utils/zoomSignature');
 
 const APPROVED_STATUSES = ['SCHEDULED', 'LIVE', 'ENDED'];
@@ -29,12 +30,28 @@ async function notifyAdminsOfClassRequest(meeting, course) {
 
 async function createZoomMeetingRecord({ courseId, instructorId, topic, agenda, duration, startTime }) {
   let zoomData;
-  zoomData = await zoomApiService.createMeeting({
-    topic,
-    agenda,
-    duration: parseInt(duration),
-    startTime,
+
+  const instructor = await prisma.user.findUnique({
+    where: { id: instructorId },
+    select: { zoomConnected: true },
   });
+
+  if (instructor && instructor.zoomConnected) {
+    zoomData = await zoomOAuthService.createMeetingAsInstructor(instructorId, {
+      topic,
+      agenda,
+      duration: parseInt(duration),
+      startTime,
+    });
+  } else {
+    // Fallback to Server-to-Server admin app
+    zoomData = await zoomApiService.createMeeting({
+      topic,
+      agenda,
+      duration: parseInt(duration),
+      startTime,
+    });
+  }
 
   const scheduledStart = startTime ? new Date(startTime) : new Date();
   const isFuture = startTime && scheduledStart > new Date();
@@ -114,8 +131,19 @@ const zoomController = {
     const course = await prisma.course.findUnique({ where: { id: courseId } });
     if (!course) return sendError(res, 'Course not found.', 404);
 
-    if (req.user.role === 'INSTRUCTOR' && course.instructorId !== req.user.id) {
-      return sendError(res, 'Not authorized to schedule classes for this course.', 403);
+    if (req.user.role === 'INSTRUCTOR') {
+      if (course.instructorId !== req.user.id) {
+        return sendError(res, 'Not authorized to schedule classes for this course.', 403);
+      }
+
+      // Check Zoom connection status
+      const instructor = await prisma.user.findUnique({
+        where: { id: req.user.id },
+        select: { zoomConnected: true },
+      });
+      if (!instructor || !instructor.zoomConnected) {
+        return sendError(res, 'Please connect your Zoom account in settings before hosting live classes.', 400);
+      }
     }
 
     const meetingTopic = topic || `${course.title} - Live Class`;
@@ -189,7 +217,16 @@ const zoomController = {
 
     if (meeting.meetingId) {
       try {
-        await zoomApiService.endMeeting(meeting.meetingId);
+        const instructor = await prisma.user.findUnique({
+          where: { id: meeting.instructorId },
+          select: { zoomConnected: true },
+        });
+
+        if (instructor && instructor.zoomConnected) {
+          await zoomOAuthService.endMeetingAsInstructor(meeting.instructorId, meeting.meetingId);
+        } else {
+          await zoomApiService.endMeeting(meeting.meetingId);
+        }
       } catch (zoomErr) {
         if (zoomErr.statusCode !== 404) {
           console.error('Zoom end-meeting error:', zoomErr.message);
@@ -219,7 +256,6 @@ const zoomController = {
       return sendError(res, 'This class has not been approved yet.', 403);
     }
 
-    // Strip any non-numeric characters — Zoom meetingId must be pure digits
     const cleanMeetingNumber = String(meetingId).replace(/\D/g, '');
     if (!cleanMeetingNumber) return sendError(res, 'Invalid meeting number.', 400);
 
@@ -238,13 +274,21 @@ const zoomController = {
     try {
       signature = generateZoomSignature(cleanMeetingNumber, sdkRole);
 
-      // If they are joining as host (sdkRole === 1), try to get ZAK token.
-      // If it fails (due to scope limitations), log a warning but do not crash.
+      // Fetch ZAK using host's custom token if it is connected
       if (sdkRole === 1) {
         try {
-          zakToken = await zoomApiService.getUserZAK('me');
+          const instructor = await prisma.user.findUnique({
+            where: { id: meeting.instructorId },
+            select: { zoomConnected: true },
+          });
+
+          if (instructor && instructor.zoomConnected) {
+            zakToken = await zoomOAuthService.getInstructorZAK(meeting.instructorId);
+          } else {
+            zakToken = await zoomApiService.getUserZAK('me');
+          }
         } catch (zakErr) {
-          console.warn('[Zoom] Failed to fetch ZAK token (likely missing scopes):', zakErr.message);
+          console.warn('[Zoom SDK] Failed to fetch host ZAK token:', zakErr.message);
         }
       }
     } catch (sigErr) {
@@ -306,7 +350,6 @@ const zoomController = {
     sendSuccess(res, 'Leave time recorded.', { attendance });
   }),
 
-  // ── GET /api/zoom/calendar ─────────────────────────────────────────────────
   getCalendar: asyncHandler(async (req, res) => {
     let meetings = [];
     const include = {
@@ -346,7 +389,6 @@ const zoomController = {
     sendSuccess(res, 'Calendar meetings fetched.', { meetings });
   }),
 
-  // ── GET /api/zoom/admin/pending ────────────────────────────────────────────
   getPendingApprovals: asyncHandler(async (req, res) => {
     const meetings = await prisma.zoomMeeting.findMany({
       where: { status: 'PENDING_APPROVAL' },
@@ -360,7 +402,6 @@ const zoomController = {
     sendSuccess(res, 'Pending class requests fetched.', { meetings });
   }),
 
-  // ── PATCH /api/zoom/:id/approve ────────────────────────────────────────────
   approveMeeting: asyncHandler(async (req, res) => {
     const { id } = req.params;
 
@@ -377,12 +418,26 @@ const zoomController = {
 
     let zoomData;
     try {
-      zoomData = await zoomApiService.createMeeting({
-        topic: pending.topic,
-        agenda: pending.agenda,
-        duration: pending.duration,
-        startTime: isFuture ? pending.startTime.toISOString() : undefined,
+      const instructor = await prisma.user.findUnique({
+        where: { id: pending.instructorId },
+        select: { zoomConnected: true },
       });
+
+      if (instructor && instructor.zoomConnected) {
+        zoomData = await zoomOAuthService.createMeetingAsInstructor(pending.instructorId, {
+          topic: pending.topic,
+          agenda: pending.agenda,
+          duration: pending.duration,
+          startTime: isFuture ? pending.startTime.toISOString() : undefined,
+        });
+      } else {
+        zoomData = await zoomApiService.createMeeting({
+          topic: pending.topic,
+          agenda: pending.agenda,
+          duration: pending.duration,
+          startTime: isFuture ? pending.startTime.toISOString() : undefined,
+        });
+      }
     } catch (zoomErr) {
       console.error('Zoom API error on approval:', zoomErr);
       return sendError(res, `Failed to create Zoom meeting: ${zoomErr.message}`, 502);
@@ -418,7 +473,6 @@ const zoomController = {
     sendSuccess(res, 'Class request approved.', { meeting });
   }),
 
-  // ── PATCH /api/zoom/:id/reject ─────────────────────────────────────────────
   rejectMeeting: asyncHandler(async (req, res) => {
     const { id } = req.params;
     const { reason } = req.body;
@@ -450,6 +504,62 @@ const zoomController = {
     });
 
     sendSuccess(res, 'Class request rejected.', { meeting });
+  }),
+
+  // ── NEW: ZOOM OAUTH FLOW CONTROLLERS ──────────────────────────────────────
+
+  // GET /api/zoom/oauth/connect
+  connectOAuth: asyncHandler(async (req, res) => {
+    if (!config.zoom.oauthClientId) {
+      return sendError(res, 'Zoom OAuth is not configured on this server.', 503);
+    }
+
+    const oauthUrl = `https://zoom.us/oauth/authorize?response_type=code&client_id=${
+      config.zoom.oauthClientId
+    }&redirect_uri=${encodeURIComponent(config.zoom.oauthRedirectUri)}&state=${req.user.id}`;
+
+    sendSuccess(res, 'Authorization URL generated.', { oauthUrl });
+  }),
+
+  // GET /api/zoom/oauth/callback
+  oauthCallback: asyncHandler(async (req, res) => {
+    const { code, state: instructorId } = req.query;
+
+    if (!code || !instructorId) {
+      return res.redirect(`${config.clientUrl}/instructor/profile?zoom=error&message=missing_params`);
+    }
+
+    try {
+      await zoomOAuthService.connectZoomAccount(instructorId, code);
+      res.redirect(`${config.clientUrl}/instructor/profile?zoom=connected`);
+    } catch (err) {
+      console.error('[Zoom OAuth Callback Error]:', err.message);
+      res.redirect(
+        `${config.clientUrl}/instructor/profile?zoom=error&message=${encodeURIComponent(err.message)}`
+      );
+    }
+  }),
+
+  // GET /api/zoom/oauth/status
+  oauthStatus: asyncHandler(async (req, res) => {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: {
+        zoomConnected: true,
+        zoomEmail: true,
+      },
+    });
+
+    sendSuccess(res, 'Connection status fetched.', {
+      connected: user?.zoomConnected || false,
+      email: user?.zoomEmail || null,
+    });
+  }),
+
+  // DELETE /api/zoom/oauth/disconnect
+  oauthDisconnect: asyncHandler(async (req, res) => {
+    await zoomOAuthService.disconnectZoomAccount(req.user.id);
+    sendSuccess(res, 'Zoom account disconnected.');
   }),
 };
 

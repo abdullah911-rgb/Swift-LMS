@@ -138,6 +138,14 @@ model User {
   announcements   Announcement[]   @relation("AuthoredAnnouncements")
   lessonProgress  LessonProgress[]
 
+  // Zoom OAuth (per-instructor credentials)
+  zoomAccessToken    String?   // Short-lived OAuth access token
+  zoomRefreshToken   String?   // Long-lived refresh token
+  zoomTokenExpiresAt DateTime? // When the access token expires
+  zoomUserId         String?   // Zoom user ID (from /v2/users/me)
+  zoomEmail          String?   // Zoom account email (for display)
+  zoomConnected      Boolean   @default(false)
+
   @@index([email])
   @@index([role])
   @@map("users")

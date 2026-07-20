@@ -38,13 +38,17 @@ const config = {
   },
 
   zoom: {
+    // Server-to-Server OAuth (admin fallback)
     accountId: process.env.ZOOM_ACCOUNT_ID,
     clientId: process.env.ZOOM_CLIENT_ID,
     clientSecret: process.env.ZOOM_CLIENT_SECRET,
-    // Meeting SDK credentials — must come from a Meeting SDK / General app on Zoom Marketplace
-    // These are DIFFERENT from the Server-to-Server OAuth credentials above
+    // Meeting SDK credentials
     sdkKey: process.env.ZOOM_SDK_KEY,
     sdkSecret: process.env.ZOOM_SDK_SECRET,
+    // User-Managed OAuth App (per-instructor)
+    oauthClientId: process.env.ZOOM_OAUTH_CLIENT_ID,
+    oauthClientSecret: process.env.ZOOM_OAUTH_CLIENT_SECRET,
+    oauthRedirectUri: process.env.ZOOM_OAUTH_REDIRECT_URI || 'http://localhost:5000/api/zoom/oauth/callback',
   },
 
   upload: {

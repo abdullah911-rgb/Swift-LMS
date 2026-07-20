@@ -4,7 +4,7 @@ import Button from '../../components/ui/Button';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
-import { IoPersonOutline, IoKeyOutline, IoMailOutline, IoCallOutline } from 'react-icons/io5';
+import { IoPersonOutline, IoKeyOutline, IoMailOutline, IoCallOutline, IoVideocamOutline } from 'react-icons/io5';
 
 const InstructorProfile = () => {
   const { user, setUser } = useAuth();
@@ -22,6 +22,12 @@ const InstructorProfile = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [savingPassword, setSavingPassword] = useState(false);
+
+  // Zoom Integration States
+  const [zoomConnected, setZoomConnected] = useState(false);
+  const [zoomEmail, setZoomEmail] = useState('');
+  const [loadingZoom, setLoadingZoom] = useState(true);
+  const [disconnectingZoom, setDisconnectingZoom] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -41,7 +47,36 @@ const InstructorProfile = () => {
         toast.error('Failed to load profile data.');
       }
     };
+
+    const fetchZoomStatus = async () => {
+      try {
+        const res = await api.get('/zoom/oauth/status');
+        if (res.data?.success) {
+          setZoomConnected(res.data.data.connected);
+          setZoomEmail(res.data.data.email || '');
+        }
+      } catch (err) {
+        console.error('Error fetching Zoom status:', err);
+      } finally {
+        setLoadingZoom(false);
+      }
+    };
+
     fetchProfile();
+    fetchZoomStatus();
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const zoomStatus = params.get('zoom');
+    if (zoomStatus === 'connected') {
+      toast.success('Successfully connected your Zoom account!');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (zoomStatus === 'error') {
+      const msg = params.get('message') || 'Failed to connect Zoom account.';
+      toast.error(`Zoom connection failed: ${msg}`);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
   }, []);
 
   const handleInfoSubmit = async (e) => {
@@ -106,6 +141,40 @@ const InstructorProfile = () => {
       toast.error(err.response?.data?.message || 'Failed to change password.');
     } finally {
       setSavingPassword(false);
+    }
+  };
+
+  const handleConnectZoom = async () => {
+    try {
+      const res = await api.get('/zoom/oauth/connect');
+      if (res.data?.success && res.data.data.oauthUrl) {
+        window.location.href = res.data.data.oauthUrl;
+      } else {
+        toast.error('Failed to get connection URL.');
+      }
+    } catch (err) {
+      console.error('Error getting OAuth URL:', err);
+      toast.error('Failed to initiate Zoom login. Please verify config.');
+    }
+  };
+
+  const handleDisconnectZoom = async () => {
+    if (!window.confirm('Are you sure you want to disconnect your Zoom account? You will not be able to host live classes until you reconnect.')) {
+      return;
+    }
+    setDisconnectingZoom(true);
+    try {
+      const res = await api.delete('/zoom/oauth/disconnect');
+      if (res.data?.success) {
+        setZoomConnected(false);
+        setZoomEmail('');
+        toast.success('Zoom account disconnected successfully.');
+      }
+    } catch (err) {
+      console.error('Error disconnecting Zoom:', err);
+      toast.error('Failed to disconnect Zoom account.');
+    } finally {
+      setDisconnectingZoom(false);
     }
   };
 
@@ -224,54 +293,101 @@ const InstructorProfile = () => {
           </form>
         </Card>
 
-        {/* Security Info */}
-        <Card hover={false} className="bg-white border border-slate-100 p-6 rounded-2xl">
-          <div className="flex items-center gap-2 border-b border-slate-50 pb-3 mb-6">
-            <IoKeyOutline size={18} className="text-accent-600" />
-            <h3 className="text-base font-bold text-slate-800">Security Credentials</h3>
-          </div>
-
-          <form onSubmit={handlePasswordSubmit} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Current Password</label>
-              <input
-                type="password"
-                required
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-100 focus:outline-none focus:border-primary-600 text-sm"
-              />
+        {/* Sidebar Info Columns */}
+        <div className="space-y-6">
+          {/* Zoom Integration */}
+          <Card hover={false} className="bg-white border border-slate-100 p-6 rounded-2xl">
+            <div className="flex items-center gap-2 border-b border-slate-50 pb-3 mb-6">
+              <IoVideocamOutline size={18} className="text-primary-700" />
+              <h3 className="text-base font-bold text-slate-800">Zoom Integration</h3>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">New Password</label>
-              <input
-                type="password"
-                required
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-100 focus:outline-none focus:border-primary-600 text-sm"
-              />
+            {loadingZoom ? (
+              <div className="py-4 text-center text-xs text-slate-400 animate-pulse">
+                Checking integration status...
+              </div>
+            ) : zoomConnected ? (
+              <div className="space-y-4">
+                <div className="rounded-xl bg-emerald-50 border border-emerald-100 p-4 text-emerald-800 text-xs leading-relaxed">
+                  <p className="font-bold mb-1">Status: Active & Connected</p>
+                  <p>All classes you start will be created under your connected account: <strong className="break-all">{zoomEmail}</strong>.</p>
+                </div>
+                <Button
+                  onClick={handleDisconnectZoom}
+                  variant="secondary"
+                  size="md"
+                  className="w-full text-red-650 hover:text-red-700 hover:bg-red-50 border-red-200"
+                  disabled={disconnectingZoom}
+                >
+                  {disconnectingZoom ? 'Disconnecting...' : 'Disconnect Zoom Account'}
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="text-slate-500 text-xs leading-relaxed">
+                  Connect your Zoom account so that your live classrooms are hosted on your own account.
+                </div>
+                <Button
+                  onClick={handleConnectZoom}
+                  variant="primary"
+                  size="md"
+                  className="w-full bg-gradient-to-r from-blue-600 to-primary-600 text-white"
+                >
+                  Connect Zoom Account
+                </Button>
+              </div>
+            )}
+          </Card>
+
+          {/* Security Credentials */}
+          <Card hover={false} className="bg-white border border-slate-100 p-6 rounded-2xl">
+            <div className="flex items-center gap-2 border-b border-slate-50 pb-3 mb-6">
+              <IoKeyOutline size={18} className="text-accent-600" />
+              <h3 className="text-base font-bold text-slate-800">Security Credentials</h3>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Confirm New Password</label>
-              <input
-                type="password"
-                required
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-100 focus:outline-none focus:border-primary-600 text-sm"
-              />
-            </div>
+            <form onSubmit={handlePasswordSubmit} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Current Password</label>
+                <input
+                  type="password"
+                  required
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-100 focus:outline-none focus:border-primary-600 text-sm"
+                />
+              </div>
 
-            <div className="pt-2 border-t border-slate-50">
-              <Button type="submit" variant="primary" size="md" className="w-full" disabled={savingPassword}>
-                {savingPassword ? 'Changing Password...' : 'Change Password'}
-              </Button>
-            </div>
-          </form>
-        </Card>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">New Password</label>
+                <input
+                  type="password"
+                  required
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-100 focus:outline-none focus:border-primary-600 text-sm"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Confirm New Password</label>
+                <input
+                  type="password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-100 focus:outline-none focus:border-primary-600 text-sm"
+                />
+              </div>
+
+              <div className="pt-2 border-t border-slate-50">
+                <Button type="submit" variant="primary" size="md" className="w-full" disabled={savingPassword}>
+                  {savingPassword ? 'Changing Password...' : 'Change Password'}
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
       </div>
     </div>
   );
