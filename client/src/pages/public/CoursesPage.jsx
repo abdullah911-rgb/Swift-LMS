@@ -111,63 +111,38 @@ const CoursesPage = () => {
         </div>
 
         {/* Search & Basic Filter Controls */}
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white border border-slate-100 p-4 rounded-2xl soft-shadow">
-          <form onSubmit={handleSearchSubmit} className="relative w-full md:max-w-md flex items-center">
-            <IoSearchOutline size={18} className="absolute left-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search courses by keyword..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-11 pr-4 py-2.5 bg-slate-50/50 border border-slate-200 hover:border-slate-350 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 rounded-xl transition-all duration-200 outline-none text-slate-800 text-sm"
-            />
-            <Button type="submit" variant="primary" size="sm" className="absolute right-2">
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center bg-white border border-slate-100 p-4 rounded-2xl shadow-sm">
+          <form onSubmit={handleSearchSubmit} className="relative flex-1 flex items-center gap-2">
+            <div className="relative flex-1">
+              <IoSearchOutline size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search courses by keyword..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 rounded-xl transition-all duration-200 outline-none text-slate-800 text-sm"
+              />
+            </div>
+            <Button type="submit" variant="primary" size="sm" className="shrink-0 px-5">
               Search
             </Button>
           </form>
 
           {/* Level filters */}
-          <div className="flex gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
-            <button
-              onClick={() => handleLevelSelect('')}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer border
-                ${!selectedLevel 
-                  ? 'bg-slate-900 text-white border-slate-900' 
-                  : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+          <div className="flex gap-2 overflow-x-auto pb-0.5 sm:pb-0 shrink-0">
+            {[['', 'All'], ['BEGINNER', 'Beginner'], ['INTERMEDIATE', 'Intermediate'], ['ADVANCED', 'Advanced']].map(([val, label]) => (
+              <button
+                key={val}
+                onClick={() => handleLevelSelect(val)}
+                className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap uppercase tracking-wide transition-all cursor-pointer border ${
+                  selectedLevel === val
+                    ? 'bg-primary-700 text-white border-primary-700 shadow-sm'
+                    : 'bg-white text-slate-600 border-slate-200 hover:border-primary-400 hover:text-primary-700'
                 }`}
-            >
-              All Levels
-            </button>
-            <button
-              onClick={() => handleLevelSelect('BEGINNER')}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer border
-                ${selectedLevel === 'BEGINNER' 
-                  ? 'bg-slate-900 text-white border-slate-900' 
-                  : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
-                }`}
-            >
-              Beginner
-            </button>
-            <button
-              onClick={() => handleLevelSelect('INTERMEDIATE')}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer border
-                ${selectedLevel === 'INTERMEDIATE' 
-                  ? 'bg-slate-900 text-white border-slate-900' 
-                  : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
-                }`}
-            >
-              Intermediate
-            </button>
-            <button
-              onClick={() => handleLevelSelect('ADVANCED')}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer border
-                ${selectedLevel === 'ADVANCED' 
-                  ? 'bg-slate-900 text-white border-slate-900' 
-                  : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
-                }`}
-            >
-              Advanced
-            </button>
+              >
+                {label}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -224,15 +199,15 @@ const CoursesPage = () => {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                   {courses.map((course) => (
-                    <Card key={course.id} hover={true} className="flex flex-col h-full overflow-hidden p-0 rounded-2xl bg-white border border-slate-100 group">
+                    <Card key={course.id} hover={true} className="flex flex-col overflow-hidden p-0 rounded-2xl bg-white border border-slate-100 group h-full">
                       {/* Image Thumbnail */}
-                      <div className="aspect-video w-full bg-slate-100 relative overflow-hidden">
+                      <div className="aspect-video w-full bg-slate-100 relative overflow-hidden shrink-0">
                         {course.thumbnail ? (
-                          <img 
-                            src={getImageUrl(course.thumbnail)} 
-                            alt={course.title} 
+                          <img
+                            src={getImageUrl(course.thumbnail)}
+                            alt={course.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                         ) : (
@@ -246,18 +221,18 @@ const CoursesPage = () => {
                       </div>
 
                       {/* Content details */}
-                      <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                        <div className="space-y-2">
+                      <div className="p-5 flex-1 flex flex-col justify-between gap-4">
+                        <div className="space-y-1.5">
                           <span className="text-[10px] font-bold text-primary-600 uppercase tracking-wider">
                             {course.category?.name}
                           </span>
-                          <h3 className="font-heading font-bold text-slate-800 text-sm sm:text-base hover:text-primary-600 transition-colors line-clamp-1">
+                          <h3 className="font-heading font-bold text-slate-800 text-sm sm:text-base hover:text-primary-600 transition-colors line-clamp-2 leading-snug">
                             <Link to={`/courses/${course.slug}`}>{course.title}</Link>
                           </h3>
                           <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
                             {course.shortDescription || course.description}
                           </p>
-                          <div className="flex gap-2 items-center text-[10px] font-bold text-slate-400">
+                          <div className="flex flex-wrap gap-x-3 gap-y-1 items-center text-[10px] font-bold text-slate-400 pt-1">
                             <span>⏱️ {course.durationInMonths || 2} Months</span>
                             <span>•</span>
                             <span>📖 {course.totalLessons} Lessons</span>
@@ -265,20 +240,20 @@ const CoursesPage = () => {
                         </div>
 
                         {/* Bottom Metadata bar */}
-                        <div className="flex items-center justify-between pt-4 border-t border-slate-50">
-                          <div className="flex items-center gap-2">
-                            <div className="h-6 w-6 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-heading font-bold text-[10px] uppercase">
+                        <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="h-6 w-6 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-heading font-bold text-[10px] uppercase shrink-0">
                               {course.instructor?.name?.charAt(0)}
                             </div>
-                            <span className="text-[11px] text-slate-500 font-semibold">{course.instructor?.name}</span>
+                            <span className="text-[11px] text-slate-500 font-semibold truncate">{course.instructor?.name}</span>
                           </div>
-                          
-                          <div className="flex items-center gap-3">
-                            <span className="text-xs sm:text-sm font-bold text-slate-800">
-                              {course.isFree ? 'Free' : `$${course.price}`}
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-xs font-bold text-slate-800">
+                              {course.isFree ? 'Free' : `PKR ${Number(course.price).toLocaleString()}`}
                             </span>
-                            <Link to={`/courses/${course.slug}`} className="text-xs font-bold text-primary-600 hover:text-primary-700 transition-colors">
-                              View Details →
+                            <Link to={`/courses/${course.slug}`} className="text-xs font-bold text-primary-600 hover:text-primary-700 transition-colors whitespace-nowrap">
+                              View →
                             </Link>
                           </div>
                         </div>

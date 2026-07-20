@@ -122,7 +122,7 @@ const CourseDetailPage = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         
         {/* Banner Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="flex flex-col-reverse lg:grid lg:grid-cols-12 gap-8 items-start">
           
           {/* Left Details */}
           <div className="lg:col-span-8 space-y-6">
@@ -235,7 +235,7 @@ const CourseDetailPage = () => {
             {course.prerequisites?.length > 0 && (
               <div className="space-y-3">
                 <h3 className="text-base font-heading font-bold text-slate-800">Prerequisites</h3>
-                <ul className="list-disc pl-5 text-xs sm:text-sm text-slate-500 space-y-2">
+                <ul className="list-disc pl-4 text-xs sm:text-sm text-slate-500 space-y-2">
                   {course.prerequisites.map((pre, idx) => (
                     <li key={idx}>{pre}</li>
                   ))}
@@ -311,7 +311,7 @@ const CourseDetailPage = () => {
           </div>
 
           {/* Right Enrollment CTA widget */}
-          <div className="lg:col-span-4 lg:sticky lg:top-24">
+          <div className="lg:col-span-4 lg:sticky lg:top-24 w-full">
             <Card hover={false} className="border border-slate-100 bg-white p-6 soft-shadow space-y-6">
               
               {/* Image Preview */}

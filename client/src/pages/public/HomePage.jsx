@@ -151,31 +151,37 @@ const HomePage = () => {
           <h2 className="text-3xl sm:text-4xl font-heading font-bold text-slate-900">Why Train With SWIFT?</h2>
           <p className="text-slate-500 max-w-lg mx-auto text-sm sm:text-base">Everything you need to successfully gain professional safety & technology certifications.</p>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-12">
-            
-            <Card hover={true} className="text-center space-y-4 p-8">
-              <div className="mx-auto h-12 w-12 rounded-2xl bg-blue-50 text-primary-600 flex items-center justify-center shadow-inner">
-                <IoVideocamOutline size={24} />
-              </div>
-              <h3 className="text-lg font-heading font-bold text-slate-800">Live Zoom Classes</h3>
-              <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">Join virtual classrooms directly from the student dashboard. Interact, ask questions, and attend workshops live.</p>
-            </Card>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-10">
 
-            <Card hover={true} className="text-center space-y-4 p-8">
-              <div className="mx-auto h-12 w-12 rounded-2xl bg-blue-50 text-primary-600 flex items-center justify-center shadow-inner">
-                <IoBookOutline size={24} />
+            {/* Card 1 */}
+            <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-primary-800 via-primary-900 to-slate-900 p-8 text-left shadow-xl shadow-primary-900/20 group hover:-translate-y-1 transition-transform duration-300">
+              <div className="absolute top-4 right-4 text-accent-400/20 text-6xl select-none pointer-events-none">★</div>
+              <div className="mb-5 h-11 w-11 rounded-2xl bg-primary-700/60 text-accent-400 flex items-center justify-center shadow-inner border border-primary-700/40">
+                <IoVideocamOutline size={22} />
               </div>
-              <h3 className="text-lg font-heading font-bold text-slate-800">Premium Materials</h3>
-              <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">Download curriculum PDFs, exercises, and slides curated by instructors. Access them offline, anytime.</p>
-            </Card>
+              <h3 className="text-base font-heading font-bold text-accent-400 mb-2">Live Zoom Classes</h3>
+              <p className="text-xs sm:text-sm text-primary-200/80 leading-relaxed">Join virtual classrooms directly from the student dashboard. Interact, ask questions, and attend workshops live.</p>
+            </div>
 
-            <Card hover={true} className="text-center space-y-4 p-8">
-              <div className="mx-auto h-12 w-12 rounded-2xl bg-blue-50 text-primary-600 flex items-center justify-center shadow-inner">
-                <IoRibbonOutline size={24} />
+            {/* Card 2 */}
+            <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-primary-800 via-primary-900 to-slate-900 p-8 text-left shadow-xl shadow-primary-900/20 group hover:-translate-y-1 transition-transform duration-300">
+              <div className="absolute top-4 right-4 text-accent-400/20 text-6xl select-none pointer-events-none">★</div>
+              <div className="mb-5 h-11 w-11 rounded-2xl bg-primary-700/60 text-accent-400 flex items-center justify-center shadow-inner border border-primary-700/40">
+                <IoBookOutline size={22} />
               </div>
-              <h3 className="text-lg font-heading font-bold text-slate-800">Certified Milestone</h3>
-              <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">Gain a verified, secure certificate of completion to showcase on LinkedIn or your portfolio resume.</p>
-            </Card>
+              <h3 className="text-base font-heading font-bold text-accent-400 mb-2">Premium Materials</h3>
+              <p className="text-xs sm:text-sm text-primary-200/80 leading-relaxed">Download curriculum PDFs, exercises, and slides curated by instructors. Access them offline, anytime.</p>
+            </div>
+
+            {/* Card 3 */}
+            <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-primary-800 via-primary-900 to-slate-900 p-8 text-left shadow-xl shadow-primary-900/20 group hover:-translate-y-1 transition-transform duration-300">
+              <div className="absolute top-4 right-4 text-accent-400/20 text-6xl select-none pointer-events-none">★</div>
+              <div className="mb-5 h-11 w-11 rounded-2xl bg-primary-700/60 text-accent-400 flex items-center justify-center shadow-inner border border-primary-700/40">
+                <IoRibbonOutline size={22} />
+              </div>
+              <h3 className="text-base font-heading font-bold text-accent-400 mb-2">Certified Milestone</h3>
+              <p className="text-xs sm:text-sm text-primary-200/80 leading-relaxed">Gain a verified, secure certificate of completion to showcase on LinkedIn or your portfolio resume.</p>
+            </div>
 
           </div>
         </div>

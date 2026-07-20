@@ -40,7 +40,7 @@ const FAQPage = () => {
         {/* Title */}
         <div className="text-center space-y-3">
           <span className="text-xs font-bold uppercase tracking-wider text-accent-700 bg-accent-50 px-3 py-1 rounded-full">FAQ Center</span>
-          <h1 className="text-3xl sm:text-4xl font-heading font-extrabold text-primary-950 leading-none">
+          <h1 className="text-3xl sm:text-4xl font-heading font-extrabold text-primary-950 leading-tight">
             Frequently Asked Questions
           </h1>
           <p className="text-sm text-slate-500 max-w-md mx-auto">
@@ -56,7 +56,7 @@ const FAQPage = () => {
               <Card key={index} hover={false} className="p-0 border border-slate-100 overflow-hidden bg-white">
                 <button
                   onClick={() => toggleAccordion(index)}
-                  className="w-full flex items-center justify-between px-6 py-5 text-left font-semibold text-slate-800 hover:bg-slate-50/50 transition-all outline-none cursor-pointer"
+                  className="w-full flex items-center justify-between px-5 py-4 text-left font-semibold text-slate-800 hover:bg-slate-50/50 transition-all outline-none cursor-pointer"
                 >
                   <span className="text-sm sm:text-base font-heading font-semibold">{faq.question}</span>
                   <IoChevronDownOutline 
