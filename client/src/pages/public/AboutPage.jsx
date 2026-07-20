@@ -9,8 +9,8 @@ const AboutPage = () => {
         
         {/* Title / Intro */}
         <div className="text-center space-y-4 max-w-2xl mx-auto">
-          <span className="text-xs font-bold uppercase tracking-wider text-accent-700 bg-accent-50 px-3 py-1 rounded-full">Our Profile</span>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-extrabold text-primary-950 leading-none">
+          <span className="inline-block text-xs font-bold uppercase tracking-wider text-accent-700 bg-accent-50 px-3 py-1 rounded-full mb-3">Our Profile</span>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-extrabold text-primary-950 leading-tight">
             Swift Institute of Safety & Technology
           </h1>
           <p className="text-sm sm:text-base text-slate-500 leading-relaxed">

@@ -147,7 +147,7 @@ const HomePage = () => {
       {/* 3. Core Features Section */}
       <section className="py-20 sm:py-28 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4">
-          <span className="text-xs font-bold uppercase tracking-wider text-primary-700 bg-primary-50 px-3 py-1 rounded-full">Core Pillars</span>
+          <span className="inline-block text-xs font-bold uppercase tracking-wider text-primary-700 bg-primary-50 px-3 py-1 rounded-full mb-3">Core Pillars</span>
           <h2 className="text-3xl sm:text-4xl font-heading font-bold text-slate-900">Why Train With SWIFT?</h2>
           <p className="text-slate-500 max-w-lg mx-auto text-sm sm:text-base">Everything you need to successfully gain professional safety & technology certifications.</p>
           

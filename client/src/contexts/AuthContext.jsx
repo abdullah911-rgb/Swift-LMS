@@ -24,7 +24,7 @@ export const AuthProvider = ({ children }) => {
     setPostLoginRole(null);
 
     // Clear client-side session immediately to ensure instant logout in the UI
-    localStorage.removeItem('accessToken');
+    sessionStorage.removeItem('accessToken');
     delete api.defaults.headers.common['Authorization'];
     setUser(null);
 
@@ -57,7 +57,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     const fetchUser = async () => {
-      const token = localStorage.getItem('accessToken');
+      const token = sessionStorage.getItem('accessToken');
       if (!token) {
         setLoading(false);
         return;
@@ -93,7 +93,7 @@ export const AuthProvider = ({ children }) => {
             );
             const newToken = data?.data?.accessToken;
             if (newToken) {
-              localStorage.setItem('accessToken', newToken);
+              sessionStorage.setItem('accessToken', newToken);
               const { data: meData } = await api.get('/auth/me');
               const restoredUser = meData.data.user;
               setUser(restoredUser);
@@ -112,11 +112,11 @@ export const AuthProvider = ({ children }) => {
             }
           } catch (refreshErr) {
             if (!isTransientError(refreshErr)) {
-              localStorage.removeItem('accessToken');
+              sessionStorage.removeItem('accessToken');
             }
           }
         } else if (status && status >= 400 && status < 500) {
-          localStorage.removeItem('accessToken');
+          sessionStorage.removeItem('accessToken');
         } else {
           console.warn('Server error restoring session — keeping token:', err.message);
         }
@@ -146,7 +146,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const { data } = await api.post('/auth/login', { email, password });
       const { accessToken, user: loggedUser } = data.data;
-      localStorage.setItem('accessToken', accessToken);
+      sessionStorage.setItem('accessToken', accessToken);
       setUser(loggedUser);
       setPostLoginRole(loggedUser.role);
       toast.success(data.message || 'Login successful!');
@@ -181,7 +181,7 @@ export const AuthProvider = ({ children }) => {
       const { data } = await api.post('/auth/verify-email', { email, otp });
       toast.success(data.message || 'Email verified successfully!');
       // Verification alone should not log the visitor into the public site.
-      if (data.data?.user && localStorage.getItem('accessToken')) {
+      if (data.data?.user && sessionStorage.getItem('accessToken')) {
         setUser(data.data.user);
       }
       return data.data;

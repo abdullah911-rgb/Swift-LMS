@@ -21,7 +21,7 @@ function isTransientError(error) {
 }
 
 function clearSession() {
-  localStorage.removeItem('accessToken');
+  sessionStorage.removeItem('accessToken');
   window.dispatchEvent(new CustomEvent(AUTH_SESSION_EXPIRED));
 }
 
@@ -35,7 +35,7 @@ function ensureHeaders(config) {
 // Request interceptor to attach access token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('accessToken');
+    const token = sessionStorage.getItem('accessToken');
     const headers = ensureHeaders(config);
     if (token) {
       headers.Authorization = `Bearer ${token}`;
@@ -106,7 +106,7 @@ api.interceptors.response.use(
           throw new Error('Invalid refresh response');
         }
 
-        localStorage.setItem('accessToken', accessToken);
+        sessionStorage.setItem('accessToken', accessToken);
         api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
         const headers = ensureHeaders(originalRequest);
         headers.Authorization = `Bearer ${accessToken}`;

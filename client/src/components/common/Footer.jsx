@@ -21,7 +21,7 @@ const Footer = () => {
           <div className="space-y-4">
           <div className="flex items-center gap-3">
             <img
-              src="/Logo.jpeg"
+              src="/Logo1.jpeg"
               alt="Swift LMS"
               className="h-12 w-12 object-contain rounded-lg bg-white/5 p-0.5"
             />
@@ -84,18 +84,18 @@ const Footer = () => {
 
         {/* Contact Info */}
         <div className="space-y-4">
-          <h4 className="text-sm font-heading font-semibold text-white uppercase tracking-wider mb-1">Contact Info</h4>
+          <h4 className="text-sm font-heading font-semibold text-white uppercase tracking-wider mb-5">Contact Info</h4>
           <ul className="space-y-3.5 text-sm">
             <li className="flex items-start gap-3">
-              <IoMailOutline size={18} className="text-accent-400 mt-0.5 shrink-0" />
+              <IoMailOutline size={18} className="text-white mt-0.5 shrink-0" />
               <span>info@swiftinstitute.edu.pk</span>
             </li>
             <li className="flex items-start gap-3">
-              <IoCallOutline size={18} className="text-accent-400 mt-0.5 shrink-0" />
+              <IoCallOutline size={18} className="text-white mt-0.5 shrink-0" />
               <span>+92 300 0000000</span>
             </li>
             <li className="flex items-start gap-3">
-              <IoLocationOutline size={18} className="text-accent-400 mt-0.5 shrink-0" />
+              <IoLocationOutline size={18} className="text-white mt-0.5 shrink-0" />
               <span>Swift Institute, Pakistan</span>
             </li>
           </ul>
@@ -105,12 +105,12 @@ const Footer = () => {
 
       {/* Bottom Footer Section */}
       <div className="border-t border-primary-800/80 bg-primary-950/40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
-          <p>© {new Date().getFullYear()} Swift Institute of Safety & Technology (SMC-PVT) LTD. All rights reserved.</p>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col items-center gap-3 text-xs">
           <div className="flex gap-6">
             <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
             <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
           </div>
+          <p>© {new Date().getFullYear()} Swift Institute of Safety & Technology (SMC-PVT) LTD. All rights reserved.</p>
         </div>
       </div>
 

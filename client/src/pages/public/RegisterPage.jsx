@@ -66,9 +66,9 @@ const RegisterPage = () => {
       <div className="w-full max-w-md space-y-6">
         
         {/* Logo and Intro */}
-        <div className="text-center space-y-2">
-          <Link to={ROUTES.HOME} className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary-600 to-primary-400 text-white font-heading font-bold text-2xl shadow-md shadow-primary-500/20">
-            L
+        <div className="text-center space-y-3">
+          <Link to={ROUTES.HOME} className="inline-block">
+            <img src="/Logo1.jpeg" alt="Swift Logo" className="h-16 w-16 mx-auto object-contain rounded-2xl" />
           </Link>
           <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-slate-900 leading-tight">
             {step === 1 ? 'Create Account' : 'Verify Your Email'}
@@ -88,7 +88,7 @@ const RegisterPage = () => {
               <form onSubmit={handleSubmit(onRegisterSubmit)} className="space-y-4">
                 <Input
                   label="Full Name"
-                  placeholder="John Smith"
+                  placeholder="username"
                   required={true}
                   error={errors.name?.message}
                   {...register('name', { required: 'Name is required' })}
@@ -97,7 +97,7 @@ const RegisterPage = () => {
                 <Input
                   label="Email Address"
                   type="email"
-                  placeholder="john@company.com"
+                  placeholder="yourmail@email.com"
                   required={true}
                   error={errors.email?.message}
                   {...register('email', { 
@@ -138,7 +138,7 @@ const RegisterPage = () => {
                 <Button
                   type="submit"
                   variant="primary"
-                  className="w-full pt-1"
+                  className="w-full"
                   isLoading={isSubmitting}
                 >
                   Create Account

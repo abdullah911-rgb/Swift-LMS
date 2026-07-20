@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROUTES } from '../../constants';
@@ -16,6 +16,19 @@ const Navbar = () => {
   const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 20) {
+        setScrolled(true);
+      } else {
+        setScrolled(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen);
   const toggleProfileDropdown = () => setProfileDropdownOpen(!profileDropdownOpen);
@@ -46,9 +59,9 @@ const Navbar = () => {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full glass shadow-sm transition-all duration-300">
+    <header className={`sticky top-0 z-40 w-full bg-white transition-all duration-300 ${scrolled ? 'shadow-md py-1' : 'shadow-sm py-2'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20">
+        <div className={`flex items-center justify-between transition-all duration-300 ${scrolled ? 'h-12 sm:h-14' : 'h-16 sm:h-20'}`}>
           
           {/* Logo */}
           <Link to={ROUTES.HOME} className="flex items-center">

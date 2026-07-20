@@ -27,7 +27,7 @@ const StudentLayout = () => {
       {/* Sidebar */}
       <aside className="w-64 bg-primary-950 text-white flex flex-col">
         <div className="p-6 border-b border-primary-900 flex items-center gap-3">
-          <img src="/Logo.jpeg" alt="SWIFT Logo" className="h-8 w-8 object-contain rounded bg-white p-0.5" />
+          <img src="/Logo1.jpeg" alt="SWIFT Logo" className="h-8 w-8 object-contain rounded bg-white p-0.5" />
           <Link to={ROUTES.HOME} className="font-heading font-bold text-lg tracking-tight text-white">
             SWIFT<span className="text-accent-400">Student</span>
           </Link>

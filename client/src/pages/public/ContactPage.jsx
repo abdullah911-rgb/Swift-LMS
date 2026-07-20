@@ -84,7 +84,7 @@ const ContactPage = () => {
                   <Input
                     label="Full Name"
                     required={true}
-                    placeholder="Jane Doe"
+                    placeholder="username"
                     error={errors.name?.message}
                     {...register('name', { required: 'Name is required' })}
                   />
@@ -92,7 +92,7 @@ const ContactPage = () => {
                     label="Email Address"
                     required={true}
                     type="email"
-                    placeholder="jane@example.com"
+                    placeholder="yourmail@email.com"
                     error={errors.email?.message}
                     {...register('email', { 
                       required: 'Email is required',

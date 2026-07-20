@@ -221,7 +221,7 @@ export default function ZoomClassroom() {
   useEffect(() => {
     const onUnload = () => {
       if (!attendanceRecorded.current) return;
-      const token = localStorage.getItem('accessToken');
+      const token = sessionStorage.getItem('accessToken');
       fetch(`${API_URL}/zoom/${meetingId}/attendance/leave`, {
         method: 'POST',
         headers: token ? { Authorization: `Bearer ${token}` } : {},
