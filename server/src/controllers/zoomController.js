@@ -135,15 +135,6 @@ const zoomController = {
       if (course.instructorId !== req.user.id) {
         return sendError(res, 'Not authorized to schedule classes for this course.', 403);
       }
-
-      // Check Zoom connection status
-      const instructor = await prisma.user.findUnique({
-        where: { id: req.user.id },
-        select: { zoomConnected: true },
-      });
-      if (!instructor || !instructor.zoomConnected) {
-        return sendError(res, 'Please connect your Zoom account in settings before hosting live classes.', 400);
-      }
     }
 
     const meetingTopic = topic || `${course.title} - Live Class`;
