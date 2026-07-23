@@ -10,23 +10,32 @@ const config = require('../config/env');
  * @param {string} [options.text]
  */
 const sendEmail = async ({ to, subject, html, text }) => {
-  // In development, log emails instead of sending if credentials not configured
-  if (config.env === 'development' && !config.email.user) {
-    console.log('\n📧 [DEV] Email would be sent:');
+  // In development, log emails instead of sending if credentials are not configured or still generic
+  const isUnconfigured = !config.email.user || config.email.user === 'your_email@gmail.com';
+  if (config.env === 'development' && isUnconfigured) {
+    console.log('\n📧 [DEV] Email Logged (SMTP not configured):');
     console.log(`   To: ${to}`);
     console.log(`   Subject: ${subject}`);
     console.log(`   Content: ${text || 'HTML email'}\n`);
     return;
   }
 
-  const transporter = getTransporter();
-  await transporter.sendMail({
-    from: config.email.from,
-    to,
-    subject,
-    html,
-    text,
-  });
+  try {
+    const transporter = getTransporter();
+    await transporter.sendMail({
+      from: config.email.from,
+      to,
+      subject,
+      html,
+      text,
+    });
+  } catch (err) {
+    console.error(`\n❌ [SMTP Error] Failed to send email to ${to}:`, err.message);
+    console.log('📝 [Fallback Log] Email Details:');
+    console.log(`   To: ${to}`);
+    console.log(`   Subject: ${subject}`);
+    console.log(`   Content: ${text || 'HTML email'}\n`);
+  }
 };
 
 /**
