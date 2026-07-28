@@ -207,3 +207,16 @@ export const assignmentService = {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
 };
+
+export const announcementService = {
+  // Instructor fetches all announcements for their course
+  getCourseAnnouncements: (courseId) => api.get(`/courses/${courseId}/announcements`),
+
+  // Instructor posts a new announcement
+  createAnnouncement: (courseId, data) => api.post(`/courses/${courseId}/announcements`, data),
+
+  // Instructor deletes an announcement
+  deleteAnnouncement: (courseId, announcementId) =>
+    api.delete(`/courses/${courseId}/announcements/${announcementId}`),
+};
+

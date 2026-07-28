@@ -360,6 +360,83 @@ const courseController = {
     });
     sendSuccess(res, 'Instructor courses fetched.', { courses });
   }),
+
+  // ── Announcements ─────────────────────────────────────────────────────────
+
+  // GET /api/courses/:id/announcements — Instructor views all announcements for their course
+  getCourseAnnouncements: asyncHandler(async (req, res) => {
+    const { id: courseId } = req.params;
+
+    const course = await prisma.course.findFirst({
+      where: { id: courseId, instructorId: req.user.id },
+    });
+    if (!course) return sendError(res, 'Course not found or not authorized.', 404);
+
+    const announcements = await prisma.announcement.findMany({
+      where: { courseId },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, title: true, body: true, isPublished: true, createdAt: true },
+    });
+
+    sendSuccess(res, 'Announcements fetched.', { announcements });
+  }),
+
+  // POST /api/courses/:id/announcements — Instructor creates a course announcement
+  createCourseAnnouncement: asyncHandler(async (req, res) => {
+    const { id: courseId } = req.params;
+    const { title, body } = req.body;
+
+    if (!title || !body) return sendError(res, 'Title and body are required.', 400);
+
+    const course = await prisma.course.findFirst({
+      where: { id: courseId, instructorId: req.user.id },
+    });
+    if (!course) return sendError(res, 'Course not found or not authorized.', 404);
+
+    const announcement = await prisma.announcement.create({
+      data: {
+        title,
+        body,
+        authorId: req.user.id,
+        courseId,
+        isPublished: true,
+      },
+    });
+
+    // Notify all enrolled students
+    const enrollments = await prisma.enrollment.findMany({
+      where: { courseId, status: 'ACTIVE' },
+      select: { studentId: true },
+    });
+
+    if (enrollments.length > 0) {
+      await prisma.notification.createMany({
+        data: enrollments.map((e) => ({
+          userId: e.studentId,
+          title: `📢 New Announcement: ${title}`,
+          message: `Your instructor posted a new announcement in "${course.title}". Check the Announcements tab.`,
+          type: 'INFO',
+          link: `/student/course/${courseId}`,
+        })),
+      });
+    }
+
+    sendSuccess(res, 'Announcement published and students notified.', { announcement }, 201);
+  }),
+
+  // DELETE /api/courses/:courseId/announcements/:announcementId
+  deleteCourseAnnouncement: asyncHandler(async (req, res) => {
+    const { courseId, announcementId } = req.params;
+
+    const announcement = await prisma.announcement.findFirst({
+      where: { id: announcementId, courseId, authorId: req.user.id },
+    });
+    if (!announcement) return sendError(res, 'Announcement not found or not authorized.', 404);
+
+    await prisma.announcement.delete({ where: { id: announcementId } });
+    sendSuccess(res, 'Announcement deleted.');
+  }),
 };
 
 module.exports = courseController;
+

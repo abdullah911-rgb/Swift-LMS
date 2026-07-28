@@ -27,4 +27,9 @@ router.delete('/:id', requireAuth, requireRole('ADMIN'), courseController.delete
 router.get('/', optionalAuth, courseController.getAll);
 router.get('/:slug', optionalAuth, courseController.getOne);
 
+// Instructor — Course Announcements
+router.get('/:id/announcements', requireAuth, requireRole('INSTRUCTOR', 'ADMIN'), courseController.getCourseAnnouncements);
+router.post('/:id/announcements', requireAuth, requireRole('INSTRUCTOR', 'ADMIN'), courseController.createCourseAnnouncement);
+router.delete('/:courseId/announcements/:announcementId', requireAuth, requireRole('INSTRUCTOR', 'ADMIN'), courseController.deleteCourseAnnouncement);
+
 module.exports = router;

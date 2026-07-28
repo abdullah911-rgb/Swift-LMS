@@ -324,17 +324,24 @@ const InstructorProfile = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="text-slate-500 text-xs leading-relaxed">
-                  Connect your Zoom account so that your live classrooms are hosted on your own account.
+                <div className="flex flex-col items-center text-center py-3 space-y-3">
+                  <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center">
+                    <IoVideocamOutline size={28} className="text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-700">Zoom OAuth Not Configured</p>
+                    <p className="text-xs text-slate-400 mt-1 leading-relaxed max-w-xs mx-auto">
+                      Per-instructor Zoom accounts are managed by your administrator.
+                    </p>
+                  </div>
                 </div>
-                <Button
-                  onClick={handleConnectZoom}
-                  variant="primary"
-                  size="md"
-                  className="w-full bg-gradient-to-r from-blue-600 to-primary-600 text-white"
-                >
-                  Connect Zoom Account
-                </Button>
+                <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl space-y-2">
+                  <p className="text-xs font-bold text-slate-600">Live Classes Still Work ✓</p>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    All live classes are hosted on the platform's shared Zoom account. 
+                    You can schedule and start live classes normally from the course edit page.
+                  </p>
+                </div>
               </div>
             )}
           </Card>

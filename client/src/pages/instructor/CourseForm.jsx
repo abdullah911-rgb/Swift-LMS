@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
-import { instructorService, moduleService, lessonService, zoomService, resourceService, assignmentService } from '../../services/portalService';
+import { instructorService, moduleService, lessonService, zoomService, resourceService, assignmentService, announcementService } from '../../services/portalService';
 import api from '../../services/api';
 import { ROUTES } from '../../constants';
 import { 
@@ -26,7 +26,8 @@ import {
   IoCloseOutline,
   IoPeopleOutline,
   IoStarOutline,
-  IoCheckmarkDoneOutline
+  IoCheckmarkDoneOutline,
+  IoMegaphoneOutline
 } from 'react-icons/io5';
 import toast from 'react-hot-toast';
 
@@ -92,6 +93,14 @@ const CourseForm = () => {
   const [feedbackInput, setFeedbackInput] = useState('');
   const [savingReview, setSavingReview] = useState(false);
 
+  // Announcements state
+  const [announcements, setAnnouncements] = useState([]);
+  const [loadingAnnouncements, setLoadingAnnouncements] = useState(false);
+  const [annTitle, setAnnTitle] = useState('');
+  const [annBody, setAnnBody] = useState('');
+  const [savingAnn, setSavingAnn] = useState(false);
+  const [showAnnForm, setShowAnnForm] = useState(false);
+
   const fetchMeetings = async (cId) => {
     setLoadingMeetings(true);
     try {
@@ -134,12 +143,29 @@ const CourseForm = () => {
     }
   };
 
+  const fetchAnnouncements = async (cId) => {
+    setLoadingAnnouncements(true);
+    try {
+      const res = await announcementService.getCourseAnnouncements(cId);
+      if (res.data?.data?.announcements) {
+        setAnnouncements(res.data.data.announcements);
+      }
+    } catch (err) {
+      console.error('Error fetching announcements:', err);
+    } finally {
+      setLoadingAnnouncements(false);
+    }
+  };
+
   useEffect(() => {
     if (isEditMode && activeTab === 'ZOOM') {
       fetchMeetings(courseId);
     }
     if (isEditMode && activeTab === 'ASSIGNMENTS') {
       fetchAssignments(courseId);
+    }
+    if (isEditMode && activeTab === 'ANNOUNCEMENTS') {
+      fetchAnnouncements(courseId);
     }
   }, [activeTab, courseId, isEditMode]);
 
@@ -600,6 +626,16 @@ const CourseForm = () => {
             }`}
           >
             <IoClipboardOutline className="inline mr-1" /> Assignments ({assignments.length})
+          </button>
+          <button
+            onClick={() => { setActiveTab('ANNOUNCEMENTS'); fetchAnnouncements(courseId); }}
+            className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
+              activeTab === 'ANNOUNCEMENTS'
+                ? 'border-primary-600 text-primary-700 font-bold'
+                : 'border-transparent text-slate-400 hover:text-slate-600'
+            }`}
+          >
+            <IoMegaphoneOutline className="inline mr-1" /> Announcements ({announcements.length})
           </button>
         </div>
       )}
@@ -1582,6 +1618,163 @@ const CourseForm = () => {
               </div>
             </Card>
           </div>
+        </div>
+      )}
+      {/* Tab 6: ANNOUNCEMENTS */}
+      {isEditMode && activeTab === 'ANNOUNCEMENTS' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          <div className="lg:col-span-2 space-y-6">
+            <Card hover={false} className="bg-white border border-slate-100 p-6 rounded-2xl space-y-4">
+              <div className="flex justify-between items-center pb-2 border-b border-slate-50">
+                <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                  <IoMegaphoneOutline size={18} className="text-primary-700" /> Course Announcements
+                </h3>
+                <button
+                  onClick={() => setShowAnnForm((p) => !p)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer"
+                >
+                  <IoAddOutline size={14} />
+                  {showAnnForm ? 'Cancel' : 'New Announcement'}
+                </button>
+              </div>
+
+              {/* Create Announcement Form */}
+              {showAnnForm && (
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!annTitle || !annBody) return toast.error('Title and body are required.');
+                    setSavingAnn(true);
+                    try {
+                      const res = await announcementService.createAnnouncement(courseId, {
+                        title: annTitle,
+                        body: annBody,
+                      });
+                      if (res.data?.success) {
+                        toast.success('Announcement posted! Students have been notified.');
+                        setAnnTitle('');
+                        setAnnBody('');
+                        setShowAnnForm(false);
+                        fetchAnnouncements(courseId);
+                      }
+                    } catch (err) {
+                      toast.error(err.response?.data?.message || 'Failed to post announcement.');
+                    } finally {
+                      setSavingAnn(false);
+                    }
+                  }}
+                  className="space-y-3 bg-primary-50/40 border border-primary-100 p-5 rounded-2xl"
+                >
+                  <h4 className="text-xs font-bold text-primary-700 uppercase tracking-wider">New Announcement</h4>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Title *</label>
+                    <input
+                      type="text"
+                      required
+                      value={annTitle}
+                      onChange={(e) => setAnnTitle(e.target.value)}
+                      placeholder="e.g. Class rescheduled to Friday"
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-100 focus:outline-none focus:border-primary-600 text-sm bg-white"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Message *</label>
+                    <textarea
+                      required
+                      value={annBody}
+                      onChange={(e) => setAnnBody(e.target.value)}
+                      rows={4}
+                      placeholder="Write your announcement message here..."
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-100 focus:outline-none focus:border-primary-600 text-sm resize-none bg-white"
+                    />
+                  </div>
+
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      type="submit"
+                      disabled={savingAnn}
+                      className="flex-1 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold rounded-xl transition-all disabled:opacity-50 cursor-pointer"
+                    >
+                      {savingAnn ? 'Posting...' : '📢 Post Announcement'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowAnnForm(false)}
+                      className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* Announcement List */}
+              {loadingAnnouncements ? (
+                <div className="text-center py-8 text-slate-400 text-sm animate-pulse">Loading announcements...</div>
+              ) : announcements.length === 0 ? (
+                <div className="text-center py-12 space-y-2">
+                  <IoMegaphoneOutline size={40} className="mx-auto text-slate-300" />
+                  <p className="text-sm font-medium text-slate-400">No announcements yet</p>
+                  <p className="text-xs text-slate-300">Click "New Announcement" to post a message to all enrolled students.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {announcements.map((ann) => (
+                    <div key={ann.id} className="p-4 border border-slate-100 rounded-2xl bg-slate-50/30 hover:border-primary-100 transition-colors space-y-2">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-bold text-slate-800">{ann.title}</p>
+                          <p className="text-[10px] text-slate-400 mt-0.5">{new Date(ann.createdAt).toLocaleString()}</p>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            if (!window.confirm('Delete this announcement?')) return;
+                            try {
+                              await announcementService.deleteAnnouncement(courseId, ann.id);
+                              toast.success('Announcement deleted.');
+                              fetchAnnouncements(courseId);
+                            } catch (err) {
+                              toast.error('Failed to delete.');
+                            }
+                          }}
+                          className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all cursor-pointer shrink-0"
+                        >
+                          <IoTrashOutline size={14} />
+                        </button>
+                      </div>
+                      <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap">{ann.body}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          </div>
+
+          {/* Right sidebar tip */}
+          <Card hover={false} className="bg-white border border-slate-100 p-6 rounded-2xl space-y-4">
+            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest pb-2 border-b border-slate-50">About Announcements</h3>
+            <div className="space-y-3 text-xs text-slate-500 leading-relaxed">
+              <div className="flex gap-2.5">
+                <span className="w-5 h-5 rounded-full bg-primary-100 text-primary-700 font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">1</span>
+                <p>Click <strong>New Announcement</strong> to compose a message for all enrolled students.</p>
+              </div>
+              <div className="flex gap-2.5">
+                <span className="w-5 h-5 rounded-full bg-primary-100 text-primary-700 font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">2</span>
+                <p>Students will receive an <strong>instant notification</strong> in their portal.</p>
+              </div>
+              <div className="flex gap-2.5">
+                <span className="w-5 h-5 rounded-full bg-primary-100 text-primary-700 font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">3</span>
+                <p>Announcements appear in the <strong>Announcements tab</strong> inside the student's course view.</p>
+              </div>
+            </div>
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-xl">
+              <p className="text-[10px] text-blue-700 font-semibold">
+                💡 Use announcements for schedule changes, reminders, or important notes.
+              </p>
+            </div>
+          </Card>
         </div>
       )}
     </div>
