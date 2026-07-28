@@ -23,6 +23,7 @@ export const ROUTES = {
   REGISTER: '/register',
   FORGOT_PASSWORD: '/forgot-password',
   RESET_PASSWORD: '/reset-password',
+  FINANCE_SOFTWARE: '/finance-software',
   
   // Student Portal
   STUDENT_DASHBOARD: '/student/dashboard',
@@ -48,6 +49,7 @@ export const ROUTES = {
   ADMIN_ENROLLMENTS: '/admin/enrollments',
   ADMIN_INSTRUCTORS: '/admin/instructors',
   ADMIN_ANNOUNCEMENTS: '/admin/announcements',
+  ADMIN_ATTENDANCE: '/admin/attendance',
 };
 
 export const ROLES = {

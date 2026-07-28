@@ -17,6 +17,7 @@ import {
   IoCloseOutline,
   IoCardOutline,
   IoCashOutline,
+  IoCalendarOutline,
 } from 'react-icons/io5';
 import AnnouncementBanner from '../common/AnnouncementBanner';
 
@@ -58,6 +59,7 @@ const AdminLayout = () => {
     { to: '/admin/users',            icon: <IoPeopleOutline size={18} />,           label: 'Users' },
     { to: '/admin/payments',         icon: <IoCardOutline size={18} />,             label: 'Payments' },
     { to: '/admin/revenue',          icon: <IoCashOutline size={18} />,             label: 'Revenue' },
+    { to: '/admin/attendance',       icon: <IoCalendarOutline size={18} />,         label: 'Attendance' },
     { to: '/admin/announcements',    icon: <IoMegaphoneOutline size={18} />,        label: 'Announcements' },
     { to: '/admin/enrollments',      icon: <IoBarChartOutline size={18} />,         label: 'Enrollments' },
   ];

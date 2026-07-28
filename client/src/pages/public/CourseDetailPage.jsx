@@ -12,9 +12,7 @@ import { enrollmentService, resourceService } from '../../services/portalService
 import ReviewsSection from '../../components/common/ReviewsSection';
 import toast from 'react-hot-toast';
 import { 
-  IoCheckmarkCircleSharp, 
   IoChevronDownOutline, 
-  IoBookOutline, 
   IoTimeOutline, 
   IoGlobeOutline,
   IoRibbonOutline,
@@ -139,12 +137,8 @@ const CourseDetailPage = () => {
             {/* Quick Meta */}
             <div className="flex flex-wrap gap-5 text-xs font-semibold text-slate-500 border-y border-slate-100 py-4">
               <span className="flex items-center gap-1.5">
-                <IoBookOutline size={16} />
-                <span>{course.totalLessons} Lessons</span>
-              </span>
-              <span className="flex items-center gap-1.5">
                 <IoTimeOutline size={16} />
-                <span>{Math.round(course.duration / 60) || 15} Hours</span>
+                <span>{course.duration ? `${Math.round(course.duration / 60)} Hours` : `${course.durationInMonths || 2} Months`}</span>
               </span>
               <span className="flex items-center gap-1.5">
                 <IoGlobeOutline size={16} />
@@ -155,21 +149,6 @@ const CourseDetailPage = () => {
                 <span>{course.certificate ? 'Verifiable Certificate' : 'No Certificate'}</span>
               </span>
             </div>
-
-            {/* What you will learn */}
-            {course.learningOutcomes?.length > 0 && (
-              <Card hover={false} className="border border-slate-100 p-6 bg-white space-y-4">
-                <h3 className="text-base font-heading font-bold text-slate-800">Learning Outcomes</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {course.learningOutcomes.map((outcome, idx) => (
-                    <div key={idx} className="flex gap-2.5 items-start">
-                      <IoCheckmarkCircleSharp className="text-primary-500 mt-0.5 flex-shrink-0" size={16} />
-                      <span className="text-xs sm:text-sm text-slate-500">{outcome}</span>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            )}
 
             {/* Curriculum Modules */}
             <div className="space-y-4">

@@ -63,6 +63,9 @@ const Footer = () => {
             <li>
               <Link to={ROUTES.FAQ} className="hover:text-accent-400 transition-colors">Frequently Asked Questions</Link>
             </li>
+            <li>
+              <Link to={ROUTES.FINANCE_SOFTWARE} className="hover:text-accent-400 transition-colors">Finance Software</Link>
+            </li>
           </ul>
         </div>
 
@@ -110,7 +113,7 @@ const Footer = () => {
             <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
             <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
           </div>
-          <p>© {new Date().getFullYear()} Swift Institute of Safety & Technology (SMC-PVT) LTD. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Swift Institute of Safety & Technology – Building Safer Workplaces Through Knowledge & Training</p>
         </div>
       </div>
 

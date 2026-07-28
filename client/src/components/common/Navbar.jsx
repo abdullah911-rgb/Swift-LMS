@@ -41,6 +41,7 @@ const Navbar = () => {
   const navLinks = [
     { label: 'Home', path: ROUTES.HOME },
     { label: 'Courses', path: ROUTES.COURSES },
+    { label: 'Finance Software', path: ROUTES.FINANCE_SOFTWARE },
     { label: 'About Us', path: ROUTES.ABOUT },
     { label: 'FAQ', path: ROUTES.FAQ },
     { label: 'Contact', path: ROUTES.CONTACT },

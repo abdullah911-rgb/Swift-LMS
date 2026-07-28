@@ -5,8 +5,34 @@ const authService = require('../services/authService');
 const authController = {
   // POST /api/auth/register
   register: asyncHandler(async (req, res) => {
-    const { name, email, password, role } = req.body;
-    const user = await authService.register({ name, email, password, role });
+    const {
+      name,
+      fatherName,
+      cnic,
+      email,
+      password,
+      phone,
+      dateOfBirth,
+      address,
+      gender,
+      qualification,
+    } = req.body;
+
+    const avatar = req.file ? `/uploads/${req.file.filename}` : null;
+
+    const user = await authService.register({
+      name,
+      fatherName,
+      cnic,
+      email,
+      password,
+      phone,
+      dateOfBirth,
+      address,
+      gender,
+      qualification,
+      avatar,
+    });
     sendSuccess(res, 'Registration successful. Please check your email for the verification OTP.', { user }, 201);
   }),
 

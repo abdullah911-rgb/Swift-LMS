@@ -1,11 +1,8 @@
 import { getImageUrl } from '../../constants/index';
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import Card from '../../components/ui/Card';
-import Button from '../../components/ui/Button';
 import { instructorService } from '../../services/portalService';
-import { ROUTES } from '../../constants';
-import { IoAddOutline, IoCreateOutline, IoTrashOutline, IoPeopleOutline, IoLayersOutline } from 'react-icons/io5';
+import { IoBookOutline, IoPeopleOutline, IoLayersOutline, IoInformationCircleOutline } from 'react-icons/io5';
 import toast from 'react-hot-toast';
 
 const InstructorCourses = () => {
@@ -18,36 +15,19 @@ const InstructorCourses = () => {
       if (res.data?.data?.courses) {
         setCourses(res.data.data.courses);
       }
-    } catch (err) {
-      console.error('Error fetching instructor courses:', err);
+    } catch {
       toast.error('Failed to load courses.');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchCourses();
-  }, []);
-
-  const handleDelete = async (courseId) => {
-    if (!window.confirm('Are you sure you want to delete/archive this course?')) return;
-    try {
-      const res = await instructorService.deleteCourse(courseId);
-      if (res.data?.success) {
-        toast.success('Course deleted/archived successfully.');
-        fetchCourses(); // Reload
-      }
-    } catch (err) {
-      console.error('Error deleting course:', err);
-      toast.error('Failed to delete course.');
-    }
-  };
+  useEffect(() => { fetchCourses(); }, []);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary-600 border-t-transparent"></div>
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary-600 border-t-transparent" />
       </div>
     );
   }
@@ -56,23 +36,25 @@ const InstructorCourses = () => {
     <div className="space-y-6 font-sans">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-heading font-bold text-primary-900">Manage Courses</h1>
-          <p className="text-sm text-slate-500">Create new course curriculums, organize modules, and update materials.</p>
+          <h1 className="text-2xl font-heading font-bold text-primary-900">My Assigned Courses</h1>
+          <p className="text-sm text-slate-500">Courses assigned to you by the administrator.</p>
         </div>
-        <Link to={ROUTES.INSTRUCTOR_COURSE_NEW}>
-          <Button variant="primary" size="md" className="flex items-center gap-1.5">
-            <IoAddOutline size={18} />
-            <span>Create Course</span>
-          </Button>
-        </Link>
+      </div>
+
+      {/* Info notice */}
+      <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-700">
+        <IoInformationCircleOutline size={20} className="shrink-0 mt-0.5" />
+        <p>
+          Courses are assigned to you by the admin. You can manage class sessions, view enrolled students, and track attendance for your assigned courses.
+          Contact the administrator if you need a course added or updated.
+        </p>
       </div>
 
       {courses.length === 0 ? (
         <Card hover={false} className="text-center py-16 bg-white border border-slate-100 rounded-2xl p-8 shadow-sm">
-          <p className="text-slate-400 mb-4">You have not created any courses yet.</p>
-          <Link to={ROUTES.INSTRUCTOR_COURSE_NEW}>
-            <Button variant="primary" size="sm">Create Your First Course</Button>
-          </Link>
+          <IoBookOutline size={40} className="mx-auto mb-3 text-slate-300" />
+          <p className="text-slate-500 font-semibold mb-1">No courses assigned yet.</p>
+          <p className="text-xs text-slate-400">Please contact the administrator to get courses assigned to you.</p>
         </Card>
       ) : (
         <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm">
@@ -85,13 +67,11 @@ const InstructorCourses = () => {
                   <th className="px-6 py-4">Syllabus Structure</th>
                   <th className="px-6 py-4">Price</th>
                   <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {courses.map((course) => (
                   <tr key={course.id} className="hover:bg-slate-50/50 transition-colors">
-                    {/* Thumbnail & Title */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         {course.thumbnail ? (
@@ -107,20 +87,20 @@ const InstructorCourses = () => {
                         )}
                         <div className="min-w-0">
                           <p className="font-bold text-slate-800 line-clamp-1">{course.title}</p>
-                          <span className="text-[10px] text-slate-400 font-medium">Created: {new Date(course.createdAt).toLocaleDateString()}</span>
+                          <span className="text-[10px] text-slate-400 font-medium">
+                            Assigned: {new Date(course.createdAt).toLocaleDateString()}
+                          </span>
                         </div>
                       </div>
                     </td>
 
-                    {/* Category / Level */}
                     <td className="px-6 py-4">
                       <div className="space-y-0.5">
                         <p className="font-semibold text-slate-700">{course.category?.name}</p>
-                        <p className="text-[10px] text-slate-400 capitalize">{course.level.toLowerCase()}</p>
+                        <p className="text-[10px] text-slate-400 capitalize">{course.level?.toLowerCase()}</p>
                       </div>
                     </td>
 
-                    {/* Structure counts */}
                     <td className="px-6 py-4 text-slate-600">
                       <div className="flex items-center gap-4 text-xs font-semibold">
                         <span className="flex items-center gap-1">
@@ -134,12 +114,10 @@ const InstructorCourses = () => {
                       </div>
                     </td>
 
-                    {/* Price */}
                     <td className="px-6 py-4 font-bold text-slate-800">
-                      {course.isFree ? 'Free' : `$${course.price}`}
+                      {course.isFree ? 'Free' : `PKR ${course.price}`}
                     </td>
 
-                    {/* Status */}
                     <td className="px-6 py-4">
                       <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
                         course.status === 'PUBLISHED'
@@ -150,26 +128,6 @@ const InstructorCourses = () => {
                       }`}>
                         {course.status}
                       </span>
-                    </td>
-
-                    {/* Actions */}
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Link to={`/instructor/courses/${course.id}/edit`}>
-                          <button className="p-2 text-slate-600 hover:text-primary-600 hover:bg-slate-100 rounded-xl transition-all" title="Edit Course">
-                            <IoCreateOutline size={18} />
-                          </button>
-                        </Link>
-                        {course.status !== 'ARCHIVED' && (
-                          <button
-                            onClick={() => handleDelete(course.id)}
-                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all cursor-pointer"
-                            title="Delete/Archive Course"
-                          >
-                            <IoTrashOutline size={18} />
-                          </button>
-                        )}
-                      </div>
                     </td>
                   </tr>
                 ))}

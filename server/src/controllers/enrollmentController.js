@@ -172,21 +172,19 @@ const enrollmentController = {
       },
     });
 
-    // Issue certificate if course completed
+    // Issue certificate if course completed (and enrollment still active)
     if (progressPercent === 100) {
       const course = await prisma.course.findUnique({ where: { id: courseId } });
       if (course?.certificate) {
-        await prisma.certificate.upsert({
-          where: { studentId_courseId: { studentId, courseId } },
-          create: { studentId, courseId },
-          update: {},
-        });
+        const { issueCertificate } = require('../utils/certificateId');
+        await issueCertificate(studentId, courseId);
         await prisma.notification.create({
           data: {
             userId: studentId,
             title: '🎓 Certificate Issued!',
             message: `Congratulations! You've completed "${course.title}" and earned your certificate.`,
             type: 'SUCCESS',
+            link: '/student/certificates',
           },
         });
       }

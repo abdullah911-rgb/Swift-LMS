@@ -15,10 +15,12 @@ router.patch('/users/:id/toggle-active', isAdmin, adminController.toggleUserActi
 router.patch('/users/:id/role', isAdmin, adminController.changeUserRole);
 router.delete('/users/:id', isAdmin, adminController.deleteUser);
 
-// Instructor approvals & details
+// Instructor management
 router.get('/instructors/pending', isAdmin, adminController.getPendingInstructors);
+router.post('/instructors', isAdmin, adminController.createInstructor);
 router.patch('/instructors/:id/approve', isAdmin, adminController.approveInstructor);
 router.patch('/instructors/:id/reject', isAdmin, adminController.rejectInstructor);
+router.patch('/instructors/:id/assign-course', isAdmin, adminController.assignCourse);
 router.get('/instructors', isAdmin, adminController.getInstructors);
 
 // Course management
@@ -26,6 +28,10 @@ router.get('/courses', isAdmin, adminController.getAllCourses);
 
 // Enrollment reports
 router.get('/enrollments', isAdmin, adminController.getRecentEnrollments);
+
+// Attendance management
+router.get('/attendance/:courseId', isAdmin, adminController.getCourseAttendance);
+router.patch('/enrollments/:studentId/:courseId/reactivate', isAdmin, adminController.reactivateEnrollment);
 
 // Announcements
 router.post('/announcements', isAdmin, adminController.createAnnouncement);

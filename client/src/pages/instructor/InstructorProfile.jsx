@@ -339,53 +339,47 @@ const InstructorProfile = () => {
             )}
           </Card>
 
-          {/* Security Credentials */}
+          {/* Security Credentials — Admin Managed */}
           <Card hover={false} className="bg-white border border-slate-100 p-6 rounded-2xl">
             <div className="flex items-center gap-2 border-b border-slate-50 pb-3 mb-6">
               <IoKeyOutline size={18} className="text-accent-600" />
               <h3 className="text-base font-bold text-slate-800">Security Credentials</h3>
             </div>
 
-            <form onSubmit={handlePasswordSubmit} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Current Password</label>
-                <input
-                  type="password"
-                  required
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-100 focus:outline-none focus:border-primary-600 text-sm"
-                />
+            <div className="space-y-4">
+              {/* Lock Icon + Info */}
+              <div className="flex flex-col items-center text-center py-4 space-y-3">
+                <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center">
+                  <IoKeyOutline size={28} className="text-slate-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-slate-700">Password Managed by Admin</p>
+                  <p className="text-xs text-slate-400 mt-1 leading-relaxed max-w-xs mx-auto">
+                    Instructor account passwords are set and managed by the system administrator. 
+                    You cannot change your own password.
+                  </p>
+                </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">New Password</label>
-                <input
-                  type="password"
-                  required
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-100 focus:outline-none focus:border-primary-600 text-sm"
-                />
+              {/* Info Box */}
+              <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl space-y-2">
+                <p className="text-xs font-bold text-amber-800">Need to update your password?</p>
+                <p className="text-xs text-amber-700 leading-relaxed">
+                  Please contact your administrator and request a password reset. The admin will update 
+                  your credentials and provide you with the new login information.
+                </p>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Confirm New Password</label>
-                <input
-                  type="password"
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-100 focus:outline-none focus:border-primary-600 text-sm"
-                />
+              {/* Current email display */}
+              <div className="p-3.5 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-3">
+                <IoMailOutline size={16} className="text-slate-400 shrink-0" />
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Login Email</p>
+                  <p className="text-sm font-semibold text-slate-700">{user?.email || '—'}</p>
+                </div>
+                <span className="ml-auto text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-500 uppercase">Read-Only</span>
               </div>
-
-              <div className="pt-2 border-t border-slate-50">
-                <Button type="submit" variant="primary" size="md" className="w-full" disabled={savingPassword}>
-                  {savingPassword ? 'Changing Password...' : 'Change Password'}
-                </Button>
-              </div>
-            </form>
+            </div>
           </Card>
         </div>
       </div>

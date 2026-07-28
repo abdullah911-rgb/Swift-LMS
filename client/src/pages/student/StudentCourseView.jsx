@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
-import { enrollmentService } from '../../services/portalService';
+import { enrollmentService, assignmentService } from '../../services/portalService';
 import { ROUTES } from '../../constants';
 import { 
   IoChevronBackOutline, 
@@ -14,7 +14,13 @@ import {
   IoCheckmarkCircleSharp, 
   IoCheckmarkCircleOutline, 
   IoDownloadOutline,
-  IoDesktopOutline
+  IoDesktopOutline,
+  IoClipboardOutline,
+  IoCloudUploadOutline,
+  IoDocumentOutline,
+  IoCheckmarkDoneOutline,
+  IoTimeOutline,
+  IoAlertCircleOutline
 } from 'react-icons/io5';
 import toast from 'react-hot-toast';
 
@@ -23,8 +29,16 @@ const StudentCourseView = () => {
   const [enrollment, setEnrollment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentLesson, setCurrentLesson] = useState(null);
-  const [activeTab, setActiveTab] = useState('CONTENT'); // 'CONTENT', 'MEETINGS', 'ANNOUNCEMENTS'
+  const [activeTab, setActiveTab] = useState('CONTENT'); // 'CONTENT', 'MEETINGS', 'ANNOUNCEMENTS', 'ASSIGNMENTS'
   const [completedLessonIds, setCompletedLessonIds] = useState(new Set());
+
+  // Assignments state
+  const [assignments, setAssignments] = useState([]);
+  const [loadingAssignments, setLoadingAssignments] = useState(false);
+  const [submittingAssignId, setSubmittingAssignId] = useState(null);
+  const [submitFile, setSubmitFile] = useState(null);
+  const [submitFileName, setSubmitFileName] = useState('');
+  const [submitNote, setSubmitNote] = useState('');
 
   const fetchCourseAccess = async (autoSelect = false) => {
     try {
@@ -72,6 +86,26 @@ const StudentCourseView = () => {
   useEffect(() => {
     fetchCourseAccess(true);
   }, [courseId]);
+
+  const fetchAssignments = async () => {
+    setLoadingAssignments(true);
+    try {
+      const res = await assignmentService.getStudentAssignments(courseId);
+      if (res.data?.data?.assignments) {
+        setAssignments(res.data.data.assignments);
+      }
+    } catch (err) {
+      console.error('Error fetching assignments:', err);
+    } finally {
+      setLoadingAssignments(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'ASSIGNMENTS') {
+      fetchAssignments();
+    }
+  }, [activeTab]);
 
   const handleLessonSelect = (lesson) => {
     setCurrentLesson(lesson);
@@ -187,6 +221,17 @@ const StudentCourseView = () => {
               >
                 <IoMegaphoneOutline size={18} />
                 <span>Announcements ({course.announcements?.length || 0})</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('ASSIGNMENTS')}
+                className={`flex-1 py-3.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all border-b-2 cursor-pointer ${
+                  activeTab === 'ASSIGNMENTS'
+                    ? 'border-primary-600 text-primary-700 bg-white'
+                    : 'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <IoClipboardOutline size={18} />
+                <span>Assignments</span>
               </button>
             </div>
 
@@ -362,6 +407,234 @@ const StudentCourseView = () => {
                           <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap">{ann.body}</p>
                         </div>
                       ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'ASSIGNMENTS' && (
+                <div className="space-y-4">
+                  <div>
+                    <h2 className="text-base font-bold text-primary-900">Course Assignments</h2>
+                    <p className="text-xs text-slate-500 mt-1">Download assignments from your instructor, complete them, and upload your work here.</p>
+                  </div>
+
+                  {loadingAssignments ? (
+                    <div className="text-center py-10 text-slate-400 text-sm animate-pulse">Loading assignments...</div>
+                  ) : assignments.length === 0 ? (
+                    <div className="p-8 border border-dashed border-slate-200 rounded-2xl text-center space-y-2">
+                      <IoClipboardOutline size={36} className="mx-auto text-slate-300" />
+                      <p className="text-sm text-slate-400">No assignments posted yet.</p>
+                      <p className="text-xs text-slate-300">Your instructor hasn't posted any assignments for this course.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {assignments.map((assignment) => {
+                        const mySubmission = assignment.submissions?.[0];
+                        const isSubmitting = submittingAssignId === assignment.id;
+                        const isPastDue = assignment.dueDate && new Date(assignment.dueDate) < new Date();
+
+                        return (
+                          <div
+                            key={assignment.id}
+                            className={`p-5 border rounded-2xl space-y-4 transition-colors ${
+                              mySubmission
+                                ? mySubmission.status === 'GRADED'
+                                  ? 'border-emerald-200 bg-emerald-50/30'
+                                  : 'border-blue-100 bg-blue-50/20'
+                                : 'border-amber-100 bg-amber-50/20'
+                            }`}
+                          >
+                            {/* Header row */}
+                            <div className="flex justify-between items-start gap-3">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h3 className="text-sm font-bold text-slate-800">{assignment.title}</h3>
+                                  {mySubmission ? (
+                                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                                      mySubmission.status === 'GRADED' ? 'bg-emerald-100 text-emerald-700' :
+                                      mySubmission.status === 'REVIEWED' ? 'bg-blue-100 text-blue-700' :
+                                      'bg-green-100 text-green-700'
+                                    }`}>
+                                      ✓ {mySubmission.status}
+                                    </span>
+                                  ) : (
+                                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                                      isPastDue ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
+                                    }`}>
+                                      {isPastDue ? '⚠ Overdue' : '⏳ Pending'}
+                                    </span>
+                                  )}
+                                </div>
+                                {assignment.description && (
+                                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">{assignment.description}</p>
+                                )}
+                                <div className="flex items-center gap-3 mt-2 flex-wrap">
+                                  {assignment.dueDate && (
+                                    <span className={`text-[10px] flex items-center gap-1 font-semibold ${
+                                      isPastDue && !mySubmission ? 'text-red-500' : 'text-slate-400'
+                                    }`}>
+                                      <IoTimeOutline size={11} />
+                                      Due: {new Date(assignment.dueDate).toLocaleString()}
+                                    </span>
+                                  )}
+                                  <span className="text-[10px] text-slate-400">
+                                    Posted: {new Date(assignment.createdAt).toLocaleDateString()}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Download assignment file */}
+                              {assignment.fileUrl && (
+                                <a
+                                  href={`${import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000'}${assignment.fileUrl}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="flex items-center gap-1.5 px-3 py-2 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold rounded-xl transition-all shrink-0"
+                                >
+                                  <IoDownloadOutline size={14} /> Download
+                                </a>
+                              )}
+                            </div>
+
+                            {/* My Submission display */}
+                            {mySubmission && (
+                              <div className="space-y-3 pt-2 border-t border-slate-200/60">
+                                <div className="flex items-center gap-2 p-3 bg-white border border-slate-100 rounded-xl">
+                                  <IoDocumentOutline size={16} className="text-primary-600 shrink-0" />
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-xs font-bold text-slate-700 truncate">
+                                      {mySubmission.fileName || 'Your submission'}
+                                    </p>
+                                    <p className="text-[10px] text-slate-400">
+                                      Submitted: {new Date(mySubmission.submittedAt).toLocaleString()}
+                                    </p>
+                                  </div>
+                                  <a
+                                    href={`${import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000'}${mySubmission.fileUrl}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-[10px] font-bold text-primary-600 hover:underline flex items-center gap-0.5"
+                                  >
+                                    <IoDownloadOutline size={12} /> View
+                                  </a>
+                                </div>
+
+                                {/* Instructor feedback / grade */}
+                                {(mySubmission.feedback || mySubmission.grade) && (
+                                  <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl space-y-1">
+                                    <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Instructor Feedback</p>
+                                    {mySubmission.grade && (
+                                      <p className="text-sm font-bold text-emerald-800">Grade: {mySubmission.grade}</p>
+                                    )}
+                                    {mySubmission.feedback && (
+                                      <p className="text-xs text-emerald-800 leading-relaxed">{mySubmission.feedback}</p>
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* Re-submit option */}
+                                {mySubmission.status === 'SUBMITTED' && (
+                                  <p className="text-[10px] text-slate-400 italic">Awaiting instructor review. You can re-submit below if needed.</p>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Upload / Re-submit form */}
+                            {isSubmitting ? (
+                              <div className="space-y-3 pt-2 border-t border-slate-200/60">
+                                <p className="text-xs font-bold text-slate-600">
+                                  {mySubmission ? 'Re-submit Your Work' : 'Submit Your Work'}
+                                </p>
+
+                                <div>
+                                  <input
+                                    type="file"
+                                    id={`submit-file-${assignment.id}`}
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      const f = e.target.files[0];
+                                      if (f) { setSubmitFile(f); setSubmitFileName(f.name); }
+                                    }}
+                                  />
+                                  <label
+                                    htmlFor={`submit-file-${assignment.id}`}
+                                    className="block w-full px-4 py-3 rounded-xl border-2 border-dashed border-primary-200 hover:border-primary-400 bg-primary-50/50 text-xs font-semibold text-primary-700 cursor-pointer text-center transition-colors"
+                                  >
+                                    {submitFileName ? (
+                                      <span className="flex items-center justify-center gap-2">
+                                        <IoDocumentOutline size={16} /> {submitFileName}
+                                      </span>
+                                    ) : (
+                                      <span className="flex items-center justify-center gap-2">
+                                        <IoCloudUploadOutline size={18} /> Click to select your file
+                                      </span>
+                                    )}
+                                  </label>
+                                </div>
+
+                                <textarea
+                                  value={submitNote}
+                                  onChange={(e) => setSubmitNote(e.target.value)}
+                                  rows={2}
+                                  placeholder="Optional note to your instructor..."
+                                  className="w-full px-4 py-2.5 rounded-xl border border-slate-100 focus:outline-none focus:border-primary-600 text-xs resize-none"
+                                />
+
+                                <div className="flex gap-2">
+                                  <button
+                                    disabled={!submitFile}
+                                    onClick={async () => {
+                                      if (!submitFile) return toast.error('Please select a file to submit.');
+                                      try {
+                                        const fd = new FormData();
+                                        fd.append('file', submitFile);
+                                        if (submitNote) fd.append('note', submitNote);
+                                        await assignmentService.submitAssignment(assignment.id, fd);
+                                        toast.success('Assignment submitted successfully!');
+                                        setSubmittingAssignId(null);
+                                        setSubmitFile(null);
+                                        setSubmitFileName('');
+                                        setSubmitNote('');
+                                        fetchAssignments();
+                                      } catch (err) {
+                                        toast.error(err.response?.data?.message || 'Failed to submit assignment.');
+                                      }
+                                    }}
+                                    className="flex-1 py-2.5 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all cursor-pointer"
+                                  >
+                                    <IoCheckmarkDoneOutline size={14} className="inline mr-1" />
+                                    {mySubmission ? 'Re-Submit Assignment' : 'Submit Assignment'}
+                                  </button>
+                                  <button
+                                    onClick={() => { setSubmittingAssignId(null); setSubmitFile(null); setSubmitFileName(''); setSubmitNote(''); }}
+                                    className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  setSubmittingAssignId(assignment.id);
+                                  setSubmitFile(null);
+                                  setSubmitFileName('');
+                                  setSubmitNote('');
+                                }}
+                                className={`w-full py-2.5 border text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                                  mySubmission
+                                    ? 'border-slate-200 hover:border-primary-300 text-slate-500 hover:text-primary-700 hover:bg-primary-50'
+                                    : 'border-primary-300 bg-primary-50 hover:bg-primary-100 text-primary-700'
+                                }`}
+                              >
+                                <IoCloudUploadOutline size={15} />
+                                {mySubmission ? 'Re-Submit Work' : 'Submit My Work'}
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>

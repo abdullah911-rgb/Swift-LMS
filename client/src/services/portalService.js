@@ -118,9 +118,14 @@ export const adminService = {
 
   // Instructor approvals & management
   getPendingInstructors: () => api.get('/admin/instructors/pending'),
+  createInstructor: (data) => api.post('/admin/instructors', data),
   approveInstructor: (id) => api.patch(`/admin/instructors/${id}/approve`),
   rejectInstructor: (id, reason) => api.patch(`/admin/instructors/${id}/reject`, { reason }),
+  assignCourse: (instructorId, courseId) => api.patch(`/admin/instructors/${instructorId}/assign-course`, { courseId }),
   getInstructors: () => api.get('/admin/instructors'),
+
+  // Attendance
+  getCourseAttendance: (courseId) => api.get(`/admin/attendance/${courseId}`),
 
   // Courses
   getAllCourses: (params) => api.get('/admin/courses', { params }),
@@ -168,4 +173,37 @@ export const certificateService = {
   getMyCertificates: () => api.get('/certificates/my'),
 };
 
+export const assignmentService = {
+  // ── Instructor ──────────────────────────────────────────────────────────────
 
+  // Create a new assignment for a course (with optional file)
+  createAssignment: (courseId, formData) =>
+    api.post(`/assignments/course/${courseId}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+
+  // Get all assignments for a course (instructor view — with submission counts)
+  getCourseAssignments: (courseId) => api.get(`/assignments/course/${courseId}`),
+
+  // Delete an assignment
+  deleteAssignment: (assignmentId) => api.delete(`/assignments/${assignmentId}`),
+
+  // Get all student submissions for an assignment
+  getSubmissions: (assignmentId) => api.get(`/assignments/${assignmentId}/submissions`),
+
+  // Review / grade a submission
+  reviewSubmission: (submissionId, data) =>
+    api.patch(`/assignments/submissions/${submissionId}/review`, data),
+
+  // ── Student ─────────────────────────────────────────────────────────────────
+
+  // Get all assignments for a course with own submission status
+  getStudentAssignments: (courseId) =>
+    api.get(`/assignments/course/${courseId}/student`),
+
+  // Submit completed assignment file
+  submitAssignment: (assignmentId, formData) =>
+    api.post(`/assignments/${assignmentId}/submit`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+};

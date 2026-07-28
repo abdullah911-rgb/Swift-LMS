@@ -4,8 +4,15 @@ const authController = require('../controllers/authController');
 const { authValidators } = require('../validators/authValidators');
 const { requireAuth } = require('../middlewares/auth');
 const { authLimiter, otpLimiter } = require('../middlewares/rateLimiter');
+const { uploadImage } = require('../middlewares/upload');
 
-router.post('/register', authLimiter, authValidators.register, authController.register);
+router.post(
+  '/register',
+  authLimiter,
+  uploadImage.single('profilePhoto'),
+  authValidators.register,
+  authController.register
+);
 router.post('/verify-email', otpLimiter, authValidators.verifyEmail, authController.verifyEmail);
 router.post('/resend-otp', otpLimiter, authController.resendOTP);
 router.post('/login', authLimiter, authValidators.login, authController.login);

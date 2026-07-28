@@ -160,15 +160,22 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (name, email, password, role) => {
+  const register = async (formData) => {
     setLoading(true);
     try {
-      const { data } = await api.post('/auth/register', { name, email, password, role });
+      const { data } = await api.post('/auth/register', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
       toast.success(data.message || 'Registration successful! OTP sent.');
       return data.data;
     } catch (err) {
       const errMsg = err.response?.data?.message || 'Registration failed.';
-      toast.error(errMsg);
+      const details = err.response?.data?.errors;
+      if (Array.isArray(details) && details.length) {
+        toast.error(details[0].message || errMsg);
+      } else {
+        toast.error(errMsg);
+      }
       throw err;
     } finally {
       setLoading(false);

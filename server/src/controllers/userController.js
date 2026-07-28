@@ -37,6 +37,15 @@ const userController = {
 
   // PUT /api/users/change-password
   changePassword: asyncHandler(async (req, res) => {
+    // Instructors cannot self-manage passwords — admin must reset via their account
+    if (req.user.role === 'INSTRUCTOR') {
+      return sendError(
+        res,
+        'Instructors cannot change their own password. Please contact the administrator to update your credentials.',
+        403
+      );
+    }
+
     const { currentPassword, newPassword } = req.body;
     const user = await prisma.user.findUnique({ where: { id: req.user.id } });
     const isMatch = await bcrypt.compare(currentPassword, user.password);

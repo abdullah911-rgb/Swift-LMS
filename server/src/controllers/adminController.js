@@ -1,6 +1,8 @@
 const prisma = require('../config/db');
+const bcrypt = require('bcryptjs');
 const asyncHandler = require('../utils/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/apiResponse');
+const { sendEmail, emailTemplates } = require('../utils/sendEmail');
 
 const adminController = {
   // GET /api/admin/stats — Platform-wide statistics
@@ -193,6 +195,105 @@ const adminController = {
     sendSuccess(res, 'Pending instructors fetched.', { instructors: pending });
   }),
 
+  // POST /api/admin/instructors — Admin creates an instructor account
+  createInstructor: asyncHandler(async (req, res) => {
+    const { name, email, password, phone, bio } = req.body;
+    if (!name || !email || !password) {
+      return sendError(res, 'Name, email, and password are required.', 400);
+    }
+
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) return sendError(res, 'An account with this email already exists.', 409);
+
+    const hashed = await bcrypt.hash(password, 12);
+    const instructor = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashed,
+        role: 'INSTRUCTOR',
+        isActive: true,
+        isVerified: true,
+        instructorApproval: 'APPROVED',
+        phone: phone || null,
+        bio: bio || null,
+      },
+      select: { id: true, name: true, email: true, role: true, isActive: true, phone: true, createdAt: true },
+    });
+
+    // Send credentials email to instructor
+    try {
+      await sendEmail({
+        to: email,
+        subject: 'Your Instructor Account — Swift Institute of Safety & Technology',
+        html: `
+          <!DOCTYPE html>
+          <html>
+          <body style="margin:0;padding:0;background:#f4f6f9;font-family:'Segoe UI',Arial,sans-serif;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f9;padding:40px 0;">
+              <tr><td align="center">
+                <table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+                  <tr>
+                    <td style="background:linear-gradient(135deg,#1e40af,#3b82f6);padding:32px;text-align:center;">
+                      <h1 style="color:#fff;margin:0;font-size:24px;font-weight:700;">Swift Institute of Safety &amp; Technology</h1>
+                      <p style="color:rgba(255,255,255,0.85);margin:8px 0 0;font-size:14px;">Building Safer Workplaces Through Knowledge &amp; Training</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:40px 48px;">
+                      <h2 style="color:#1e293b;margin:0 0 16px;font-size:22px;">Welcome, ${name}!</h2>
+                      <p style="color:#64748b;font-size:15px;line-height:1.6;margin:0 0 24px;">
+                        An instructor account has been created for you on the Swift LMS platform. Here are your login credentials:
+                      </p>
+                      <div style="background:#f1f5ff;border:2px dashed #3b82f6;border-radius:12px;padding:24px;margin:24px 0;">
+                        <p style="color:#1e293b;font-size:14px;margin:0 0 8px;"><strong>Email:</strong> ${email}</p>
+                        <p style="color:#1e293b;font-size:14px;margin:0;"><strong>Password:</strong> ${password}</p>
+                      </div>
+                      <p style="color:#94a3b8;font-size:13px;margin:24px 0 0;">Please log in and change your password immediately for security.</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="background:#f8fafc;padding:20px 48px;border-top:1px solid #e2e8f0;">
+                      <p style="color:#94a3b8;font-size:12px;margin:0;text-align:center;">Swift Institute of Safety &amp; Technology – Building Safer Workplaces Through Knowledge &amp; Training</p>
+                    </td>
+                  </tr>
+                </table>
+              </td></tr>
+            </table>
+          </body>
+          </html>
+        `,
+        text: `Welcome ${name}! Your instructor account has been created. Email: ${email} | Password: ${password}. Please login and change your password.`,
+      });
+    } catch (emailErr) {
+      console.error('Failed to send instructor credentials email:', emailErr.message);
+    }
+
+    sendSuccess(res, 'Instructor account created successfully. Credentials emailed to instructor.', { instructor }, 201);
+  }),
+
+  // PATCH /api/admin/instructors/:id/assign-course — Assign a course to an instructor
+  assignCourse: asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const { courseId } = req.body;
+    if (!courseId) return sendError(res, 'courseId is required.', 400);
+
+    const instructor = await prisma.user.findUnique({ where: { id } });
+    if (!instructor || instructor.role !== 'INSTRUCTOR') {
+      return sendError(res, 'Instructor not found.', 404);
+    }
+    const course = await prisma.course.findUnique({ where: { id: courseId } });
+    if (!course) return sendError(res, 'Course not found.', 404);
+
+    const updated = await prisma.course.update({
+      where: { id: courseId },
+      data: { instructorId: id },
+      include: { instructor: { select: { id: true, name: true, email: true } } },
+    });
+
+    sendSuccess(res, 'Course assigned to instructor successfully.', { course: updated });
+  }),
+
   // PATCH /api/admin/instructors/:id/approve — Approve instructor
   approveInstructor: asyncHandler(async (req, res) => {
     const { id } = req.params;
@@ -274,6 +375,79 @@ const adminController = {
     const { id } = req.params;
     await prisma.platformAnnouncement.delete({ where: { id } });
     sendSuccess(res, 'Announcement deleted successfully.');
+  }),
+
+  // PATCH /api/admin/enrollments/:studentId/:courseId/reactivate — Reactivate a dropped enrollment
+  reactivateEnrollment: asyncHandler(async (req, res) => {
+    const { studentId, courseId } = req.params;
+    const enrollment = await prisma.enrollment.findUnique({
+      where: { studentId_courseId: { studentId, courseId } },
+    });
+    if (!enrollment) return sendError(res, 'Enrollment not found.', 404);
+
+    const updated = await prisma.enrollment.update({
+      where: { studentId_courseId: { studentId, courseId } },
+      data: { status: 'ACTIVE' },
+    });
+
+    await prisma.notification.create({
+      data: {
+        userId: studentId,
+        title: 'Enrollment Reactivated',
+        message: 'Your course enrollment has been reactivated by the admin. You now have access to the course.',
+        type: 'SUCCESS',
+        link: '/student/my-courses',
+      },
+    });
+
+    sendSuccess(res, 'Enrollment reactivated successfully.', { enrollment: updated });
+  }),
+
+  // GET /api/admin/attendance/:courseId — Get attendance summary for a course
+  getCourseAttendance: asyncHandler(async (req, res) => {
+    const { courseId } = req.params;
+
+    const meetings = await prisma.zoomMeeting.findMany({
+      where: { courseId, status: { in: ['ENDED', 'LIVE'] } },
+      select: { id: true },
+    });
+
+    const totalMeetings = meetings.length;
+    if (totalMeetings === 0) {
+      return sendSuccess(res, 'No ended meetings for this course yet.', { students: [], totalMeetings: 0 });
+    }
+
+    const meetingIds = meetings.map((m) => m.id);
+
+    const enrollments = await prisma.enrollment.findMany({
+      where: { courseId, status: 'ACTIVE' },
+      include: { student: { select: { id: true, name: true, email: true } } },
+    });
+
+    const attendanceCounts = await prisma.attendance.groupBy({
+      by: ['studentId'],
+      where: { meetingId: { in: meetingIds } },
+      _count: { meetingId: true },
+    });
+
+    const countMap = {};
+    attendanceCounts.forEach((a) => { countMap[a.studentId] = a._count.meetingId; });
+
+    const students = enrollments.map((e) => {
+      const attended = countMap[e.studentId] || 0;
+      const percentage = totalMeetings > 0 ? Math.round((attended / totalMeetings) * 100) : 0;
+      return {
+        studentId: e.studentId,
+        name: e.student.name,
+        email: e.student.email,
+        attended,
+        totalMeetings,
+        percentage,
+        belowThreshold: percentage < 80,
+      };
+    });
+
+    sendSuccess(res, 'Attendance summary fetched.', { students, totalMeetings });
   }),
 
   // GET /api/admin/announcements/active — Get active announcements for banners

@@ -16,12 +16,12 @@ router.patch('/:id/approve', requireAuth, requireRole('ADMIN'), courseController
 router.patch('/:id/reject', requireAuth, requireRole('ADMIN'), courseController.rejectCourse);
 router.patch('/:id/publish', requireAuth, requireRole('ADMIN'), courseController.togglePublish);
 
-// Instructor routes
+// Instructor routes — instructors can view their assigned courses but cannot create/delete
 router.get('/instructor/my-courses', requireAuth, requireRole('INSTRUCTOR', 'ADMIN'), courseController.getInstructorCourses);
-router.patch('/:id/submit-approval', requireAuth, requireRole('INSTRUCTOR'), courseController.submitForApproval);
-router.post('/', requireAuth, requireRole('INSTRUCTOR', 'ADMIN'), uploadImage.single('thumbnail'), courseController.create);
-router.put('/:id', requireAuth, requireRole('INSTRUCTOR', 'ADMIN'), uploadImage.single('thumbnail'), courseController.update);
-router.delete('/:id', requireAuth, requireRole('INSTRUCTOR', 'ADMIN'), courseController.delete);
+// Only admin can create, update, delete courses
+router.post('/', requireAuth, requireRole('ADMIN'), uploadImage.single('thumbnail'), courseController.create);
+router.put('/:id', requireAuth, requireRole('ADMIN'), uploadImage.single('thumbnail'), courseController.update);
+router.delete('/:id', requireAuth, requireRole('ADMIN'), courseController.delete);
 
 // Public listing and detail (must come AFTER specific named routes)
 router.get('/', optionalAuth, courseController.getAll);

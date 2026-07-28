@@ -233,9 +233,7 @@ const CoursesPage = () => {
                             {course.shortDescription || course.description}
                           </p>
                           <div className="flex flex-wrap gap-x-3 gap-y-1 items-center text-[10px] font-bold text-slate-400 pt-1">
-                            <span>⏱️ {course.durationInMonths || 2} Months</span>
-                            <span>•</span>
-                            <span>📖 {course.totalLessons} Lessons</span>
+                            <span>⏱️ {course.duration ? `${Math.round(course.duration / 60)} Hours` : `${course.durationInMonths || 2} Months`}</span>
                           </div>
                         </div>
 

@@ -18,7 +18,19 @@ const OTP_TTL_MS = 10 * 60 * 1000;
 
 const authService = {
   // ── Register ──────────────────────────────────────────────────────────────
-  async register({ name, email, password, role = 'STUDENT' }) {
+  async register({
+    name,
+    fatherName,
+    cnic,
+    email,
+    password,
+    phone,
+    dateOfBirth,
+    address,
+    gender,
+    qualification,
+    avatar,
+  }) {
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
       const err = new Error('An account with this email already exists.');
@@ -26,17 +38,44 @@ const authService = {
       throw err;
     }
 
+    const normalizedCnic = cnic ? String(cnic).replace(/\s/g, '') : null;
+    if (normalizedCnic) {
+      const existingCnic = await prisma.user.findUnique({ where: { cnic: normalizedCnic } });
+      if (existingCnic) {
+        const err = new Error('An account with this CNIC already exists.');
+        err.statusCode = 409;
+        throw err;
+      }
+    }
+
     const hashed = await bcrypt.hash(password, 12);
     const user = await prisma.user.create({
-      data: { 
-        name, 
-        email, 
-        password: hashed, 
-        role,
-        isActive: role === 'INSTRUCTOR' ? false : true,
-        instructorApproval: role === 'INSTRUCTOR' ? 'PENDING' : 'APPROVED'
+      data: {
+        name,
+        fatherName: fatherName || null,
+        cnic: normalizedCnic,
+        email,
+        password: hashed,
+        role: 'STUDENT',
+        phone: phone || null,
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+        address: address || null,
+        gender: gender || null,
+        qualification: qualification || null,
+        avatar: avatar || null,
+        isActive: true,
+        instructorApproval: 'APPROVED',
       },
-      select: { id: true, name: true, email: true, role: true, isActive: true, instructorApproval: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        isActive: true,
+        phone: true,
+        fatherName: true,
+        cnic: true,
+      },
     });
 
     // Generate and send OTP

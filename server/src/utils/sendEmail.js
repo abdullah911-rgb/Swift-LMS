@@ -43,7 +43,7 @@ const sendEmail = async ({ to, subject, html, text }) => {
  */
 const emailTemplates = {
   verifyEmail: (name, otp) => ({
-    subject: 'Verify Your Email — LMS Platform',
+    subject: 'Verify Your Email — Swift Institute of Safety & Technology',
     html: `
       <!DOCTYPE html>
       <html>
@@ -54,8 +54,8 @@ const emailTemplates = {
             <table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
               <tr>
                 <td style="background:linear-gradient(135deg,#1e40af,#3b82f6);padding:32px;text-align:center;">
-                  <h1 style="color:#fff;margin:0;font-size:24px;font-weight:700;">LMS Platform</h1>
-                  <p style="color:rgba(255,255,255,0.85);margin:8px 0 0;font-size:14px;">Learning Without Limits</p>
+                  <h1 style="color:#fff;margin:0;font-size:24px;font-weight:700;">Swift Institute of Safety &amp; Technology</h1>
+                  <p style="color:rgba(255,255,255,0.85);margin:8px 0 0;font-size:14px;">Building Safer Workplaces Through Knowledge &amp; Training</p>
                 </td>
               </tr>
               <tr>
@@ -75,7 +75,7 @@ const emailTemplates = {
               </tr>
               <tr>
                 <td style="background:#f8fafc;padding:20px 48px;border-top:1px solid #e2e8f0;">
-                  <p style="color:#94a3b8;font-size:12px;margin:0;text-align:center;">© 2024 LMS Platform. All rights reserved.</p>
+                  <p style="color:#94a3b8;font-size:12px;margin:0;text-align:center;">Swift Institute of Safety &amp; Technology – Building Safer Workplaces Through Knowledge &amp; Training</p>
                 </td>
               </tr>
             </table>
@@ -88,7 +88,7 @@ const emailTemplates = {
   }),
 
   resetPassword: (name, otp) => ({
-    subject: 'Reset Your Password — LMS Platform',
+    subject: 'Reset Your Password — Swift Institute of Safety & Technology',
     html: `
       <!DOCTYPE html>
       <html>
@@ -98,7 +98,7 @@ const emailTemplates = {
             <table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
               <tr>
                 <td style="background:linear-gradient(135deg,#1e40af,#3b82f6);padding:32px;text-align:center;">
-                  <h1 style="color:#fff;margin:0;font-size:24px;font-weight:700;">LMS Platform</h1>
+                  <h1 style="color:#fff;margin:0;font-size:24px;font-weight:700;">Swift Institute of Safety &amp; Technology</h1>
                 </td>
               </tr>
               <tr>
@@ -118,7 +118,7 @@ const emailTemplates = {
               </tr>
               <tr>
                 <td style="background:#f8fafc;padding:20px 48px;border-top:1px solid #e2e8f0;">
-                  <p style="color:#94a3b8;font-size:12px;margin:0;text-align:center;">© 2024 LMS Platform. All rights reserved.</p>
+                  <p style="color:#94a3b8;font-size:12px;margin:0;text-align:center;">Swift Institute of Safety &amp; Technology – Building Safer Workplaces Through Knowledge &amp; Training</p>
                 </td>
               </tr>
             </table>
@@ -131,7 +131,7 @@ const emailTemplates = {
   }),
 
   welcomeEmail: (name) => ({
-    subject: 'Welcome to LMS Platform!',
+    subject: 'Welcome to Swift Institute of Safety & Technology!',
     html: `
       <!DOCTYPE html>
       <html>
@@ -141,7 +141,7 @@ const emailTemplates = {
             <table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
               <tr>
                 <td style="background:linear-gradient(135deg,#1e40af,#3b82f6);padding:32px;text-align:center;">
-                  <h1 style="color:#fff;margin:0;font-size:24px;font-weight:700;">Welcome to LMS Platform!</h1>
+                  <h1 style="color:#fff;margin:0;font-size:24px;font-weight:700;">Welcome to Swift Institute!</h1>
                 </td>
               </tr>
               <tr>
@@ -157,7 +157,7 @@ const emailTemplates = {
               </tr>
               <tr>
                 <td style="background:#f8fafc;padding:20px 48px;border-top:1px solid #e2e8f0;">
-                  <p style="color:#94a3b8;font-size:12px;margin:0;text-align:center;">© 2024 LMS Platform. All rights reserved.</p>
+                  <p style="color:#94a3b8;font-size:12px;margin:0;text-align:center;">Swift Institute of Safety &amp; Technology – Building Safer Workplaces Through Knowledge &amp; Training</p>
                 </td>
               </tr>
             </table>
@@ -216,7 +216,7 @@ const emailTemplates = {
               </tr>
               <tr>
                 <td style="background:#f8fafc;padding:20px 48px;border-top:1px solid #e2e8f0;">
-                  <p style="color:#94a3b8;font-size:12px;margin:0;text-align:center;">© 2024 LMS Platform. All rights reserved.</p>
+                  <p style="color:#94a3b8;font-size:12px;margin:0;text-align:center;">Swift Institute of Safety &amp; Technology – Building Safer Workplaces Through Knowledge &amp; Training</p>
                 </td>
               </tr>
             </table>

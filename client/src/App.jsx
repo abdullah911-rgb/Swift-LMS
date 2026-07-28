@@ -27,6 +27,7 @@ import RegisterPage from './pages/public/RegisterPage';
 import ForgotPasswordPage from './pages/public/ForgotPasswordPage';
 import ResetPasswordPage from './pages/public/ResetPasswordPage';
 import NotFoundPage from './pages/public/NotFoundPage';
+import FinanceSoftwarePage from './pages/public/FinanceSoftwarePage';
 
 // Portal Dashboards
 import StudentDashboard from './pages/student/StudentDashboard';
@@ -37,7 +38,6 @@ import StudentCalendar from './pages/student/StudentCalendar';
 
 import InstructorDashboard from './pages/instructor/InstructorDashboard';
 import InstructorCourses from './pages/instructor/InstructorCourses';
-import CourseForm from './pages/instructor/CourseForm';
 import InstructorStudents from './pages/instructor/InstructorStudents';
 import InstructorProfile from './pages/instructor/InstructorProfile';
 import InstructorCalendar from './pages/instructor/InstructorCalendar';
@@ -51,6 +51,7 @@ import AdminInstructors from './pages/admin/AdminInstructors';
 import AdminAnnouncements from './pages/admin/AdminAnnouncements';
 import AdminPayments from './pages/admin/AdminPayments';
 import AdminRevenue from './pages/admin/AdminRevenue';
+import AdminAttendance from './pages/admin/AdminAttendance';
 
 // Student extras
 import MyCertificates from './pages/student/MyCertificates';
@@ -93,6 +94,7 @@ function App() {
             <Route path={ROUTES.ABOUT} element={<AboutPage />} />
             <Route path={ROUTES.FAQ} element={<FAQPage />} />
             <Route path={ROUTES.CONTACT} element={<ContactPage />} />
+            <Route path={ROUTES.FINANCE_SOFTWARE} element={<FinanceSoftwarePage />} />
             
             {/* Auth Routes */}
             <Route path={ROUTES.LOGIN} element={<LoginPage />} />
@@ -136,8 +138,6 @@ function App() {
             <Route index element={<Navigate to={ROUTES.INSTRUCTOR_DASHBOARD} replace />} />
             <Route path="dashboard" element={<InstructorDashboard />} />
             <Route path="courses" element={<InstructorCourses />} />
-            <Route path="courses/new" element={<CourseForm />} />
-            <Route path="courses/:courseId/edit" element={<CourseForm />} />
             <Route path="students" element={<InstructorStudents />} />
             <Route path="profile" element={<InstructorProfile />} />
             <Route path="calendar" element={<InstructorCalendar />} />
@@ -162,6 +162,7 @@ function App() {
             <Route path="announcements" element={<AdminAnnouncements />} />
             <Route path="payments" element={<AdminPayments />} />
             <Route path="revenue" element={<AdminRevenue />} />
+            <Route path="attendance" element={<AdminAttendance />} />
           </Route>
 
           {/* Zoom In-Browser Classroom — accessible to all authenticated roles */}
