@@ -287,7 +287,7 @@ const CourseForm = () => {
         const res = await instructorService.createCourse(formData);
         if (res.data?.success) {
           toast.success('Course created! Now build the syllabus and submit for approval.');
-          navigate(`/instructor/courses/${res.data.data.course.id}/edit`);
+          navigate(`/instructor/courses/${res.data.data.course.id}/manage`);
         }
       }
     } catch (err) {

@@ -1,8 +1,9 @@
 import { getImageUrl } from '../../constants/index';
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Card from '../../components/ui/Card';
 import { instructorService } from '../../services/portalService';
-import { IoBookOutline, IoPeopleOutline, IoLayersOutline, IoInformationCircleOutline } from 'react-icons/io5';
+import { IoBookOutline, IoPeopleOutline, IoLayersOutline, IoInformationCircleOutline, IoSettingsOutline } from 'react-icons/io5';
 import toast from 'react-hot-toast';
 
 const InstructorCourses = () => {
@@ -67,6 +68,7 @@ const InstructorCourses = () => {
                   <th className="px-6 py-4">Syllabus Structure</th>
                   <th className="px-6 py-4">Price</th>
                   <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -128,6 +130,17 @@ const InstructorCourses = () => {
                       }`}>
                         {course.status}
                       </span>
+                    </td>
+
+                    {/* Manage Button */}
+                    <td className="px-6 py-4">
+                      <Link
+                        to={`/instructor/courses/${course.id}/manage`}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold rounded-xl transition-all"
+                      >
+                        <IoSettingsOutline size={13} />
+                        Manage
+                      </Link>
                     </td>
                   </tr>
                 ))}

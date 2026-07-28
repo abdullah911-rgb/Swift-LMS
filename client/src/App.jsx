@@ -41,6 +41,7 @@ import InstructorCourses from './pages/instructor/InstructorCourses';
 import InstructorStudents from './pages/instructor/InstructorStudents';
 import InstructorProfile from './pages/instructor/InstructorProfile';
 import InstructorCalendar from './pages/instructor/InstructorCalendar';
+import CourseForm from './pages/instructor/CourseForm';
 
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminApprovals from './pages/admin/AdminApprovals';
@@ -138,6 +139,7 @@ function App() {
             <Route index element={<Navigate to={ROUTES.INSTRUCTOR_DASHBOARD} replace />} />
             <Route path="dashboard" element={<InstructorDashboard />} />
             <Route path="courses" element={<InstructorCourses />} />
+            <Route path="courses/:courseId/manage" element={<CourseForm />} />
             <Route path="students" element={<InstructorStudents />} />
             <Route path="profile" element={<InstructorProfile />} />
             <Route path="calendar" element={<InstructorCalendar />} />
