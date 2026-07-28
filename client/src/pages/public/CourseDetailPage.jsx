@@ -138,7 +138,7 @@ const CourseDetailPage = () => {
             <div className="flex flex-wrap gap-5 text-xs font-semibold text-slate-500 border-y border-slate-100 py-4">
               <span className="flex items-center gap-1.5">
                 <IoTimeOutline size={16} />
-                <span>{course.duration ? `${Math.round(course.duration / 60)} Hours` : `${course.durationInMonths || 2} Months`}</span>
+                <span>{course.durationInMonths && course.durationInMonths > 0 ? `${course.durationInMonths} ${course.durationInMonths === 1 ? 'Month' : 'Months'}` : course.duration ? `${Math.round(course.duration / 60)} Hours` : '—'}</span>
               </span>
               <span className="flex items-center gap-1.5">
                 <IoGlobeOutline size={16} />
@@ -314,9 +314,7 @@ const CourseDetailPage = () => {
                 <p className="text-3xl font-heading font-extrabold text-slate-800">
                   {course.isFree ? 'Free Access' : `PKR ${Number(course.price).toLocaleString()}`}
                 </p>
-                {course.durationInMonths && (
-                  <p className="text-sm text-slate-500 font-medium">⏱️ {course.durationInMonths} Month Course</p>
-                )}
+
               </div>
 
               {/* Action Buttons */}
