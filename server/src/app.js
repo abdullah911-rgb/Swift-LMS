@@ -66,8 +66,19 @@ if (config.env === 'development') {
 // Rate Limiter
 app.use('/api', generalLimiter);
 
-// Static uploads directory
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Static uploads directory (use /tmp/uploads for serverless environments)
+const isServerless = process.env.VERCEL || process.env.LAMBDA_TASK_ROOT || process.env.AWS_EXECUTION_ENV;
+const uploadDir = isServerless 
+  ? '/tmp/uploads' 
+  : path.join(__dirname, '../uploads');
+
+const fs = require('fs');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+app.use('/uploads', express.static(uploadDir));
+
 
 // Routes
 app.use('/api/auth', authRoutes);

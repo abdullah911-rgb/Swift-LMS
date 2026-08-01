@@ -45,12 +45,6 @@ const InstructorDashboard = () => {
           <h1 className="text-2xl font-heading font-bold text-primary-900">Instructor Dashboard</h1>
           <p className="text-sm text-slate-500">Monitor registrations, design courses, and review enrolled students.</p>
         </div>
-        <Link to={ROUTES.INSTRUCTOR_COURSE_NEW}>
-          <Button variant="primary" size="md" className="flex items-center gap-1.5">
-            <IoAddOutline size={18} />
-            <span>Create New Course</span>
-          </Button>
-        </Link>
       </div>
 
       {/* Stats Cards */}
@@ -99,11 +93,9 @@ const InstructorDashboard = () => {
           </div>
 
           {totalCourses === 0 ? (
-            <div className="text-center py-12 space-y-4">
-              <p className="text-sm text-slate-400">You haven't created any courses yet.</p>
-              <Link to={ROUTES.INSTRUCTOR_COURSE_NEW}>
-                <Button variant="secondary" size="sm">Create Your First Course</Button>
-              </Link>
+            <div className="text-center py-12 space-y-2">
+              <p className="text-sm text-slate-400">No courses assigned to your account yet.</p>
+              <p className="text-xs text-slate-350">Please contact the system administrator to assign your courses.</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -140,11 +132,6 @@ const InstructorDashboard = () => {
             </p>
           </div>
           <div className="space-y-3">
-            <Link to={ROUTES.INSTRUCTOR_COURSE_NEW} className="block w-full">
-              <Button variant="primary" size="sm" className="w-full flex items-center justify-center gap-2">
-                <IoAddOutline size={16} /> Create Course
-              </Button>
-            </Link>
             <Link to={ROUTES.INSTRUCTOR_COURSES} className="block w-full">
               <Button variant="outline" size="sm" className="w-full flex items-center justify-center gap-2">
                 <IoBookOutline size={16} /> Manage Courses

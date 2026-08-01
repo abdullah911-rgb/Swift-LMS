@@ -8,11 +8,16 @@ const ALLOWED_IMAGE_TYPES = /jpeg|jpg|png|gif|webp/;
 const ALLOWED_VIDEO_TYPES = /mp4|mkv|avi|mov|webm/;
 const ALLOWED_DOC_TYPES = /pdf|doc|docx|ppt|pptx|xls|xlsx|zip/;
 
-// Resolve upload path absolutely
-const uploadDir = path.resolve(__dirname, '../../uploads');
+// Resolve upload path absolutely (use /tmp/uploads for serverless environments)
+const isServerless = process.env.VERCEL || process.env.LAMBDA_TASK_ROOT || process.env.AWS_EXECUTION_ENV;
+const uploadDir = isServerless 
+  ? '/tmp/uploads' 
+  : path.resolve(__dirname, '../../uploads');
+
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
+
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
