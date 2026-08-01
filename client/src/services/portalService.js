@@ -171,6 +171,31 @@ export const paymentService = {
 export const certificateService = {
   getCertificate: (courseId) => api.get(`/certificates/${courseId}`),
   getMyCertificates: () => api.get('/certificates/my'),
+  verifyCertificate: (code) => api.get(`/certificates/verify/${code}`),
+};
+
+export const quizService = {
+  // Instructor quiz management
+  upsertQuiz: (courseId, data) => api.post(`/quiz/course/${courseId}`, data),
+  getQuiz: (courseId) => api.get(`/quiz/course/${courseId}`),
+  updateQuiz: (quizId, data) => api.put(`/quiz/${quizId}`, data),
+  deleteQuiz: (quizId) => api.delete(`/quiz/${quizId}`),
+  togglePublish: (quizId) => api.patch(`/quiz/${quizId}/publish`),
+  importQuestions: (quizId, text, replace = true) => api.post(`/quiz/${quizId}/import`, { text, replace }),
+  previewImport: (quizId, text) => api.post(`/quiz/${quizId}/preview-import`, { text }),
+  getQuestions: (quizId) => api.get(`/quiz/${quizId}/questions`),
+  deleteQuestion: (questionId) => api.delete(`/quiz/question/${questionId}`),
+  getStats: (courseId) => api.get(`/quiz/course/${courseId}/stats`),
+  adminGetAll: () => api.get('/quiz/admin/all'),
+
+  // Student quiz flow
+  checkEligibility: (courseId) => api.get(`/quiz/course/${courseId}/eligibility`),
+  startQuiz: (courseId) => api.post(`/quiz/course/${courseId}/start`),
+  submitAnswer: (attemptId, data) => api.post(`/quiz/attempt/${attemptId}/answer`, data),
+  submitQuiz: (attemptId, data) => api.post(`/quiz/attempt/${attemptId}/submit`, data),
+  getAttempts: (courseId) => api.get(`/quiz/course/${courseId}/attempts`),
+  evaluateStatus: (courseId, userId = null) =>
+    api.get(`/quiz/course/${courseId}/evaluate`, { params: userId ? { userId } : {} }),
 };
 
 export const assignmentService = {

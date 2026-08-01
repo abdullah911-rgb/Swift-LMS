@@ -320,12 +320,12 @@ const AdminInstructors = () => {
               const unassignedCourses = getUnassignedCourses(inst);
 
               return (
-                <div key={inst.id} className="border border-slate-100 rounded-2xl overflow-hidden">
+                <div key={inst.id} className="border border-slate-100 rounded-2xl overflow-hidden shadow-xs hover:border-slate-200 transition-colors bg-white">
                   <div
                     onClick={() => toggleExpand(inst.id)}
-                    className="p-4 bg-slate-50/40 hover:bg-slate-50 transition-colors flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 cursor-pointer"
+                    className="p-4 bg-slate-50/40 hover:bg-slate-50 transition-colors grid grid-cols-1 sm:grid-cols-12 items-center gap-4 cursor-pointer"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 col-span-12 sm:col-span-6 min-w-0">
                       <div className="h-10 w-10 rounded-xl bg-primary-100 text-primary-750 flex items-center justify-center font-bold font-heading shrink-0 border border-primary-200">
                         {inst.avatar ? (
                           <img src={getImageUrl(inst.avatar)} alt={inst.name} className="h-10 w-10 rounded-xl object-cover" />
@@ -333,39 +333,40 @@ const AdminInstructors = () => {
                           inst.name?.split(' ').map(n => n[0]).join('') || '?'
                         )}
                       </div>
-                      <div>
-                        <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                      <div className="min-w-0">
+                        <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2 truncate">
                           {inst.name}
                           {!inst.isActive && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-100 font-semibold">Deactivated</span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-100 font-semibold shrink-0">Deactivated</span>
                           )}
                         </h4>
-                        <p className="text-xs text-slate-500">{inst.email}</p>
+                        <p className="text-xs text-slate-500 truncate">{inst.email}</p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-6 self-stretch sm:self-auto justify-between">
-                      <div className="flex items-center gap-4 text-xs text-slate-600 font-semibold">
-                        <span className="flex items-center gap-1"><IoBookOutline size={14} className="text-slate-450" /> {totalCourses} Courses</span>
-                        <span className="flex items-center gap-1"><IoPeopleOutline size={14} className="text-slate-450" /> {totalEnrolled} Students</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleToggleActive(inst.id, inst.isActive); }}
-                          disabled={actionId === inst.id}
-                          className={`p-2 rounded-xl transition-all cursor-pointer text-xs font-semibold flex items-center gap-1 ${inst.isActive ? 'text-green-600 hover:bg-green-50' : 'text-slate-400 hover:bg-slate-50'}`}
-                          title={inst.isActive ? 'Deactivate Instructor' : 'Activate Instructor'}
-                        >
-                          <IoToggleOutline size={18} />
-                        </button>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleDelete(inst.id); }}
-                          disabled={actionId === inst.id}
-                          className="p-2 text-slate-400 hover:text-red-650 hover:bg-red-50 rounded-xl transition-all cursor-pointer"
-                          title="Delete Instructor Account"
-                        >
-                          <IoTrashOutline size={15} />
-                        </button>
+                    <div className="flex items-center gap-4 text-xs text-slate-600 font-semibold col-span-12 sm:col-span-4 sm:justify-start justify-between w-full sm:w-auto whitespace-nowrap">
+                      <span className="flex items-center gap-1.5"><IoBookOutline size={15} className="text-slate-450 shrink-0" /> {totalCourses} Courses</span>
+                      <span className="flex items-center gap-1.5"><IoPeopleOutline size={15} className="text-slate-450 shrink-0" /> {totalEnrolled} Students</span>
+                    </div>
+
+                    <div className="flex items-center gap-1 col-span-12 sm:col-span-2 justify-end w-full sm:w-auto shrink-0 border-t border-slate-100 sm:border-t-0 pt-3 sm:pt-0">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleToggleActive(inst.id, inst.isActive); }}
+                        disabled={actionId === inst.id}
+                        className={`p-2 rounded-xl transition-all cursor-pointer text-xs font-semibold flex items-center gap-1 ${inst.isActive ? 'text-green-600 hover:bg-green-50' : 'text-slate-400 hover:bg-slate-50'}`}
+                        title={inst.isActive ? 'Deactivate Instructor' : 'Activate Instructor'}
+                      >
+                        <IoToggleOutline size={20} />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDelete(inst.id); }}
+                        disabled={actionId === inst.id}
+                        className="p-2 text-slate-400 hover:text-red-650 hover:bg-red-50 rounded-xl transition-all cursor-pointer"
+                        title="Delete Instructor Account"
+                      >
+                        <IoTrashOutline size={16} />
+                      </button>
+                      <div className="pl-1 text-slate-400">
                         {isExpanded ? <IoChevronUpOutline size={16} /> : <IoChevronDownOutline size={16} />}
                       </div>
                     </div>

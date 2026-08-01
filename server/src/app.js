@@ -23,8 +23,10 @@ const reviewRoutes = require('./routes/reviewRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const certificateRoutes = require('./routes/certificateRoutes');
 const assignmentRoutes = require('./routes/assignmentRoutes');
+const quizRoutes = require('./routes/quizRoutes');
 
 const app = express();
+
 
 // Middleware
 app.use(helmet());
@@ -82,6 +84,8 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/certificates', certificateRoutes);
 app.use('/api/assignments', assignmentRoutes);
+app.use('/api/quiz', quizRoutes);
+
 
 // Health check
 app.get('/health', (req, res) => {

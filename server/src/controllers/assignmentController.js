@@ -63,16 +63,22 @@ const assignmentController = {
     sendSuccess(res, 'Assignment created and students notified.', { assignment }, 201);
   }),
 
-  // ── Instructor: GET /api/assignments/course/:courseId ───────────────────────
+  // ── Instructor/Admin: GET /api/assignments/course/:courseId ─────────────────
   // Get all assignments for a course (instructor view — includes submission counts)
   getCourseAssignments: asyncHandler(async (req, res) => {
     const { courseId } = req.params;
 
-    // Verify instructor owns this course
-    const course = await prisma.course.findFirst({
-      where: { id: courseId, instructorId: req.user.id },
-    });
-    if (!course) return sendError(res, 'Course not found or not authorized.', 404);
+    // Admin can see any course; Instructor can only see their own courses
+    if (req.user.role === 'INSTRUCTOR') {
+      const course = await prisma.course.findFirst({
+        where: { id: courseId, instructorId: req.user.id },
+      });
+      if (!course) return sendError(res, 'Course not found or not authorized.', 404);
+    } else {
+      // Admin: verify course exists
+      const course = await prisma.course.findUnique({ where: { id: courseId } });
+      if (!course) return sendError(res, 'Course not found.', 404);
+    }
 
     const assignments = await prisma.assignment.findMany({
       where: { courseId },
@@ -84,6 +90,7 @@ const assignmentController = {
 
     sendSuccess(res, 'Assignments fetched.', { assignments });
   }),
+
 
   // ── Student: GET /api/assignments/course/:courseId/student ──────────────────
   // Get all assignments for a course with the student's own submission status
@@ -256,6 +263,19 @@ const assignmentController = {
         reviewedAt: new Date(),
       },
     });
+
+    // Recalculate certificate eligibility if graded
+    if (grade) {
+      try {
+        const { computeFinalScore, issueCertificateWithMarks } = require('../utils/evaluationUtils');
+        const evaluation = await computeFinalScore(submission.studentId, submission.assignment.courseId);
+        if (evaluation.eligible) {
+          await issueCertificateWithMarks(submission.studentId, submission.assignment.courseId, evaluation.breakdown);
+        }
+      } catch (err) {
+        console.error('[Assignment review] Evaluation check error:', err.message);
+      }
+    }
 
     // Notify the student that their work has been reviewed
     await prisma.notification.create({

@@ -24,6 +24,8 @@ export const ROUTES = {
   FORGOT_PASSWORD: '/forgot-password',
   RESET_PASSWORD: '/reset-password',
   FINANCE_SOFTWARE: '/finance-software',
+  VERIFY_CERTIFICATE: '/verify-certificate',
+
   
   // Student Portal
   STUDENT_DASHBOARD: '/student/dashboard',

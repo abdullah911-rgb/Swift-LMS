@@ -258,7 +258,7 @@ const RegisterPage = () => {
                       type="file"
                       accept="image/jpeg,image/jpg,image/png,image/webp"
                       onChange={handlePhotoChange}
-                      className="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 cursor-pointer"
+                      className="block w-fit text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 cursor-pointer"
                     />
                   </div>
                   {photoError && <p className="text-xs text-red-500">{photoError}</p>}

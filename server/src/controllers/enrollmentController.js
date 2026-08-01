@@ -172,22 +172,18 @@ const enrollmentController = {
       },
     });
 
-    // Issue certificate if course completed (and enrollment still active)
+    // Notify student that they completed lessons and can take the final quiz
     if (progressPercent === 100) {
       const course = await prisma.course.findUnique({ where: { id: courseId } });
-      if (course?.certificate) {
-        const { issueCertificate } = require('../utils/certificateId');
-        await issueCertificate(studentId, courseId);
-        await prisma.notification.create({
-          data: {
-            userId: studentId,
-            title: '🎓 Certificate Issued!',
-            message: `Congratulations! You've completed "${course.title}" and earned your certificate.`,
-            type: 'SUCCESS',
-            link: '/student/certificates',
-          },
-        });
-      }
+      await prisma.notification.create({
+        data: {
+          userId: studentId,
+          title: '📝 Course Lessons Completed!',
+          message: `You've completed all lessons for "${course.title}". You are now eligible to attempt the Final MCQ Assessment.`,
+          type: 'SUCCESS',
+          link: `/student/course/${courseId}`,
+        },
+      });
     }
 
     sendSuccess(res, 'Lesson marked as complete.', {
@@ -218,8 +214,50 @@ const enrollmentController = {
       orderBy: { enrolledAt: 'desc' },
     });
 
-    sendSuccess(res, 'Students fetched.', { enrollments });
+    // ── Attendance data for the course ────────────────────────────────────
+    // Get all meetings that count (ENDED or LIVE)
+    const meetings = await prisma.zoomMeeting.findMany({
+      where: { courseId, status: { in: ['ENDED', 'LIVE'] } },
+      select: { id: true },
+    });
+    const totalMeetings = meetings.length;
+    const meetingIds = meetings.map((m) => m.id);
+
+    // For each student, count attended meetings
+    const studentIds = enrollments.map((e) => e.studentId);
+
+    let attendanceCounts = [];
+    if (totalMeetings > 0 && studentIds.length > 0) {
+      attendanceCounts = await prisma.attendance.groupBy({
+        by: ['studentId'],
+        where: { studentId: { in: studentIds }, meetingId: { in: meetingIds } },
+        _count: { meetingId: true },
+      });
+    }
+
+    // Build a map: studentId → attended count
+    const attendanceMap = {};
+    attendanceCounts.forEach((a) => {
+      attendanceMap[a.studentId] = a._count.meetingId;
+    });
+
+    // Attach attendance info to each enrollment
+    const enrichedEnrollments = enrollments.map((enrollment) => {
+      const attended = attendanceMap[enrollment.studentId] || 0;
+      const percentage = totalMeetings > 0 ? Math.round((attended / totalMeetings) * 100) : null;
+      return {
+        ...enrollment,
+        attendance: {
+          attended,
+          total: totalMeetings,
+          percentage,  // null means no sessions held yet
+        },
+      };
+    });
+
+    sendSuccess(res, 'Students fetched.', { enrollments: enrichedEnrollments, totalMeetings });
   }),
+
 };
 
 module.exports = enrollmentController;

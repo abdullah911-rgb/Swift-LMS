@@ -1,7 +1,8 @@
 const prisma = require('../config/db');
 const asyncHandler = require('../utils/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/apiResponse');
-const { issueCertificate } = require('../utils/certificateId');
+const { computeFinalScore, issueCertificateWithMarks } = require('../utils/evaluationUtils');
+
 
 const certificateController = {
 
@@ -23,12 +24,14 @@ const certificateController = {
       return sendError(res, 'This course does not offer a certificate.', 400);
     }
 
-    // Require full course completion for certificate issuance
-    if (enrollment.progress < 100 && enrollment.status !== 'COMPLETED') {
+    // Call full eligibility / evaluation logic
+    const evaluation = await computeFinalScore(studentId, courseId);
+    if (!evaluation.eligible) {
       return sendError(
         res,
-        `You need to complete the course to get a certificate. Current progress: ${Math.round(enrollment.progress)}%`,
-        400,
+        evaluation.reason || 'You are not eligible for a certificate.',
+        403,
+        { breakdown: evaluation.breakdown }
       );
     }
 
@@ -41,7 +44,7 @@ const certificateController = {
     });
 
     if (!certificate) {
-      await issueCertificate(studentId, courseId);
+      await issueCertificateWithMarks(studentId, courseId, evaluation.breakdown);
       certificate = await prisma.certificate.findUnique({
         where: { studentId_courseId: { studentId, courseId } },
         include: {
@@ -63,6 +66,10 @@ const certificateController = {
         courseTitle: certificate.course.title,
         instructorName: certificate.course.instructor?.name || 'N/A',
         courseLevel: certificate.course.level,
+        attendanceMarks: certificate.attendanceMarks,
+        assignmentMarks: certificate.assignmentMarks,
+        mcqMarks: certificate.mcqMarks,
+        finalMarks: certificate.finalMarks,
       },
     });
   }),
@@ -79,6 +86,55 @@ const certificateController = {
     });
     sendSuccess(res, 'Certificates retrieved.', { certificates });
   }),
+
+  // ── GET /api/certificates/verify/:code — public verification ─────────────
+  verifyCertificate: asyncHandler(async (req, res) => {
+    const { code } = req.params;
+    
+    // Search by verificationCode (UUID)
+    let certificate = await prisma.certificate.findUnique({
+      where: { verificationCode: code },
+      include: {
+        student: { select: { name: true, fatherName: true, cnic: true } },
+        course: { select: { title: true, level: true, instructor: { select: { name: true } } } },
+      },
+    });
+
+    // Fallback: search by certificateId (SST-YYYY-NNNNNNNN)
+    if (!certificate) {
+      certificate = await prisma.certificate.findUnique({
+        where: { certificateId: code },
+        include: {
+          student: { select: { name: true, fatherName: true, cnic: true } },
+          course: { select: { title: true, level: true, instructor: { select: { name: true } } } },
+        },
+      });
+    }
+
+    if (!certificate) {
+      return sendError(res, 'Certificate not found or verification ID is invalid.', 404);
+    }
+
+
+    sendSuccess(res, 'Certificate verified successfully.', {
+      certificate: {
+        certificateId: certificate.certificateId,
+        verificationCode: certificate.verificationCode,
+        issuedAt: certificate.issuedAt,
+        studentName: certificate.student.name,
+        fatherName: certificate.student.fatherName,
+        cnic: certificate.student.cnic,
+        courseTitle: certificate.course.title,
+        courseLevel: certificate.course.level,
+        instructorName: certificate.course.instructor?.name || 'N/A',
+        attendanceMarks: certificate.attendanceMarks,
+        assignmentMarks: certificate.assignmentMarks,
+        mcqMarks: certificate.mcqMarks,
+        finalMarks: certificate.finalMarks,
+      },
+    });
+  }),
+
 };
 
 module.exports = certificateController;

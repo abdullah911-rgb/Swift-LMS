@@ -18,6 +18,7 @@ import {
   IoCardOutline,
   IoCashOutline,
   IoCalendarOutline,
+  IoClipboardOutline,
 } from 'react-icons/io5';
 import AnnouncementBanner from '../common/AnnouncementBanner';
 
@@ -59,9 +60,10 @@ const AdminLayout = () => {
     { to: '/admin/users',            icon: <IoPeopleOutline size={18} />,           label: 'Users' },
     { to: '/admin/payments',         icon: <IoCardOutline size={18} />,             label: 'Payments' },
     { to: '/admin/revenue',          icon: <IoCashOutline size={18} />,             label: 'Revenue' },
-    { to: '/admin/attendance',       icon: <IoCalendarOutline size={18} />,         label: 'Attendance' },
+    {to: '/admin/attendance',       icon: <IoCalendarOutline size={18} />,         label: 'Attendance' },
     { to: '/admin/announcements',    icon: <IoMegaphoneOutline size={18} />,        label: 'Announcements' },
     { to: '/admin/enrollments',      icon: <IoBarChartOutline size={18} />,         label: 'Enrollments' },
+    { to: '/admin/quizzes',          icon: <IoClipboardOutline size={18} />,        label: 'Quizzes' },
   ];
 
   const sidebarContent = (
@@ -70,7 +72,7 @@ const AdminLayout = () => {
         <div className="flex items-center gap-3 min-w-0">
           <img src="/Logo1.jpeg" alt="Swift" className="h-9 w-9 object-contain rounded-lg border border-slate-800 shrink-0" />
           <div className="min-w-0">
-            <span className="font-heading font-bold text-lg tracking-tight text-slate-100">Swift</span>
+            <span className="font-heading font-bold text-lg tracking-tight text-slate-100">SWIFT</span>
             <p className="text-[10px] text-accent-500 font-bold uppercase tracking-widest">System Admin</p>
           </div>
         </div>

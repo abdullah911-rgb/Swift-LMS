@@ -188,10 +188,10 @@ const StudentCourseView = () => {
           {/* Main Viewer Card */}
           <Card hover={false} className="bg-white border border-slate-100 overflow-hidden p-0 rounded-2xl">
             {/* Viewer Navbar Tabs */}
-            <div className="flex border-b border-slate-100 bg-slate-50/50">
+            <div className="flex overflow-x-auto whitespace-nowrap border-b border-slate-100 bg-slate-50/50 scrollbar-none select-none">
               <button
                 onClick={() => setActiveTab('CONTENT')}
-                className={`flex-1 py-3.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all border-b-2 cursor-pointer ${
+                className={`py-3.5 px-5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all border-b-2 cursor-pointer shrink-0 ${
                   activeTab === 'CONTENT'
                     ? 'border-primary-600 text-primary-700 bg-white'
                     : 'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50'
@@ -202,7 +202,7 @@ const StudentCourseView = () => {
               </button>
               <button
                 onClick={() => setActiveTab('MEETINGS')}
-                className={`flex-1 py-3.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all border-b-2 cursor-pointer ${
+                className={`py-3.5 px-5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all border-b-2 cursor-pointer shrink-0 ${
                   activeTab === 'MEETINGS'
                     ? 'border-primary-600 text-primary-700 bg-white'
                     : 'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50'
@@ -213,7 +213,7 @@ const StudentCourseView = () => {
               </button>
               <button
                 onClick={() => setActiveTab('ANNOUNCEMENTS')}
-                className={`flex-1 py-3.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all border-b-2 cursor-pointer ${
+                className={`py-3.5 px-5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all border-b-2 cursor-pointer shrink-0 ${
                   activeTab === 'ANNOUNCEMENTS'
                     ? 'border-primary-600 text-primary-700 bg-white'
                     : 'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50'
@@ -224,7 +224,7 @@ const StudentCourseView = () => {
               </button>
               <button
                 onClick={() => setActiveTab('ASSIGNMENTS')}
-                className={`flex-1 py-3.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all border-b-2 cursor-pointer ${
+                className={`py-3.5 px-5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all border-b-2 cursor-pointer shrink-0 ${
                   activeTab === 'ASSIGNMENTS'
                     ? 'border-primary-600 text-primary-700 bg-white'
                     : 'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50'
@@ -233,7 +233,19 @@ const StudentCourseView = () => {
                 <IoClipboardOutline size={18} />
                 <span>Assignments</span>
               </button>
+              <button
+                onClick={() => setActiveTab('QUIZ')}
+                className={`py-3.5 px-5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all border-b-2 cursor-pointer shrink-0 ${
+                  activeTab === 'QUIZ'
+                    ? 'border-primary-600 text-primary-700 bg-white'
+                    : 'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <IoClipboardOutline size={18} />
+                <span>Final Quiz</span>
+              </button>
             </div>
+
 
             {/* Tab Contents */}
             <div className="p-6">
@@ -637,6 +649,29 @@ const StudentCourseView = () => {
                       })}
                     </div>
                   )}
+                </div>
+              )}
+
+              {activeTab === 'QUIZ' && (
+                <div className="space-y-6 text-center py-8">
+                  <div className="h-16 w-16 bg-primary-50 text-primary-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
+                    <IoClipboardOutline size={30} />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-base font-extrabold text-slate-800">Final Assessment Quiz</h3>
+                    <p className="text-xs text-slate-500 max-w-md mx-auto">
+                      Complete this course by taking the final quiz. To pass the course and lock in your completion certificate, you must satisfy attendance, assignments and quiz criteria.
+                    </p>
+                  </div>
+                  <div className="pt-2">
+                    <Link
+                      to={`/student/course/${courseId}/quiz`}
+                      className="inline-flex items-center gap-2 px-5 py-3 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold rounded-xl shadow-md shadow-primary-600/10 transition-all cursor-pointer"
+                    >
+                      <span>Go to Final Quiz Screen</span>
+                      <IoChevronForwardOutline size={14} />
+                    </Link>
+                  </div>
                 </div>
               )}
             </div>

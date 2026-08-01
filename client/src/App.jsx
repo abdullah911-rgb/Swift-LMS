@@ -58,6 +58,13 @@ import AdminAttendance from './pages/admin/AdminAttendance';
 import MyCertificates from './pages/student/MyCertificates';
 import PaymentPage from './pages/student/PaymentPage';
 import StudentPayments from './pages/student/StudentPayments';
+import FinalQuiz from './pages/student/FinalQuiz';
+
+// Admin extras
+import AdminQuizzes from './pages/admin/AdminQuizzes';
+
+// Public extras
+import VerifyCertificate from './pages/public/VerifyCertificate';
 
 // Zoom Classroom
 import ZoomClassroom from './pages/ZoomClassroom';
@@ -102,6 +109,10 @@ function App() {
             <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
             <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPasswordPage />} />
             <Route path={ROUTES.RESET_PASSWORD} element={<ResetPasswordPage />} />
+            {/* Public verification route */}
+            <Route path="verify/:code" element={<VerifyCertificate />} />
+            <Route path={ROUTES.VERIFY_CERTIFICATE} element={<VerifyCertificate />} />
+
             
             {/* 404 handler */}
             <Route path="*" element={<NotFoundPage />} />
@@ -125,6 +136,7 @@ function App() {
             <Route path="certificates" element={<MyCertificates />} />
             <Route path="payments" element={<StudentPayments />} />
             <Route path="pay/:courseId" element={<PaymentPage />} />
+            <Route path="course/:courseId/quiz" element={<FinalQuiz />} />
           </Route>
 
           {/* Instructor Dashboard Layout */}
@@ -140,6 +152,7 @@ function App() {
             <Route path="dashboard" element={<InstructorDashboard />} />
             <Route path="courses" element={<InstructorCourses />} />
             <Route path="courses/:courseId/manage" element={<CourseForm />} />
+            <Route path="courses/new" element={<CourseForm />} />
             <Route path="students" element={<InstructorStudents />} />
             <Route path="profile" element={<InstructorProfile />} />
             <Route path="calendar" element={<InstructorCalendar />} />
@@ -165,6 +178,7 @@ function App() {
             <Route path="payments" element={<AdminPayments />} />
             <Route path="revenue" element={<AdminRevenue />} />
             <Route path="attendance" element={<AdminAttendance />} />
+            <Route path="quizzes" element={<AdminQuizzes />} />
           </Route>
 
           {/* Zoom In-Browser Classroom — accessible to all authenticated roles */}

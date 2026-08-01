@@ -30,12 +30,17 @@ function getCertFields(cert) {
     certificateId: cert.certificateId || 'SST-XXXX-00000000',
     issuedAt: cert.issuedAt,
     verificationCode: cert.verificationCode,
+    attendanceMarks: cert.attendanceMarks || 0,
+    assignmentMarks: cert.assignmentMarks || 0,
+    mcqMarks: cert.mcqMarks || 0,
+    finalMarks: cert.finalMarks || 0,
   };
 }
 
 /** Visual certificate using the approved template + dynamic overlays */
 function CertificateDocument({ cert, id }) {
   const fields = getCertFields(cert);
+  const verifyUrl = `${window.location.origin}/verify/${fields.verificationCode}`;
 
   return (
     <div
@@ -95,6 +100,21 @@ function CertificateDocument({ cert, id }) {
         </div>
       </div>
 
+      {/* Marks Breakdown Box — placed on left bottom overlay */}
+      <div
+        className="absolute bg-white/95 backdrop-blur-xs border border-[#c9a227]/30 rounded-lg p-2 shadow-xs font-sans flex flex-col gap-0.5 text-[#0a2540]"
+        style={{ left: '7.5%', bottom: '15%', width: '28%' }}
+      >
+        <span className="text-[6px] sm:text-[9px] font-extrabold uppercase tracking-wide text-[#c9a227]">Evaluation Summary</span>
+        <div className="grid grid-cols-2 gap-x-2 text-[5px] sm:text-[8px] font-medium border-t border-slate-100 pt-0.5">
+          <span>Attendance:</span> <span className="font-bold text-right">{fields.attendanceMarks.toFixed(1)}/20</span>
+          <span>Assignments:</span> <span className="font-bold text-right">{fields.assignmentMarks.toFixed(1)}/20</span>
+          <span>Final MCQ:</span> <span className="font-bold text-right">{fields.mcqMarks.toFixed(1)}/60</span>
+          <span className="font-bold text-[#c9a227] border-t border-slate-100 mt-0.5">Total Score:</span>
+          <span className="font-extrabold text-[#c9a227] text-right border-t border-slate-100 mt-0.5">{fields.finalMarks.toFixed(1)}/100</span>
+        </div>
+      </div>
+
       {/* Certificate ID — bottom-left ribbon area */}
       <div
         className="absolute"
@@ -108,18 +128,20 @@ function CertificateDocument({ cert, id }) {
         </p>
       </div>
 
-      {/*
-        QR Code placeholder — bottom-right.
-        Content/destination will be configured later per institute requirements.
-      */}
+      {/* Dynamic Verification QR Code — bottom-right */}
       <div
-        className="absolute flex flex-col items-center justify-center bg-white border border-slate-300"
+        className="absolute flex items-center justify-center bg-white border border-slate-200 p-0.5 shadow-xs"
         style={{ right: '5.5%', bottom: '4.5%', width: '11%', aspectRatio: '1' }}
-        title="QR code will be configured soon"
+        title="Scan to verify authenticity"
       >
-        <span className="text-[7px] sm:text-[9px] font-semibold text-slate-400 text-center leading-tight px-1">
-          QR
-        </span>
+        <img
+          src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(verifyUrl)}`}
+          alt="Verification QR"
+          className="w-full h-full object-contain"
+          onError={(e) => {
+            e.target.style.display = 'none';
+          }}
+        />
       </div>
     </div>
   );
@@ -151,6 +173,8 @@ export default function MyCertificates() {
   const handleDownload = async (cert) => {
     try {
       const fields = getCertFields(cert);
+      const verifyUrl = `${window.location.origin}/verify/${fields.verificationCode}`;
+
       const img = new Image();
       img.crossOrigin = 'anonymous';
       await new Promise((resolve, reject) => {
@@ -195,25 +219,89 @@ export default function MyCertificates() {
       ctx.font = `${Math.round(w * 0.016)}px Georgia, serif`;
       ctx.fillText(dateText, w / 2, dateY);
 
+      // Draw Evaluation Summary Box on Canvas
+      const boxW = w * 0.28;
+      const boxH = h * 0.18;
+      const boxX = w * 0.08;
+      const boxY = h * 0.69;
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
+      ctx.strokeStyle = '#c9a227';
+      ctx.lineWidth = Math.round(w * 0.0015);
+      
+      // Simple rect fallback if roundRect unsupported
+      if (ctx.roundRect) {
+        ctx.beginPath();
+        ctx.roundRect(boxX, boxY, boxW, boxH, 8);
+        ctx.fill();
+        ctx.stroke();
+      } else {
+        ctx.fillRect(boxX, boxY, boxW, boxH);
+        ctx.strokeRect(boxX, boxY, boxW, boxH);
+      }
+
+      ctx.fillStyle = '#c9a227';
+      ctx.font = `bold ${Math.round(w * 0.012)}px sans-serif`;
+      ctx.textAlign = 'left';
+      ctx.fillText('EVALUATION BREAKDOWN', boxX + 15, boxY + 22);
+
+      ctx.fillStyle = '#0a2540';
+      ctx.font = `${Math.round(w * 0.010)}px sans-serif`;
+
+      const drawRow = (label, val, yOffset) => {
+        ctx.textAlign = 'left';
+        ctx.fillText(label, boxX + 15, boxY + yOffset);
+        ctx.textAlign = 'right';
+        ctx.fillText(val, boxX + boxW - 15, boxY + yOffset);
+      };
+
+      drawRow('Attendance (20):', fields.attendanceMarks.toFixed(1), 45);
+      drawRow('Assignments (20):', fields.assignmentMarks.toFixed(1), 65);
+      drawRow('Final MCQ (60):', fields.mcqMarks.toFixed(1), 85);
+
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(boxX + 15, boxY + 95);
+      ctx.lineTo(boxX + boxW - 15, boxY + 95);
+      ctx.stroke();
+
+      ctx.fillStyle = '#c9a227';
+      ctx.font = `bold ${Math.round(w * 0.011)}px sans-serif`;
+      drawRow('Total Score:', `${fields.finalMarks.toFixed(1)} / 100`, 112);
+
       // Certificate ID (bottom-left)
       ctx.fillStyle = '#c9a227';
       ctx.font = `bold ${Math.round(w * 0.016)}px monospace`;
       ctx.textAlign = 'left';
       ctx.fillText(fields.certificateId, w * 0.08, h * 0.935);
 
-      // QR placeholder (bottom-right) — content TBD
-      const qrSize = w * 0.1;
-      const qrX = w * 0.855;
-      const qrY = h * 0.82;
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(qrX, qrY, qrSize, qrSize);
-      ctx.strokeStyle = '#cbd5e1';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(qrX, qrY, qrSize, qrSize);
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = `${Math.round(w * 0.012)}px sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.fillText('QR', qrX + qrSize / 2, qrY + qrSize / 2 + 4);
+      // Load and Draw QR code on Canvas
+      const qrImg = new Image();
+      qrImg.crossOrigin = 'anonymous';
+      await new Promise((resolve) => {
+        qrImg.onload = resolve;
+        qrImg.onerror = resolve;
+        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(verifyUrl)}`;
+      });
+
+      if (qrImg.complete && qrImg.naturalWidth > 0) {
+        ctx.drawImage(qrImg, w * 0.855, h * 0.82, w * 0.1, w * 0.1);
+      } else {
+        // Fallback placeholder
+        const qrSize = w * 0.1;
+        const qrX = w * 0.855;
+        const qrY = h * 0.82;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(qrX, qrY, qrSize, qrSize);
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(qrX, qrY, qrSize, qrSize);
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = `${Math.round(w * 0.012)}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText('QR', qrX + qrSize / 2, qrY + qrSize / 2 + 4);
+      }
 
       canvas.toBlob((blob) => {
         if (!blob) {

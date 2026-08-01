@@ -30,6 +30,7 @@ import {
   IoMegaphoneOutline
 } from 'react-icons/io5';
 import toast from 'react-hot-toast';
+import QuizManager from './QuizManager';
 
 const CourseForm = () => {
   const { courseId } = useParams();
@@ -636,6 +637,16 @@ const CourseForm = () => {
             }`}
           >
             <IoMegaphoneOutline className="inline mr-1" /> Announcements ({announcements.length})
+          </button>
+          <button
+            onClick={() => { setActiveTab('QUIZ'); }}
+            className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
+              activeTab === 'QUIZ'
+                ? 'border-primary-600 text-primary-700 font-bold'
+                : 'border-transparent text-slate-400 hover:text-slate-600'
+            }`}
+          >
+            <IoClipboardOutline className="inline mr-1" /> Final Quiz
           </button>
         </div>
       )}
@@ -1776,6 +1787,9 @@ const CourseForm = () => {
             </div>
           </Card>
         </div>
+      )}
+      {isEditMode && activeTab === 'QUIZ' && (
+        <QuizManager courseId={courseId} />
       )}
     </div>
 

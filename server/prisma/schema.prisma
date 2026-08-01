@@ -145,6 +145,7 @@ model User {
   attendance           Attendance[]
   otpVerifications     OTPVerification[]
   quizAttempts         QuizAttempt[]
+  quizSessions         QuizSession[]
   platformAnnouncements PlatformAnnouncement[] @relation("AdminAnnouncements")
   reviews              Review[]               @relation("StudentReviews")
   receivedReviews      Review[]               @relation("InstructorReviews")
@@ -262,6 +263,7 @@ model Course {
   reviews          Review[]
   paymentRequests  PaymentRequest[]
   assignments      Assignment[]
+  quiz             Quiz?        @relation("CourseQuiz")
 
   @@index([slug])
   @@index([categoryId])
@@ -284,7 +286,7 @@ model Module {
 
   course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   lessons     Lesson[]
-  quiz        Quiz?
+  quiz        Quiz?    @relation("ModuleQuiz")
 
   @@index([courseId])
   @@map("modules")
@@ -383,19 +385,26 @@ model LessonProgress {
 // ─── QUIZ ─────────────────────────────────────────────────────────────────────
 
 model Quiz {
-  id          String       @id @default(uuid())
-  moduleId    String       @unique
-  title       String
-  description String?
-  passMark    Int          @default(60) // Percentage required to pass
-  timeLimit   Int?         // Minutes — null = no limit
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id               String       @id @default(uuid())
+  courseId         String       @unique  // Course-level final assessment quiz
+  moduleId         String?      @unique  // Optional module-level quiz (unused currently)
+  title            String
+  description      String?
+  passMark         Int          @default(60) // Percentage required to pass
+  timePerQuestion  Int          @default(60) // Seconds per question (client + server enforced)
+  maxAttempts      Int          @default(3)  // Maximum attempts allowed
+  isPublished      Boolean      @default(false) // Controls student visibility
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 
-  module      Module       @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  questions   QuizQuestion[]
-  attempts    QuizAttempt[]
+  course           Course?      @relation("CourseQuiz", fields: [courseId], references: [id], onDelete: Cascade)
+  module           Module?      @relation("ModuleQuiz", fields: [moduleId], references: [id], onDelete: Cascade)
+  questions        QuizQuestion[]
+  attempts         QuizAttempt[]
+  sessions         QuizSession[]
 
+  @@index([courseId])
+  @@index([moduleId])
   @@map("quizzes")
 }
 
@@ -408,7 +417,6 @@ model QuizQuestion {
   correctAnswer Json         // Array of correct option IDs
   explanation   String?
   order         Int
-  marks         Int          @default(1)
   createdAt     DateTime     @default(now())
 
   quiz          Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
@@ -418,21 +426,46 @@ model QuizQuestion {
 }
 
 model QuizAttempt {
-  id          String    @id @default(uuid())
-  quizId      String
-  userId      String
-  answers     Json      // { questionId: [selectedOptionIds] }
-  score       Float     // Percentage
-  passed      Boolean
-  timeTaken   Int?      // Seconds
-  completedAt DateTime  @default(now())
+  id              String    @id @default(uuid())
+  quizId          String
+  userId          String
+  attemptNumber   Int       // Sequential attempt number per student per quiz
+  answers         Json      @default("{}") // { questionId: selectedOptionId }
+  currentQuestion Int       @default(0)   // 0-based index of current question (for resume)
+  score           Float     @default(0)   // Quiz percentage (0-100) — for pass/fail check
+  rawScore        Float     @default(0)   // Number of correct answers
+  mcqMarks        Float     @default(0)   // (rawScore/totalQuestions)*60 — final MCQ marks
+  passed          Boolean   @default(false)
+  timeTaken       Int?                    // Total seconds from start to submit
+  startedAt       DateTime  @default(now())
+  completedAt     DateTime?               // null = in-progress; set when submitted
 
-  quiz        Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quiz            Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session         QuizSession?
 
   @@index([quizId])
   @@index([userId])
   @@map("quiz_attempts")
+}
+
+// Tracks the active quiz window for timer enforcement and question sequencing
+model QuizSession {
+  id              String      @id @default(uuid())
+  quizId          String
+  userId          String
+  attemptId       String      @unique    // Links to the in-progress QuizAttempt
+  expiresAt       DateTime               // startedAt + (totalQuestions * timePerQuestion) + grace
+  createdAt       DateTime    @default(now())
+
+  quiz            Quiz        @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attempt         QuizAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  @@unique([quizId, userId]) // Only one active session per student per quiz
+  @@index([quizId])
+  @@index([userId])
+  @@map("quiz_sessions")
 }
 
 // ─── ZOOM MEETING ─────────────────────────────────────────────────────────────
@@ -493,6 +526,12 @@ model Certificate {
   issuedAt         DateTime @default(now())
   certificateUrl   String?
   verificationCode String   @unique @default(uuid())
+
+  // Marks breakdown stored at issuance time
+  attendanceMarks  Float    @default(0) // out of 20
+  assignmentMarks  Float    @default(0) // out of 20
+  mcqMarks         Float    @default(0) // out of 60
+  finalMarks       Float    @default(0) // total out of 100
 
   student          User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
   course           Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)

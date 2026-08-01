@@ -1,15 +1,22 @@
 const multer = require('multer');
 const path = require('path');
 const crypto = require('crypto');
+const fs = require('fs');
 const config = require('../config/env');
 
 const ALLOWED_IMAGE_TYPES = /jpeg|jpg|png|gif|webp/;
 const ALLOWED_VIDEO_TYPES = /mp4|mkv|avi|mov|webm/;
 const ALLOWED_DOC_TYPES = /pdf|doc|docx|ppt|pptx|xls|xlsx|zip/;
 
+// Resolve upload path absolutely
+const uploadDir = path.resolve(__dirname, '../../uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, config.upload.path);
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
