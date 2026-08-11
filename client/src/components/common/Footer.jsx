@@ -30,7 +30,7 @@ const Footer = () => {
             </span>
           </div>
           <p className="text-sm leading-relaxed text-slate-400">
-            Swift — empowering professionals with industry-certified safety and technology education.
+            Swift empowering professionals with industry-certified safety and technology education.
           </p>
           
           {/* Social Links */}
@@ -61,7 +61,7 @@ const Footer = () => {
               <Link to={ROUTES.ABOUT} className="hover:text-accent-400 transition-colors">About SWIFT</Link>
             </li>
             <li>
-              <Link to={ROUTES.FAQ} className="hover:text-accent-400 transition-colors">Frequently Asked Questions</Link>
+              <Link to={ROUTES.FAQ} className="hover:text-accent-400 transition-colors">News &amp; Updates</Link>
             </li>
             <li>
               <Link to={ROUTES.FINANCE_SOFTWARE} className="hover:text-accent-400 transition-colors">Finance Software</Link>

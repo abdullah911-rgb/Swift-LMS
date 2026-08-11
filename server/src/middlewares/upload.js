@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const config = require('../config/env');
 
-const ALLOWED_IMAGE_TYPES = /jpeg|jpg|png|gif|webp/;
+const ALLOWED_IMAGE_TYPES = /jpeg|jpg|png|gif|webp|jfif/;
 const ALLOWED_VIDEO_TYPES = /mp4|mkv|avi|mov|webm/;
 const ALLOWED_DOC_TYPES = /pdf|doc|docx|ppt|pptx|xls|xlsx|zip/;
 

@@ -61,12 +61,12 @@ const CourseDetailPage = () => {
   const handleEnroll = async () => {
     if (!user) {
       toast.error('Please sign in to enroll in courses.');
-      navigate(ROUTES.LOGIN, { state: { from: { pathname: `/courses/${slug}` } } });
+      navigate(ROUTES.LOGIN, { state: { from: { pathname: `/checkout/${course.id}` } } });
       return;
     }
 
     if (!course.isFree && Number(course.price) > 0) {
-      navigate(`/student/pay/${course.id}`);
+      navigate(`/checkout/${course.id}`);
       return;
     }
 
@@ -142,7 +142,7 @@ const CourseDetailPage = () => {
               </span>
               <span className="flex items-center gap-1.5">
                 <IoGlobeOutline size={16} />
-                <span>{course.language}</span>
+                <span>{course.language ? `${course.language} & Urdu` : 'English & Urdu'}</span>
               </span>
               <span className="flex items-center gap-1.5">
                 <IoRibbonOutline size={16} />

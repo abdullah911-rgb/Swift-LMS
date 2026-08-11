@@ -430,7 +430,7 @@ export default function VerifyCertificate() {
                 Certificate Verification Portal
               </h1>
               <p className="text-slate-500 text-sm max-w-sm mx-auto leading-relaxed">
-                Verify credential authenticity, matching graduate registry profiles, and academic transcripts in real-time.
+                Verify credential Authenticity, Matching Graduate Registry Profiles, and Academic Transcripts in real-time.
               </p>
             </div>
 

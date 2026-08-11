@@ -3,9 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
-import { instructorService, moduleService, lessonService, zoomService, resourceService, assignmentService, announcementService } from '../../services/portalService';
+import { instructorService, moduleService, lessonService, zoomService, resourceService, assignmentService, announcementService, adminService } from '../../services/portalService';
 import api from '../../services/api';
 import { ROUTES } from '../../constants';
+import { useAuth } from '../../contexts/AuthContext';
 import { 
   IoChevronBackOutline, 
   IoBookOutline, 
@@ -36,6 +37,9 @@ const CourseForm = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
   const isEditMode = !!courseId;
+  const { user } = useAuth();
+  const [instructors, setInstructors] = useState([]);
+  const [instructorId, setInstructorId] = useState('');
 
   // General course state
   const [categories, setCategories] = useState([]);
@@ -196,19 +200,17 @@ const CourseForm = () => {
           setCategories(catRes.data.data.categories);
         }
 
+        if (user?.role === 'ADMIN') {
+          const instRes = await adminService.getInstructors();
+          if (instRes.data?.data?.instructors) {
+            setInstructors(instRes.data.data.instructors);
+          }
+        }
+
         if (isEditMode) {
-          // Fetch course details
-          const courseRes = await api.get(`/courses/stats`); // we can load stats or getOne course
-          // Wait, getOne is /api/courses/:slug, let's load from public course detail endpoint but using getOne course id / slug?
-          // Let's load the course details directly using standard API path if we have it or a direct GET /api/courses/stats/detail?
-          // Let's query by getOne course slug or let's inspect the courseController.getOne
-          // In courseController, getOne is GET /api/courses/:slug. Wait! How do we edit if we only have the ID?
-          // Let's check courseController routes:
-          // router.get('/:slug', optionalAuth, courseController.getOne);
-          // Wait, can we fetch the course detail using getOne or do we need to search it? Let's check all GET courses endpoints.
-          // Let's fetch all courses from instructor courses list and find the matches
-          const myCoursesRes = await instructorService.getMyCourses();
-          const match = myCoursesRes.data?.data?.courses?.find(c => c.id === courseId);
+          // Fetch course details directly bypassing list filtering
+          const courseRes = await api.get(`/courses/${courseId}`);
+          const match = courseRes.data?.data?.course || courseRes.data?.data;
           if (match) {
             setTitle(match.title || '');
             setDescription(match.description || '');
@@ -221,15 +223,18 @@ const CourseForm = () => {
             setCertificate(match.certificate);
             setDurationInMonths(match.durationInMonths || 2);
             setCourseApprovalStatus({ pendingApproval: match.pendingApproval, status: match.status });
+            if (match.instructorId) {
+              setInstructorId(match.instructorId);
+            }
             if (match.thumbnail) {
-              setThumbnailPreview(match.thumbnail.startsWith('/') ? `http://localhost:5000${match.thumbnail}` : match.thumbnail);
+              setThumbnailPreview(match.thumbnail.startsWith('/') ? match.thumbnail.startsWith('http') ? match.thumbnail : `http://localhost:5000${match.thumbnail}` : match.thumbnail);
             }
             
             // Now load modules
             fetchModules(courseId);
           } else {
             toast.error('Course not found or unauthorized.');
-            navigate(ROUTES.INSTRUCTOR_COURSES);
+            navigate(user?.role === 'ADMIN' ? '/admin/courses' : ROUTES.INSTRUCTOR_COURSES);
           }
         }
       } catch (err) {
@@ -237,8 +242,10 @@ const CourseForm = () => {
         toast.error('Failed to load initial data.');
       }
     };
-    initData();
-  }, [courseId, isEditMode]);
+    if (user) {
+      initData();
+    }
+  }, [courseId, isEditMode, user, navigate]);
 
   const fetchModules = async (cId) => {
     try {
@@ -261,6 +268,10 @@ const CourseForm = () => {
 
   const handleCourseSubmit = async (e) => {
     e.preventDefault();
+    if (user?.role === 'ADMIN' && !instructorId) {
+      toast.error('Please assign an instructor to the course.');
+      return;
+    }
     setSavingCourse(true);
     try {
       const formData = new FormData();
@@ -277,18 +288,26 @@ const CourseForm = () => {
       if (thumbnail) {
         formData.append('thumbnail', thumbnail);
       }
+      if (user?.role === 'ADMIN' && instructorId) {
+        formData.append('instructorId', instructorId);
+      }
 
       if (isEditMode) {
         const res = await instructorService.updateCourse(courseId, formData);
         if (res.data?.success) {
-          toast.success('Changes submitted for admin approval!');
-          setCourseApprovalStatus((p) => ({ ...p, pendingApproval: true }));
+          if (user?.role === 'ADMIN') {
+            toast.success('Course details updated successfully!');
+            navigate('/admin/courses');
+          } else {
+            toast.success('Changes submitted for admin approval!');
+            setCourseApprovalStatus((p) => ({ ...p, pendingApproval: true }));
+          }
         }
       } else {
         const res = await instructorService.createCourse(formData);
         if (res.data?.success) {
-          toast.success('Course created! Now build the syllabus and submit for approval.');
-          navigate(`/instructor/courses/${res.data.data.course.id}/manage`);
+          toast.success(user?.role === 'ADMIN' ? 'Course created successfully!' : 'Course created! Now build the syllabus and submit for approval.');
+          navigate(user?.role === 'ADMIN' ? `/admin/courses/${res.data.data.course.id}/manage` : `/instructor/courses/${res.data.data.course.id}/manage`);
         }
       }
     } catch (err) {
@@ -526,7 +545,7 @@ const CourseForm = () => {
     <div className="space-y-6 font-sans">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Link to={ROUTES.INSTRUCTOR_COURSES} className="p-2 rounded-xl bg-white border border-slate-100 hover:bg-slate-50 text-slate-600 transition-all">
+        <Link to={user?.role === 'ADMIN' ? '/admin/courses' : ROUTES.INSTRUCTOR_COURSES} className="p-2 rounded-xl bg-white border border-slate-100 hover:bg-slate-50 text-slate-600 transition-all">
           <IoChevronBackOutline size={18} />
         </Link>
         <div>
@@ -705,6 +724,25 @@ const CourseForm = () => {
               <h3 className="text-xs font-bold uppercase tracking-widest text-primary-700">Classification</h3>
 
               <div className="space-y-3">
+                {user?.role === 'ADMIN' && (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-500">Instructor <span className="text-red-500">*</span></label>
+                    <select
+                      required
+                      value={instructorId}
+                      onChange={(e) => setInstructorId(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-100 bg-white focus:outline-none focus:border-primary-600 text-sm"
+                    >
+                      <option value="">Select Instructor</option>
+                      {instructors.map((inst) => (
+                        <option key={inst.id} value={inst.id}>
+                          {inst.name} ({inst.email})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-500">Category</label>
                   <select
@@ -1212,6 +1250,99 @@ const CourseForm = () => {
               </div>
             )}
           </Card>
+        </div>
+      )}
+
+      {/* Tab: RESOURCES (Files) */}
+      {isEditMode && activeTab === 'RESOURCES' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left panel — Upload area */}
+          <div className="lg:col-span-1 space-y-4">
+            <Card hover={false} className="bg-white border border-slate-100 p-6 shadow-sm">
+              <h3 className="text-sm font-heading font-bold text-slate-800 mb-2">Upload Course Materials</h3>
+              <p className="text-xs text-slate-400 leading-relaxed mb-4">
+                Upload PDFs, slides, documentation, code, or spreadsheet exercises for students to download offline. Max file size: 20MB.
+              </p>
+              
+              <label htmlFor="resource-files-upload" className={`flex flex-col items-center justify-center border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 min-h-[160px] ${
+                uploadingFiles ? 'bg-slate-50 border-primary-300' : 'bg-slate-50/50 border-slate-200 hover:border-primary-400 hover:bg-slate-50'
+              }`}>
+                {uploadingFiles ? (
+                  <div className="space-y-3">
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent mx-auto" />
+                    <p className="text-xs font-bold text-primary-600">Uploading files...</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <IoCloudUploadOutline size={32} className="text-slate-400 mx-auto" />
+                    <div>
+                      <p className="text-xs font-bold text-slate-700">Click to upload files</p>
+                      <p className="text-[10px] text-slate-400 mt-1">Select one or more files</p>
+                    </div>
+                  </div>
+                )}
+                <input
+                  id="resource-files-upload"
+                  type="file"
+                  multiple
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  disabled={uploadingFiles}
+                />
+              </label>
+            </Card>
+          </div>
+
+          {/* Right panel — List of uploaded files */}
+          <div className="lg:col-span-2">
+            <Card hover={false} className="bg-white border border-slate-100 p-6 shadow-sm min-h-[250px] flex flex-col">
+              <h3 className="text-sm font-heading font-bold text-slate-800 mb-4">Course Files ({resources.length})</h3>
+              
+              {resources.length === 0 ? (
+                <div className="flex-grow flex flex-col items-center justify-center text-center p-8 text-slate-400">
+                  <IoDocumentOutline size={40} className="opacity-30 mb-2" />
+                  <p className="text-xs font-medium">No files uploaded yet.</p>
+                  <p className="text-[10px] text-slate-400 mt-1">Use the upload tool on the left to add resources.</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+                  {resources.map((file) => (
+                    <div key={file.id} className="flex items-center justify-between p-3 border border-slate-100 rounded-xl bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="p-2 bg-primary-50 text-primary-600 rounded-lg shrink-0">
+                          <IoDocumentOutline size={18} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-800 truncate" title={file.name}>{file.name}</p>
+                          <p className="text-[9px] text-slate-400 font-semibold uppercase mt-0.5">
+                            {file.fileType} {file.fileSize ? `· ${(file.fileSize / 1024).toFixed(1)} KB` : ''}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0 ml-3">
+                        <a
+                          href={getImageUrl(file.fileUrl)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="p-1.5 hover:bg-slate-100 text-slate-500 rounded-lg transition-all"
+                          title="Download file"
+                        >
+                          <IoDownloadOutline size={16} />
+                        </a>
+                        <button
+                          onClick={() => handleDeleteResource(file.id)}
+                          className="p-1.5 hover:bg-red-50 text-red-500 hover:text-red-600 rounded-lg transition-all cursor-pointer"
+                          title="Remove file"
+                        >
+                          <IoTrashOutline size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          </div>
         </div>
       )}
 

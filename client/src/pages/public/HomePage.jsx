@@ -13,7 +13,6 @@ import {
   IoVideocamOutline,
   IoArrowForwardOutline,
   IoCheckmarkCircleSharp,
-  IoCloseOutline,
 } from 'react-icons/io5';
 
 const HomePage = () => {
@@ -26,7 +25,6 @@ const HomePage = () => {
 
   const [featuredCourses, setFeaturedCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [adDismissed, setAdDismissed] = useState(false);
 
   useEffect(() => {
     const fetchHomeData = async () => {
@@ -71,7 +69,7 @@ const HomePage = () => {
                 Learn <span className="bg-gradient-to-r from-primary-700 to-accent-500 bg-clip-text text-transparent">Safety & Technology</span> from Certified Experts
               </h1>
               <p className="text-base sm:text-lg text-slate-500 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                Join Swift Institute of Safety & Technology — attend live Zoom interactive classes, access downloadable course materials, track your progress, and earn internationally recognized certificates.
+                Join Swift Institute of Safety & Technology attend live Zoom interactive classes, access downloadable course materials, track your progress, and earn internationally recognized certificates.
               </p>
               
               <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
@@ -99,42 +97,54 @@ const HomePage = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="lg:col-span-6 mt-12 lg:mt-0 relative flex justify-center"
             >
-              <div className="relative w-full max-w-md lg:max-w-lg aspect-square sm:aspect-video lg:aspect-square bg-gradient-to-tr from-primary-500/10 to-primary-300/5 rounded-3xl p-6 border border-slate-100 shadow-2xl flex items-center justify-center overflow-hidden">
+              <div className="relative w-full max-w-xs lg:max-w-sm aspect-square bg-gradient-to-tr from-primary-500/10 to-primary-300/5 rounded-2xl p-3 border border-slate-100 shadow-xl flex items-center justify-center overflow-hidden">
+
                 {/* Floating UI Elements */}
-                <div className="absolute top-10 left-10 p-4 bg-white/80 backdrop-blur border border-slate-100 rounded-2xl soft-shadow space-y-2 animate-bounce" style={{ animationDuration: '6s' }}>
-                  <div className="flex items-center gap-2">
+                <div className="absolute top-4 left-4 p-3 bg-white/90 backdrop-blur border border-slate-100 rounded-xl soft-shadow space-y-1.5 z-10" style={{ animation: 'float1 6s ease-in-out infinite' }}>
+                  <div className="flex items-center gap-1.5">
                     <div className="h-2 w-2 rounded-full bg-emerald-500 animate-ping"></div>
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Live Zoom Session</span>
+                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Live Zoom Session</span>
                   </div>
-                  <p className="text-xs font-bold text-slate-800">Full-Stack Web Dev</p>
+                  <p className="text-[10px] font-bold text-slate-800">Safety Management</p>
                 </div>
 
-                <div className="absolute bottom-10 right-10 p-4 bg-white/85 backdrop-blur border border-slate-100 rounded-2xl soft-shadow flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-primary-100 text-primary-700">
-                    <IoRibbonOutline size={20} />
+                <div className="absolute bottom-4 right-4 p-2.5 bg-white/90 backdrop-blur border border-slate-100 rounded-xl soft-shadow flex items-center gap-2 z-10" style={{ animation: 'float2 7s ease-in-out infinite' }}>
+                  <div className="p-2 rounded-lg bg-primary-100 text-primary-700">
+                    <IoRibbonOutline size={16} />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-slate-800">Certificate Issued</p>
-                    <p className="text-[10px] text-slate-400 font-semibold">Verified on Blockchain</p>
+                    <p className="text-[10px] font-bold text-slate-800">Certificate Issued</p>
+                    <p className="text-[8px] text-slate-400 font-semibold">Verified on Blockchain</p>
                   </div>
                 </div>
 
-                {/* Main Illustration placeholder (elegant graphic block) */}
-                {!adDismissed && (
-                  <div className="w-4/5 h-4/5 rounded-2xl bg-gradient-to-br from-primary-600 to-primary-500 shadow-lg text-white flex flex-col justify-end p-8 relative">
-                    <button
-                      type="button"
-                      onClick={() => setAdDismissed(true)}
-                      className="absolute top-3 right-3 z-20 p-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white transition-colors cursor-pointer"
-                      aria-label="Dismiss"
-                    >
-                      <IoCloseOutline size={20} />
-                    </button>
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.2),transparent)]"></div>
-                    <h3 className="text-2xl font-heading font-extrabold tracking-tight relative z-10">Expand Your Learning Envelope</h3>
-                    <p className="text-sm text-primary-100 mt-2 relative z-10 font-light">Interactive platform with live mentoring, downloadable slides, and automated quiz modules.</p>
-                  </div>
-                )}
+                {/* Progress badge */}
+                <div className="absolute top-4 right-4 px-2.5 py-1.5 bg-accent-500/90 text-white rounded-lg text-[9px] font-bold shadow-md z-10" style={{ animation: 'float1 8s ease-in-out infinite reverse' }}>
+                  🎓 48 Experts
+                </div>
+
+                {/* Hero Study Illustration */}
+                <img
+                  src="/hero-illustration.jpg"
+                  alt="Student studying online with Swift Institute"
+                  className="w-full h-full object-cover rounded-2xl"
+                  style={{ animation: 'subtleFloat 8s ease-in-out infinite' }}
+                />
+
+                <style>{`
+                  @keyframes float1 {
+                    0%, 100% { transform: translateY(0px); }
+                    50% { transform: translateY(-8px); }
+                  }
+                  @keyframes float2 {
+                    0%, 100% { transform: translateY(0px); }
+                    50% { transform: translateY(8px); }
+                  }
+                  @keyframes subtleFloat {
+                    0%, 100% { transform: scale(1); }
+                    50% { transform: scale(1.02); }
+                  }
+                `}</style>
               </div>
             </motion.div>
 
@@ -170,7 +180,7 @@ const HomePage = () => {
                 <IoBookOutline size={22} />
               </div>
               <h3 className="text-base font-heading font-bold text-accent-400 mb-2">Premium Materials</h3>
-              <p className="text-xs sm:text-sm text-primary-200/80 leading-relaxed">Download curriculum PDFs, exercises, and slides curated by instructors. Access them offline, anytime.</p>
+              <p className="text-xs sm:text-sm text-primary-200/80 leading-relaxed">Download curriculum PDFs, Exercises, and Slides Curated by Instructors. Access them offline, anytime.</p>
             </div>
 
             {/* Card 3 */}
@@ -180,7 +190,7 @@ const HomePage = () => {
                 <IoRibbonOutline size={22} />
               </div>
               <h3 className="text-base font-heading font-bold text-accent-400 mb-2">Certified Milestone</h3>
-              <p className="text-xs sm:text-sm text-primary-200/80 leading-relaxed">Gain a verified, secure certificate of completion to showcase on LinkedIn or your portfolio resume.</p>
+              <p className="text-xs sm:text-sm text-primary-200/80 leading-relaxed">Gain a Verified, Secure Certificate of Completion to Showcase on LinkedIn or your Portfolio Resume.</p>
             </div>
 
           </div>
@@ -258,7 +268,7 @@ const HomePage = () => {
                       
                       <div className="flex items-center gap-3">
                         <span className="text-sm font-bold text-slate-800">
-                          {course.isFree ? 'Free' : `$${course.price}`}
+                          {course.isFree ? 'Free' : `PKR ${Number(course.price).toLocaleString()}`}
                         </span>
                         <Link to={`/courses/${course.slug}`} className="text-xs font-bold text-primary-600 hover:text-primary-700 transition-colors">
                           View Details →

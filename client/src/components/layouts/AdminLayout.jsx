@@ -72,7 +72,7 @@ const AdminLayout = () => {
         <div className="flex items-center gap-3 min-w-0">
           <img src="/Logo1.jpeg" alt="Swift" className="h-9 w-9 object-contain rounded-lg border border-slate-800 shrink-0" />
           <div className="min-w-0">
-            <span className="font-heading font-bold text-lg tracking-tight text-slate-100">SWIFT</span>
+            <span className="font-heading font-bold text-lg tracking-tight text-slate-100">Swift</span>
             <p className="text-[10px] text-accent-500 font-bold uppercase tracking-widest">System Admin</p>
           </div>
         </div>

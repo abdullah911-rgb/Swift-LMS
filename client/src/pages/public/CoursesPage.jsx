@@ -106,7 +106,7 @@ const CoursesPage = () => {
             Browse All Curriculum Courses
           </h1>
           <p className="text-sm text-slate-500 max-w-lg mx-auto">
-            Choose from beginner to advanced programming tracks. Master design patterns, framework layers, and databases.
+            Choose from Beginner to Advanced Programming Tracks. Master Design Patterns, Framework Layers, and Databases.
           </p>
         </div>
 

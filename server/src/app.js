@@ -77,7 +77,12 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-app.use('/uploads', express.static(uploadDir));
+app.use('/uploads', (req, res, next) => {
+  if (req.path.endsWith('.jfif')) {
+    res.setHeader('Content-Type', 'image/jpeg');
+  }
+  next();
+}, express.static(uploadDir));
 
 
 // Routes

@@ -21,7 +21,7 @@ const AboutPage = () => {
         {/* Content Columns */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           <div className="space-y-6">
-            <h2 className="text-2xl font-heading font-bold text-primary-900">Industry-Standard Professional Ecosystem</h2>
+            <h2 className="text-2xl font-heading font-bold text-primary-900">Multi Professional EcoSystem</h2>
             <p className="text-sm text-slate-500 leading-relaxed">
               We provide structured training programs designed to keep workplaces safe and build tech-savvy professionals. Our custom LMS integrates live lectures, downloadable manuals, and automated validation features to guarantee optimal learning outcomes.
             </p>

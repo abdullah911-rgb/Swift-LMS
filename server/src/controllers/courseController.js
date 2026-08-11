@@ -81,17 +81,17 @@ const courseController = {
   // GET /api/courses/:slug — Public course detail
   getOne: asyncHandler(async (req, res) => {
     const { slug } = req.params;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+
     const course = await prisma.course.findUnique({
-      where: { slug },
+      where: isUuid ? { id: slug } : { slug },
       include: {
         category: { select: { id: true, name: true, slug: true } },
         instructor: { select: { id: true, name: true, avatar: true, bio: true } },
         modules: {
-          where: { isPublished: true },
           orderBy: { order: 'asc' },
           include: {
             lessons: {
-              where: { isPublished: true },
               orderBy: { order: 'asc' },
               select: {
                 id: true,
@@ -108,7 +108,12 @@ const courseController = {
       },
     });
 
-    if (!course || course.status !== 'PUBLISHED') {
+    if (!course) {
+      return sendError(res, 'Course not found.', 404);
+    }
+
+    const isStaff = req.user && (req.user.role === 'ADMIN' || (req.user.role === 'INSTRUCTOR' && course.instructorId === req.user.id));
+    if (course.status !== 'PUBLISHED' && !isStaff) {
       return sendError(res, 'Course not found.', 404);
     }
 
@@ -168,9 +173,11 @@ const courseController = {
 
   // POST /api/courses
   create: asyncHandler(async (req, res) => {
-    const { title, description, shortDescription, categoryId, level, price, isFree, language, learningOutcomes, prerequisites, certificate, durationInMonths } = req.body;
+    const { title, description, shortDescription, categoryId, level, price, isFree, language, learningOutcomes, prerequisites, certificate, durationInMonths, instructorId } = req.body;
     const slug = slugify(title, { lower: true, strict: true }) + '-' + Date.now();
     const thumbnail = req.file ? `/uploads/${req.file.filename}` : null;
+
+    const targetInstructorId = (req.user.role === 'ADMIN' && instructorId) ? instructorId : req.user.id;
 
     const course = await prisma.course.create({
       data: {
@@ -180,7 +187,7 @@ const courseController = {
         shortDescription,
         thumbnail,
         categoryId,
-        instructorId: req.user.id,
+        instructorId: targetInstructorId,
         level: level || 'BEGINNER',
         price: parseFloat(price) || 0,
         isFree: isFree === 'true' || isFree === true,
@@ -195,7 +202,7 @@ const courseController = {
       include: { category: true, instructor: { select: { id: true, name: true } } },
     });
 
-    sendSuccess(res, 'Course created successfully. Submit it for admin approval when ready.', { course }, 201);
+    sendSuccess(res, 'Course created successfully.', { course }, 201);
   }),
 
   // PUT /api/courses/:id
@@ -209,7 +216,7 @@ const courseController = {
       return sendError(res, 'You are not authorized to edit this course.', 403);
     }
 
-    const { title, description, shortDescription, categoryId, level, price, isFree, language, status, learningOutcomes, prerequisites, certificate, durationInMonths } = req.body;
+    const { title, description, shortDescription, categoryId, level, price, isFree, language, status, learningOutcomes, prerequisites, certificate, durationInMonths, instructorId } = req.body;
     const data = {};
 
     // Instructors can only update details; changes go into pendingEdits for admin review
@@ -253,6 +260,7 @@ const courseController = {
     if (prerequisites) data.prerequisites = prerequisites;
     if (certificate !== undefined) data.certificate = certificate !== 'false';
     if (req.file) data.thumbnail = `/uploads/${req.file.filename}`;
+    if (req.user.role === 'ADMIN' && instructorId) data.instructorId = instructorId;
 
     const updated = await prisma.course.update({ where: { id }, data, include: { category: true } });
     sendSuccess(res, 'Course updated.', { course: updated });

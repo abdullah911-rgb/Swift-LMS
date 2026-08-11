@@ -45,7 +45,7 @@ const StudentLayout = () => {
             className="font-heading font-bold text-lg tracking-tight text-white truncate"
             onClick={() => setSidebarOpen(false)}
           >
-            SWIFT<span className="text-accent-400">Student</span>
+            Swift <span className="text-accent-400">Student</span>
           </Link>
         </div>
         {/* Close button — only visible on mobile */}

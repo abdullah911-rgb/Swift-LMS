@@ -45,7 +45,7 @@ const Navbar = () => {
     { label: 'Certificate Verification', path: ROUTES.VERIFY_CERTIFICATE },
     { label: 'About Us', path: ROUTES.ABOUT },
 
-    { label: 'FAQ', path: ROUTES.FAQ },
+    { label: 'News & Updates', path: ROUTES.FAQ },
     { label: 'Contact', path: ROUTES.CONTACT },
   ];
 

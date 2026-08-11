@@ -28,6 +28,7 @@ import ForgotPasswordPage from './pages/public/ForgotPasswordPage';
 import ResetPasswordPage from './pages/public/ResetPasswordPage';
 import NotFoundPage from './pages/public/NotFoundPage';
 import FinanceSoftwarePage from './pages/public/FinanceSoftwarePage';
+import CheckoutPage from './pages/public/CheckoutPage';
 
 // Portal Dashboards
 import StudentDashboard from './pages/student/StudentDashboard';
@@ -103,6 +104,7 @@ function App() {
             <Route path={ROUTES.FAQ} element={<FAQPage />} />
             <Route path={ROUTES.CONTACT} element={<ContactPage />} />
             <Route path={ROUTES.FINANCE_SOFTWARE} element={<FinanceSoftwarePage />} />
+            <Route path="/checkout/:courseId" element={<CheckoutPage />} />
             
             {/* Auth Routes */}
             <Route path={ROUTES.LOGIN} element={<LoginPage />} />
@@ -172,6 +174,8 @@ function App() {
             <Route path="approvals" element={<AdminApprovals />} />
             <Route path="users" element={<AdminUsers />} />
             <Route path="courses" element={<AdminCourses />} />
+            <Route path="courses/:courseId/manage" element={<CourseForm />} />
+            <Route path="courses/new" element={<CourseForm />} />
             <Route path="enrollments" element={<AdminEnrollments />} />
             <Route path="instructors" element={<AdminInstructors />} />
             <Route path="announcements" element={<AdminAnnouncements />} />
