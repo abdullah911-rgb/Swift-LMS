@@ -174,7 +174,28 @@ const adminController = {
         course: { select: { id: true, title: true, instructor: { select: { name: true } } } },
       },
     });
-    sendSuccess(res, 'Enrollments fetched.', { enrollments });
+
+    // Enrich each enrollment with Roll# (certificateId) and payment amount
+    const enriched = await Promise.all(
+      enrollments.map(async (enr) => {
+        const certificate = await prisma.certificate.findUnique({
+          where: { studentId_courseId: { studentId: enr.studentId, courseId: enr.courseId } },
+          select: { certificateId: true },
+        });
+        const payment = await prisma.paymentRequest.findUnique({
+          where: { studentId_courseId: { studentId: enr.studentId, courseId: enr.courseId } },
+          select: { amount: true, status: true },
+        });
+        return {
+          ...enr,
+          certificateId: certificate?.certificateId || null,
+          paymentAmount: payment?.amount ? Number(payment.amount) : null,
+          paymentStatus: payment?.status || null,
+        };
+      })
+    );
+
+    sendSuccess(res, 'Enrollments fetched.', { enrollments: enriched });
   }),
 
   // GET /api/admin/instructors/pending — List all pending instructors

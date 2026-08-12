@@ -6,10 +6,10 @@ import toast from 'react-hot-toast';
 import {
   IoSchoolOutline,
   IoPersonOutline,
-  IoBookOutline,
   IoRefreshOutline,
   IoCalendarOutline,
-  IoStatsChartOutline,
+  IoCardOutline,
+  IoCashOutline,
 } from 'react-icons/io5';
 
 const AdminEnrollments = () => {
@@ -29,6 +29,20 @@ const AdminEnrollments = () => {
   };
 
   useEffect(() => { fetchEnrollments(); }, []);
+
+  const paymentBadge = (status) => {
+    if (!status) return <span className="text-[10px] text-slate-400">—</span>;
+    const map = {
+      APPROVED: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      PENDING:  'bg-amber-50  text-amber-700  border-amber-200',
+      REJECTED: 'bg-red-50    text-red-700    border-red-200',
+    };
+    return (
+      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${map[status] || 'bg-slate-50 text-slate-500 border-slate-200'}`}>
+        {status}
+      </span>
+    );
+  };
 
   return (
     <div className="space-y-6 font-sans">
@@ -68,6 +82,8 @@ const AdminEnrollments = () => {
                   <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Student</th>
                   <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Course</th>
                   <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Instructor</th>
+                  <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Roll #</th>
+                  <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Paid (PKR)</th>
                   <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Progress</th>
                   <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Enrolled</th>
                 </tr>
@@ -75,6 +91,8 @@ const AdminEnrollments = () => {
               <tbody className="divide-y divide-slate-50">
                 {enrollments.map((enr) => (
                   <tr key={enr.id} className="hover:bg-slate-50/50 transition-colors">
+
+                    {/* Student */}
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
                         <div className="h-8 w-8 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-xs shrink-0">
@@ -94,17 +112,54 @@ const AdminEnrollments = () => {
                         </div>
                       </div>
                     </td>
+
+                    {/* Course */}
                     <td className="px-5 py-4">
-                      <p className="text-xs font-semibold text-slate-800 line-clamp-1 max-w-[200px]">
+                      <p className="text-xs font-semibold text-slate-800 line-clamp-1 max-w-[180px]">
                         {enr.course?.title}
                       </p>
                     </td>
+
+                    {/* Instructor */}
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-1.5 text-xs text-slate-500">
                         <IoPersonOutline size={12} />
                         <span>{enr.course?.instructor?.name || '—'}</span>
                       </div>
                     </td>
+
+                    {/* Roll # */}
+                    <td className="px-5 py-4">
+                      {enr.certificateId ? (
+                        <div className="flex items-center gap-1.5">
+                          <IoCardOutline size={12} className="text-primary-500 shrink-0" />
+                          <span className="text-[11px] font-mono font-semibold text-primary-700 bg-primary-50 px-2 py-0.5 rounded-lg">
+                            {enr.certificateId}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-[10px] text-slate-400 italic">Not issued</span>
+                      )}
+                    </td>
+
+                    {/* Paid (PKR) */}
+                    <td className="px-5 py-4">
+                      <div className="flex flex-col gap-1">
+                        {enr.paymentAmount != null ? (
+                          <div className="flex items-center gap-1.5">
+                            <IoCashOutline size={12} className="text-emerald-500 shrink-0" />
+                            <span className="text-xs font-bold text-emerald-700">
+                              PKR {enr.paymentAmount.toLocaleString()}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-[10px] text-slate-400 italic">No payment</span>
+                        )}
+                        {paymentBadge(enr.paymentStatus)}
+                      </div>
+                    </td>
+
+                    {/* Progress */}
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2">
                         <div className="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
@@ -118,12 +173,15 @@ const AdminEnrollments = () => {
                         </span>
                       </div>
                     </td>
+
+                    {/* Enrolled Date */}
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-1.5 text-xs text-slate-500">
                         <IoCalendarOutline size={12} />
                         {new Date(enr.enrolledAt).toLocaleDateString()}
                       </div>
                     </td>
+
                   </tr>
                 ))}
               </tbody>
