@@ -91,7 +91,7 @@ function CertificateDocument({ cert, id }) {
       {/* Student Name — covers "Your Name Here" placeholder with solid white cover */}
       <div
         className="absolute left-[15%] right-[15%] text-center"
-        style={{ top: '47.5%', height: '8.5%' }}
+        style={{ top: '51.2%', height: '8.5%' }}
       >
         <div className="w-full h-full bg-white flex items-center justify-center">
           <p
@@ -110,7 +110,7 @@ function CertificateDocument({ cert, id }) {
       {/* Course / Program Name — covers "[PROGRAM / COURSE NAME]" placeholder with solid white cover */}
       <div
         className="absolute left-[10%] right-[10%] text-center"
-        style={{ top: '61.5%', height: '5.5%' }}
+        style={{ top: '63.0%', height: '5.5%' }}
       >
         <div className="w-full h-full bg-white flex items-center justify-center">
           <p
@@ -125,7 +125,7 @@ function CertificateDocument({ cert, id }) {
       {/* Date Day — fills first blank space */}
       <div
         className="absolute text-center flex items-center justify-center"
-        style={{ left: '43.2%', width: '3.6%', top: '68.2%', height: '3.2%' }}
+        style={{ left: '46.8%', width: '4.0%', top: '68.6%', height: '3.2%' }}
       >
         <span
           className="text-[#0a2540] leading-none font-bold"
@@ -141,7 +141,7 @@ function CertificateDocument({ cert, id }) {
       {/* Date Month — fills second blank space */}
       <div
         className="absolute text-center flex items-center justify-center"
-        style={{ left: '51.2%', width: '7.6%', top: '68.2%', height: '3.2%' }}
+        style={{ left: '55.5%', width: '9.5%', top: '68.6%', height: '3.2%' }}
       >
         <span
           className="text-[#0a2540] leading-none font-bold"
@@ -157,7 +157,7 @@ function CertificateDocument({ cert, id }) {
       {/* Date Year — fills third blank space */}
       <div
         className="absolute text-center flex items-center justify-center"
-        style={{ left: '62.2%', width: '3.0%', top: '68.2%', height: '3.2%' }}
+        style={{ left: '68.2%', width: '2.5%', top: '68.6%', height: '3.2%' }}
       >
         <span
           className="text-[#0a2540] leading-none font-bold"
@@ -188,7 +188,7 @@ function CertificateDocument({ cert, id }) {
       {/* Certificate ID — covers bottom-left template ID with matching solid dark blue cover */}
       <div
         className="absolute flex items-center justify-center bg-[#0a2540] px-1 text-center"
-        style={{ left: '7.6%', bottom: '6.2%', width: '14.8%', height: '3.4%' }}
+        style={{ left: '9.6%', bottom: '6.2%', width: '14.2%', height: '3.4%' }}
       >
         <p
           className="font-mono font-bold text-[#c9a227] tracking-wider leading-none text-center w-full"
