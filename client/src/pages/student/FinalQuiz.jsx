@@ -42,8 +42,8 @@ export default function FinalQuiz() {
   const [results, setResults] = useState(null);
   const [claimingCert, setClaimingCert] = useState(false);
 
-  const navigate = useNavigate();
   const timerRef = useRef(null);
+
 
   // Check eligibility and load history
   const checkStatus = async () => {
