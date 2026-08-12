@@ -42,6 +42,22 @@ function CertificateDocument({ cert, id }) {
   const fields = getCertFields(cert);
   const verifyUrl = `${window.location.origin}/verify/${fields.verificationCode}`;
 
+  // Extract day, month, and year for the template blank spaces
+  const dateObj = new Date(fields.issuedAt);
+  const dayNum = dateObj.getDate();
+  const monthName = dateObj.toLocaleString('en-US', { month: 'long' });
+  const yearNum = dateObj.getFullYear();
+  const getSuffix = (n) => {
+    if (n > 3 && n < 21) return 'th';
+    switch (n % 10) {
+      case 1: return 'st';
+      case 2: return 'nd';
+      case 3: return 'rd';
+      default: return 'th';
+    }
+  };
+  const dayText = `${dayNum}${getSuffix(dayNum)}`;
+
   return (
     <div
       id={id}
@@ -57,8 +73,8 @@ function CertificateDocument({ cert, id }) {
 
       {/* Student Name — covers "Your Name Here" placeholder with solid white cover */}
       <div
-        className="absolute left-[12%] right-[12%] text-center"
-        style={{ top: '48.5%', height: '7%' }}
+        className="absolute left-[15%] right-[15%] text-center"
+        style={{ top: '46.5%', height: '8%' }}
       >
         <div className="w-full h-full bg-white flex items-center justify-center">
           <p
@@ -70,10 +86,10 @@ function CertificateDocument({ cert, id }) {
         </div>
       </div>
 
-      {/* Course / Program Name — covers course placeholder with solid white cover */}
+      {/* Course / Program Name — covers "[PROGRAM / COURSE NAME]" placeholder with solid white cover */}
       <div
         className="absolute left-[10%] right-[10%] text-center"
-        style={{ top: '56.8%', height: '5.5%' }}
+        style={{ top: '61.5%', height: '5.5%' }}
       >
         <div className="w-full h-full bg-white flex items-center justify-center">
           <p
@@ -85,19 +101,43 @@ function CertificateDocument({ cert, id }) {
         </div>
       </div>
 
-      {/* Issue Date — covers date placeholders with solid white cover */}
+      {/* Date Day — fills first blank space */}
       <div
-        className="absolute left-[15%] right-[15%] text-center"
-        style={{ top: '65.5%', height: '4%' }}
+        className="absolute text-center flex items-center justify-center"
+        style={{ left: '42.5%', width: '5.5%', top: '67.8%', height: '3%' }}
       >
-        <div className="w-full h-full bg-white flex items-center justify-center">
-          <p
-            className="font-serif text-[#0a2540] leading-none"
-            style={{ fontSize: 'clamp(9px, 1.1vw, 13px)' }}
-          >
-            {formatIssueDate(fields.issuedAt)}
-          </p>
-        </div>
+        <span
+          className="font-serif font-bold italic text-[#0a2540]"
+          style={{ fontSize: 'clamp(9px, 1.2vw, 13px)' }}
+        >
+          {dayText}
+        </span>
+      </div>
+
+      {/* Date Month — fills second blank space */}
+      <div
+        className="absolute text-center flex items-center justify-center"
+        style={{ left: '51%', width: '9%', top: '67.8%', height: '3%' }}
+      >
+        <span
+          className="font-serif font-bold italic text-[#0a2540]"
+          style={{ fontSize: 'clamp(9px, 1.2vw, 13px)' }}
+        >
+          {monthName}
+        </span>
+      </div>
+
+      {/* Date Year — fills third blank space */}
+      <div
+        className="absolute text-center flex items-center justify-center"
+        style={{ left: '61.5%', width: '3.5%', top: '67.8%', height: '3%' }}
+      >
+        <span
+          className="font-serif font-bold italic text-[#0a2540]"
+          style={{ fontSize: 'clamp(9px, 1.2vw, 13px)' }}
+        >
+          {yearNum}
+        </span>
       </div>
 
       {/* Marks Breakdown Box — placed on left bottom overlay */}
@@ -130,12 +170,12 @@ function CertificateDocument({ cert, id }) {
 
       {/* Dynamic Verification QR Code — bottom-right, fits exactly on top of the template white box */}
       <div
-        className="absolute flex items-center justify-center bg-white border border-slate-200 p-0.5 shadow-xs"
-        style={{ right: '3.8%', bottom: '3.8%', width: '10.5%', aspectRatio: '1' }}
+        className="absolute flex items-center justify-center bg-white p-0.5 shadow-xs"
+        style={{ right: '3.5%', bottom: '4.2%', width: '8.8%', aspectRatio: '1' }}
         title="Scan to verify authenticity"
       >
         <img
-          src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(verifyUrl)}`}
+          src={`https://chart.googleapis.com/chart?cht=qr&chs=150x150&chl=${encodeURIComponent(verifyUrl)}`}
           alt="Verification QR"
           className="w-full h-full object-contain"
           onError={(e) => {
@@ -208,17 +248,17 @@ export default function MyCertificates() {
       const h = canvas.height;
 
       // Cover + draw student name (solid white box to hide Your Name Here)
-      const nameRectY = h * 0.485;
-      const nameRectH = h * 0.07;
+      const nameRectY = h * 0.465;
+      const nameRectH = h * 0.08;
       ctx.fillStyle = '#ffffff';
-      ctx.fillRect(w * 0.12, nameRectY, w * 0.76, nameRectH);
+      ctx.fillRect(w * 0.15, nameRectY, w * 0.7, nameRectH);
       ctx.fillStyle = '#0a2540';
       ctx.font = `italic bold ${Math.round(w * 0.045)}px Georgia, serif`;
       ctx.textAlign = 'center';
-      ctx.fillText(fields.studentName, w / 2, nameRectY + nameRectH / 2 + Math.round(w * 0.012), w * 0.72);
+      ctx.fillText(fields.studentName, w / 2, nameRectY + nameRectH / 2 + Math.round(w * 0.012), w * 0.68);
 
       // Course title (solid white box to hide course placeholder)
-      const courseRectY = h * 0.568;
+      const courseRectY = h * 0.615;
       const courseRectH = h * 0.055;
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(w * 0.1, courseRectY, w * 0.8, courseRectH);
@@ -226,15 +266,31 @@ export default function MyCertificates() {
       ctx.font = `bold ${Math.round(w * 0.024)}px Georgia, serif`;
       ctx.fillText(fields.courseTitle.toUpperCase(), w / 2, courseRectY + courseRectH / 2 + Math.round(w * 0.008), w * 0.76);
 
-      // Date (solid white box to hide date blanks)
-      const dateRectY = h * 0.655;
-      const dateRectH = h * 0.04;
-      const dateText = formatIssueDate(fields.issuedAt);
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(w * 0.15, dateRectY, w * 0.7, dateRectH);
+      // Date blanks (draw day, month, and year separately on top of template lines)
+      const dateObj = new Date(fields.issuedAt);
+      const dayNum = dateObj.getDate();
+      const monthName = dateObj.toLocaleString('en-US', { month: 'long' });
+      const yearNum = dateObj.getFullYear();
+      const getSuffix = (n) => {
+        if (n > 3 && n < 21) return 'th';
+        switch (n % 10) {
+          case 1: return 'st';
+          case 2: return 'nd';
+          case 3: return 'rd';
+          default: return 'th';
+        }
+      };
+      const dayText = `${dayNum}${getSuffix(dayNum)}`;
+
       ctx.fillStyle = '#0a2540';
-      ctx.font = `${Math.round(w * 0.014)}px Georgia, serif`;
-      ctx.fillText(dateText, w / 2, dateRectY + dateRectH / 2 + Math.round(w * 0.005));
+      ctx.font = `bold italic ${Math.round(w * 0.015)}px Georgia, serif`;
+      ctx.textAlign = 'center';
+
+      // Place day, month, and year exactly in the template blank lines
+      const dateY = h * 0.702;
+      ctx.fillText(dayText, w * 0.45, dateY);
+      ctx.fillText(monthName, w * 0.555, dateY);
+      ctx.fillText(String(yearNum), w * 0.635, dateY);
 
       // Draw Evaluation Summary Box on Canvas
       const boxW = w * 0.28;
@@ -288,10 +344,10 @@ export default function MyCertificates() {
       drawRow('Total Score:', `${fields.finalMarks.toFixed(1)} / 100`, 112);
 
       // Certificate ID (bottom-left) - solid dark blue cover matching ribbon to hide placeholder
-      const certIdRectX = w * 0.074;
-      const certIdRectY = h * 0.906;
-      const certIdRectW = w * 0.215;
-      const certIdRectH = h * 0.032;
+      const certIdRectX = w * 0.076;
+      const certIdRectY = h * 0.895;
+      const certIdRectW = w * 0.21;
+      const certIdRectH = h * 0.035;
       ctx.fillStyle = '#071f38';
       ctx.fillRect(certIdRectX, certIdRectY, certIdRectW, certIdRectH);
       ctx.fillStyle = '#c9a227';
@@ -305,12 +361,12 @@ export default function MyCertificates() {
       await new Promise((resolve) => {
         qrImg.onload = resolve;
         qrImg.onerror = resolve;
-        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(verifyUrl)}`;
+        qrImg.src = `https://chart.googleapis.com/chart?cht=qr&chs=150x150&chl=${encodeURIComponent(verifyUrl)}`;
       });
 
-      const qrSize = w * 0.105;
-      const qrX = w * (1 - 0.038 - 0.105);
-      const qrY = h * (1 - 0.038) - qrSize;
+      const qrSize = w * 0.088;
+      const qrX = w * (1 - 0.035 - 0.088);
+      const qrY = h * (1 - 0.042) - qrSize;
 
       if (qrImg.complete && qrImg.naturalWidth > 0) {
         // Draw background white box to hide template's square, then draw QR
@@ -329,6 +385,7 @@ export default function MyCertificates() {
         ctx.textAlign = 'center';
         ctx.fillText('QR', qrX + qrSize / 2, qrY + qrSize / 2 + 4);
       }
+
 
       canvas.toBlob((blob) => {
         if (!blob) {
