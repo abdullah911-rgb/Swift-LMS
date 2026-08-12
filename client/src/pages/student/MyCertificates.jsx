@@ -10,18 +10,18 @@ const CERT_TEMPLATE = '/Certificate.png';
 const CERT_LAYOUT = {
   name: {
     left: 0.195,
-    top: 0.434,
+    top: 0.426,
     width: 0.61,
-    height: 0.072,
+    height: 0.08,
     fontSize: 'clamp(24px, 4vw, 52px)',
     canvasFontScale: 0.05,
     textYOffset: 0.017,
   },
   course: {
     left: 0.255,
-    top: 0.596,
+    top: 0.590,
     width: 0.49,
-    height: 0.043,
+    height: 0.05,
     fontSize: 'clamp(12px, 1.7vw, 23px)',
     canvasFontScale: 0.023,
     textYOffset: 0.006,
@@ -155,15 +155,13 @@ function CertificateDocument({ cert, id }) {
           height: `${CERT_LAYOUT.name.height * 100}%`,
         }}
       >
-        <div className="w-full h-full bg-white/92 flex items-center justify-center">
+        <div className="w-full h-full bg-white flex items-center justify-center">
           <p
             className="text-[#0a2540] leading-none whitespace-nowrap"
             style={{ 
               fontFamily: "'Great Vibes', cursive", 
               fontSize: CERT_LAYOUT.name.fontSize,
               fontWeight: 'normal',
-              textShadow: '0 1px 0 rgba(255,255,255,0.35)',
-              transform: 'translateY(4%)',
               maxWidth: '100%',
             }}
           >
@@ -182,7 +180,7 @@ function CertificateDocument({ cert, id }) {
           height: `${CERT_LAYOUT.course.height * 100}%`,
         }}
       >
-        <div className="w-full h-full bg-white/94 flex items-center justify-center px-[1%]">
+        <div className="w-full h-full bg-white flex items-center justify-center px-[1%]">
           <p
             className="font-serif font-bold uppercase tracking-wide text-[#0a2540] leading-none whitespace-nowrap"
             style={{ fontSize: CERT_LAYOUT.course.fontSize, maxWidth: '100%' }}
@@ -207,7 +205,6 @@ function CertificateDocument({ cert, id }) {
           style={{ 
             fontFamily: "'Great Vibes', cursive",
             fontSize: CERT_LAYOUT.date.fontSize,
-            transform: 'translateY(8%)',
           }}
         >
           {dayText}
@@ -229,7 +226,6 @@ function CertificateDocument({ cert, id }) {
           style={{ 
             fontFamily: "'Great Vibes', cursive",
             fontSize: CERT_LAYOUT.date.fontSize,
-            transform: 'translateY(8%)',
           }}
         >
           {monthName}
@@ -251,7 +247,6 @@ function CertificateDocument({ cert, id }) {
           style={{ 
             fontFamily: "'Great Vibes', cursive",
             fontSize: CERT_LAYOUT.date.fontSize,
-            transform: 'translateY(8%)',
           }}
         >
           {yearShort}
@@ -387,7 +382,7 @@ export default function MyCertificates() {
       const nameRectY = h * CERT_LAYOUT.name.top;
       const nameRectW = w * CERT_LAYOUT.name.width;
       const nameRectH = h * CERT_LAYOUT.name.height;
-      ctx.fillStyle = 'rgba(255,255,255,0.92)';
+      ctx.fillStyle = '#ffffff';
       ctx.fillRect(nameRectX, nameRectY, nameRectW, nameRectH);
       ctx.fillStyle = '#0a2540';
       ctx.font = `normal ${Math.round(w * CERT_LAYOUT.name.canvasFontScale)}px 'Great Vibes', 'Brush Script MT', cursive`;
@@ -404,7 +399,7 @@ export default function MyCertificates() {
       const courseRectY = h * CERT_LAYOUT.course.top;
       const courseRectW = w * CERT_LAYOUT.course.width;
       const courseRectH = h * CERT_LAYOUT.course.height;
-      ctx.fillStyle = 'rgba(255,255,255,0.94)';
+      ctx.fillStyle = '#ffffff';
       ctx.fillRect(courseRectX, courseRectY, courseRectW, courseRectH);
       ctx.fillStyle = '#0a2540';
       ctx.font = `bold ${Math.round(w * CERT_LAYOUT.course.canvasFontScale)}px Georgia, serif`;
