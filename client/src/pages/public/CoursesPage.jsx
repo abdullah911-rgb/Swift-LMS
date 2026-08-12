@@ -1,6 +1,7 @@
 import { getImageUrl } from '../../constants/index';
 import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
 import Card from '../../components/ui/Card';
 import Input from '../../components/ui/Input';
@@ -10,6 +11,7 @@ import Spinner from '../../components/ui/Spinner';
 import { IoSearchOutline, IoFilterOutline } from 'react-icons/io5';
 
 const CoursesPage = () => {
+  const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [courses, setCourses] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -99,7 +101,20 @@ const CoursesPage = () => {
   return (
     <div className="py-12 sm:py-16 bg-slate-50/30 font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-        
+
+        {/* Back to Portal button — only for signed-in students */}
+        {user?.role === 'STUDENT' && (
+          <div className="flex justify-start">
+            <Link
+              to="/student/dashboard"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary-700 text-white text-sm font-semibold shadow-sm hover:bg-primary-800 transition-all group"
+            >
+              <span className="text-base group-hover:-translate-x-0.5 transition-transform">←</span>
+              Back to My Portal
+            </Link>
+          </div>
+        )}
+
         {/* Header Intro */}
         <div className="text-center space-y-3">
           <h1 className="text-3xl sm:text-4xl font-heading font-extrabold text-slate-900 leading-none">

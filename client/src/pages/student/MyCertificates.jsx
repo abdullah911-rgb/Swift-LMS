@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { certificateService } from '../../services/portalService';
+import { certificateService, enrollmentService } from '../../services/portalService';
 import toast from 'react-hot-toast';
-import { IoDownloadOutline, IoPrintOutline, IoCloseOutline } from 'react-icons/io5';
+import { IoDownloadOutline, IoPrintOutline, IoCloseOutline, IoRibbonOutline } from 'react-icons/io5';
 
 const CERT_TEMPLATE = '/Certificate.png';
 
@@ -156,6 +156,22 @@ export default function MyCertificates() {
   useEffect(() => {
     (async () => {
       try {
+        // Step 1: Fetch all enrollments to find completed courses
+        const enrollRes = await enrollmentService.getMyEnrollments();
+        const enrollments = enrollRes.data?.data?.enrollments || [];
+
+        // Step 2: Auto-issue certificates for eligible completed courses
+        const eligibleCourseIds = enrollments
+          .filter(e => e.progress >= 80 && e.course?.certificate)
+          .map(e => e.courseId);
+
+        if (eligibleCourseIds.length > 0) {
+          await Promise.allSettled(
+            eligibleCourseIds.map(id => certificateService.getCertificate(id))
+          );
+        }
+
+        // Step 3: Now fetch the issued certificates list
         const res = await certificateService.getMyCertificates();
         setCertificates(res.data?.data?.certificates || []);
       } catch {

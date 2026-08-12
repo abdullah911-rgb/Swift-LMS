@@ -160,6 +160,23 @@ async function checkAndDeactivateEnrollment(studentId, courseId) {
   }
 }
 
+function adjustMeetingStatuses(meetings) {
+  const now = new Date();
+  return meetings.map(meeting => {
+    const start = new Date(meeting.startTime);
+    const end = new Date(start.getTime() + (meeting.duration || 60) * 60 * 1000);
+    if (now > end && (meeting.status === 'LIVE' || meeting.status === 'SCHEDULED')) {
+      const updatedMeeting = { ...meeting, status: 'ENDED' };
+      prisma.zoomMeeting.update({
+        where: { id: meeting.id },
+        data: { status: 'ENDED' }
+      }).catch(err => console.error('Error auto-ending meeting:', err));
+      return updatedMeeting;
+    }
+    return meeting;
+  });
+}
+
 const zoomController = {
   // ── GET /api/zoom/course/:courseId ─────────────────────────────────────────
   getByCourse: asyncHandler(async (req, res) => {
@@ -182,10 +199,12 @@ const zoomController = {
       where.status = { in: VISIBLE_TO_STUDENTS };
     }
 
-    const meetings = await prisma.zoomMeeting.findMany({
+    const rawMeetings = await prisma.zoomMeeting.findMany({
       where,
       orderBy: { startTime: 'desc' },
     });
+
+    const meetings = adjustMeetingStatuses(rawMeetings);
 
     sendSuccess(res, 'Meetings fetched.', { meetings });
   }),
@@ -451,7 +470,7 @@ const zoomController = {
       });
     }
 
-    sendSuccess(res, 'Calendar meetings fetched.', { meetings });
+    sendSuccess(res, 'Calendar meetings fetched.', { meetings: adjustMeetingStatuses(meetings) });
   }),
 
   getPendingApprovals: asyncHandler(async (req, res) => {

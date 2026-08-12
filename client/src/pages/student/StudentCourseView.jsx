@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
-import { enrollmentService, assignmentService } from '../../services/portalService';
+import { enrollmentService, assignmentService, certificateService } from '../../services/portalService';
 import { ROUTES } from '../../constants';
 import { 
   IoChevronBackOutline, 
@@ -26,11 +26,13 @@ import toast from 'react-hot-toast';
 
 const StudentCourseView = () => {
   const { courseId } = useParams();
+  const navigate = useNavigate();
   const [enrollment, setEnrollment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentLesson, setCurrentLesson] = useState(null);
   const [activeTab, setActiveTab] = useState('CONTENT'); // 'CONTENT', 'MEETINGS', 'ANNOUNCEMENTS', 'ASSIGNMENTS'
   const [completedLessonIds, setCompletedLessonIds] = useState(new Set());
+  const [claimingCert, setClaimingCert] = useState(false);
 
   // Assignments state
   const [assignments, setAssignments] = useState([]);
@@ -133,6 +135,20 @@ const StudentCourseView = () => {
     }
   };
 
+  const handleClaimCertificate = async () => {
+    setClaimingCert(true);
+    try {
+      await certificateService.getCertificate(courseId);
+      toast.success('🎓 Certificate issued! Redirecting...');
+      setTimeout(() => navigate('/student/certificates'), 800);
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Could not issue certificate.';
+      toast.error(msg);
+    } finally {
+      setClaimingCert(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -169,12 +185,13 @@ const StudentCourseView = () => {
               {enrollment.progress}% Complete
             </span>
             {enrollment.progress >= 80 && course.certificate && (
-              <Link
-                to="/student/certificates"
-                className="flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 uppercase hover:bg-emerald-100 transition-colors"
+              <button
+                onClick={handleClaimCertificate}
+                disabled={claimingCert}
+                className="flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 uppercase hover:bg-emerald-100 transition-colors disabled:opacity-60 cursor-pointer"
               >
-                🎓 Claim Certificate
-              </Link>
+                {claimingCert ? '⏳ Generating...' : '🎓 Claim Certificate'}
+              </button>
             )}
           </div>
         </div>
@@ -358,17 +375,25 @@ const StudentCourseView = () => {
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {course.zoomMeetings.map((meeting) => (
+                  {course.zoomMeetings.map((meeting) => {
+                        const mStatus = (() => {
+                          const s = meeting.status;
+                          if (s !== 'LIVE' && s !== 'SCHEDULED') return s;
+                          const start = new Date(meeting.startTime);
+                          const end = new Date(start.getTime() + (meeting.duration || 60) * 60 * 1000);
+                          return new Date() > end ? 'ENDED' : s;
+                        })();
+                        return (
                         <div key={meeting.id} className="p-4 border border-slate-100 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white hover:border-primary-100">
                           <div className="space-y-1">
                             <span className={`inline-block text-[9px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full ${
-                              meeting.status === 'LIVE'
+                              mStatus === 'LIVE'
                                 ? 'bg-red-100 text-red-700'
-                                : meeting.status === 'SCHEDULED'
+                                : mStatus === 'SCHEDULED'
                                 ? 'bg-blue-100 text-blue-700'
                                 : 'bg-slate-100 text-slate-500'
                             }`}>
-                              {meeting.status === 'LIVE' ? '🔴 LIVE' : meeting.status}
+                              {mStatus === 'LIVE' ? '🔴 LIVE' : mStatus}
                             </span>
                             <h4 className="text-sm font-bold text-slate-800">{meeting.topic}</h4>
                             <p className="text-[11px] text-slate-500">
@@ -376,7 +401,7 @@ const StudentCourseView = () => {
                             </p>
                             {meeting.agenda && <p className="text-xs text-slate-400 mt-1">{meeting.agenda}</p>}
                           </div>
-                          {meeting.status === 'LIVE' ? (
+                          {mStatus === 'LIVE' ? (
                             <Link to={`/zoom-classroom/${meeting.meetingId}?courseId=${course.id}`}>
                               <Button variant="primary" size="sm" className="flex items-center gap-2">
                                 <IoVideocamOutline size={16} /> Join Live Class
@@ -385,11 +410,13 @@ const StudentCourseView = () => {
                           ) : (
                             <Button variant="secondary" size="sm" disabled className="flex items-center gap-2 opacity-50 cursor-not-allowed">
                               <IoVideocamOutline size={16} />
-                              {meeting.status === 'ENDED' ? 'Class Ended' : 'Not Live Yet'}
+                              {mStatus === 'ENDED' ? 'Class Ended' : 'Not Live Yet'}
                             </Button>
                           )}
                         </div>
-                      ))}
+                        );
+                      })}
+
                     </div>
                   )}
                 </div>

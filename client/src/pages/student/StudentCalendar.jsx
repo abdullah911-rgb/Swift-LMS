@@ -11,6 +11,17 @@ const STATUS_STYLES = {
   CANCELLED: { bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-200', dot: 'bg-orange-400', label: 'Cancelled'    },
 };
 
+// Re-evaluate meeting status client-side so stale LIVE/SCHEDULED classes
+// that have already passed show as ENDED without a page refresh.
+function computeCurrentStatus(meeting) {
+  const status = meeting.status;
+  if (status !== 'LIVE' && status !== 'SCHEDULED') return status;
+  const start = new Date(meeting.startTime);
+  const end = new Date(start.getTime() + (meeting.duration || 60) * 60 * 1000);
+  if (new Date() > end) return 'ENDED';
+  return status;
+}
+
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
@@ -31,7 +42,7 @@ function CalendarGrid({ year, month, meetings, selectedDay, onSelectDay }) {
 
   const liveMeetingDays = useMemo(() => {
     const s = new Set();
-    meetings.filter(m => m.status === 'LIVE').forEach((m) => {
+    meetings.filter(m => computeCurrentStatus(m) === 'LIVE').forEach((m) => {
       const d = new Date(m.startTime);
       s.add(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
     });
@@ -119,7 +130,10 @@ export default function StudentCalendar() {
     if (selectedDay === null) {
       // Show all upcoming / today's meetings across all time
       return [...meetings]
-        .filter(m => m.status !== 'ENDED' && m.status !== 'CANCELLED')
+        .filter(m => {
+          const s = computeCurrentStatus(m);
+          return s !== 'ENDED' && s !== 'CANCELLED';
+        })
         .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
     }
     return monthMeetings.filter((m) => {
@@ -207,9 +221,10 @@ export default function StudentCalendar() {
             ) : (
               <div className="space-y-3 max-h-[520px] overflow-y-auto pr-1">
                 {displayedMeetings.map((meeting) => {
-                  const style = STATUS_STYLES[meeting.status] || STATUS_STYLES.ENDED;
+                  const currentStatus = computeCurrentStatus(meeting);
+                  const style = STATUS_STYLES[currentStatus] || STATUS_STYLES.ENDED;
                   const startDate = new Date(meeting.startTime);
-                  const isLive = meeting.status === 'LIVE';
+                  const isLive = currentStatus === 'LIVE';
 
                   return (
                     <div
@@ -258,8 +273,8 @@ export default function StudentCalendar() {
           {/* Stats pill */}
           <div className="grid grid-cols-3 gap-3">
             {[
-              { label: 'Live Now',  count: meetings.filter(m => m.status === 'LIVE').length,      color: 'text-red-600',    bg: 'bg-red-50',    border: 'border-red-100' },
-              { label: 'Upcoming', count: meetings.filter(m => m.status === 'SCHEDULED').length,  color: 'text-blue-600',   bg: 'bg-blue-50',   border: 'border-blue-100' },
+                          { label: 'Live Now',  count: meetings.filter(m => computeCurrentStatus(m) === 'LIVE').length,      color: 'text-red-600',    bg: 'bg-red-50',    border: 'border-red-100' },
+              { label: 'Upcoming', count: meetings.filter(m => computeCurrentStatus(m) === 'SCHEDULED').length,  color: 'text-blue-600',   bg: 'bg-blue-50',   border: 'border-blue-100' },
               { label: 'Total',    count: meetings.length,                                         color: 'text-slate-600',  bg: 'bg-slate-50',  border: 'border-slate-100' },
             ].map(({ label, count, color, bg, border }) => (
               <div key={label} className={`${bg} border ${border} rounded-xl p-3 text-center`}>

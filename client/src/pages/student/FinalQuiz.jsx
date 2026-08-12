@@ -40,7 +40,9 @@ export default function FinalQuiz() {
 
   // Results state
   const [results, setResults] = useState(null);
+  const [claimingCert, setClaimingCert] = useState(false);
 
+  const navigate = useNavigate();
   const timerRef = useRef(null);
 
   // Check eligibility and load history
@@ -190,10 +192,57 @@ export default function FinalQuiz() {
     setSelectedOption(optId);
   };
 
+  const handleViewCertificate = async () => {
+    setClaimingCert(true);
+    try {
+      await certificateService.getCertificate(courseId);
+      toast.success('🎓 Certificate issued! Redirecting...');
+      setTimeout(() => navigate('/student/certificates'), 800);
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Could not issue certificate.';
+      toast.error(msg);
+      navigate('/student/certificates');
+    } finally {
+      setClaimingCert(false);
+    }
+  };
+
   if (loading && !inQuiz) {
     return (
       <div className="flex justify-center items-center py-16">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+      </div>
+    );
+  }
+
+  // No quiz configured yet — show friendly message
+  if (!eligibility && !loading) {
+    return (
+      <div className="max-w-3xl mx-auto py-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Link to={`/student/course/${courseId}`} className="text-slate-500 hover:text-slate-800 transition-colors">
+            <IoBookOutline size={20} />
+          </Link>
+          <span className="text-slate-300">/</span>
+          <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">Course Final Quiz</span>
+        </div>
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-8 text-center space-y-4">
+          <div className="h-16 w-16 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto">
+            <IoAlertCircleOutline size={32} />
+          </div>
+          <div>
+            <h3 className="text-base font-extrabold text-slate-800">No Quiz Available Yet</h3>
+            <p className="text-sm text-slate-500 mt-1 max-w-sm mx-auto">
+              The instructor has not uploaded a quiz for this course yet. Please check back later.
+            </p>
+          </div>
+          <Link
+            to={`/student/course/${courseId}`}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold rounded-xl transition-all"
+          >
+            ← Back to Course
+          </Link>
+        </div>
       </div>
     );
   }
@@ -393,12 +442,13 @@ export default function FinalQuiz() {
 
               {certElig.eligible && (
                 <div className="flex justify-end pt-1">
-                  <Link
-                    to="/student/certificates"
-                    className="inline-block px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                  <button
+                    onClick={handleViewCertificate}
+                    disabled={claimingCert}
+                    className="inline-block px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer"
                   >
-                    View Certificate
-                  </Link>
+                    {claimingCert ? '⏳ Generating...' : '🎓 View Certificate'}
+                  </button>
                 </div>
               )}
             </div>
