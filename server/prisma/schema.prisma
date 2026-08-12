@@ -343,6 +343,7 @@ model Enrollment {
   id          String           @id @default(uuid())
   studentId   String
   courseId    String
+  rollNumber  String?          @unique // e.g. SST-2026-00000001, assigned at enrollment time
   status      EnrollmentStatus @default(ACTIVE)
   progress    Float            @default(0) // Percentage 0-100
   enrolledAt  DateTime         @default(now())
@@ -356,6 +357,7 @@ model Enrollment {
   @@unique([studentId, courseId])
   @@index([studentId])
   @@index([courseId])
+  @@index([rollNumber])
   @@map("enrollments")
 }
 

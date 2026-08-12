@@ -18,8 +18,24 @@ const enrollmentController = {
     });
     if (existing) return sendError(res, 'Already enrolled in this course.', 409);
 
+    // Generate sequential Roll Number (SST-YYYY-NNNNNNNN)
+    const year = new Date().getFullYear();
+    const prefix = `SST-${year}-`;
+    const lastEnrollment = await prisma.enrollment.findFirst({
+      where: { rollNumber: { startsWith: prefix } },
+      orderBy: { rollNumber: 'desc' },
+      select: { rollNumber: true },
+    });
+    let nextNum = 1;
+    if (lastEnrollment?.rollNumber) {
+      const parts = lastEnrollment.rollNumber.split('-');
+      const num = parseInt(parts[parts.length - 1], 10);
+      if (!isNaN(num)) nextNum = num + 1;
+    }
+    const rollNumber = `${prefix}${String(nextNum).padStart(8, '0')}`;
+
     const enrollment = await prisma.enrollment.create({
-      data: { studentId, courseId },
+      data: { studentId, courseId, rollNumber },
       include: {
         course: { select: { id: true, title: true, slug: true, thumbnail: true } },
       },
@@ -30,7 +46,7 @@ const enrollmentController = {
       data: {
         userId: studentId,
         title: 'Enrollment Successful',
-        message: `You have been enrolled in "${course.title}".`,
+        message: `You have been enrolled in "${course.title}". Your Roll # is ${rollNumber}.`,
         type: 'SUCCESS',
       },
     });

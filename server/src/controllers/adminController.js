@@ -175,20 +175,15 @@ const adminController = {
       },
     });
 
-    // Enrich each enrollment with Roll# (certificateId) and payment amount
+    // Enrich each enrollment with payment amount (rollNumber is already on the enrollment)
     const enriched = await Promise.all(
       enrollments.map(async (enr) => {
-        const certificate = await prisma.certificate.findUnique({
-          where: { studentId_courseId: { studentId: enr.studentId, courseId: enr.courseId } },
-          select: { certificateId: true },
-        });
         const payment = await prisma.paymentRequest.findUnique({
           where: { studentId_courseId: { studentId: enr.studentId, courseId: enr.courseId } },
           select: { amount: true, status: true },
         });
         return {
           ...enr,
-          certificateId: certificate?.certificateId || null,
           paymentAmount: payment?.amount ? Number(payment.amount) : null,
           paymentStatus: payment?.status || null,
         };

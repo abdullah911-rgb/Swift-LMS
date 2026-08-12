@@ -130,15 +130,15 @@ const AdminEnrollments = () => {
 
                     {/* Roll # */}
                     <td className="px-5 py-4">
-                      {enr.certificateId ? (
+                      {enr.rollNumber ? (
                         <div className="flex items-center gap-1.5">
                           <IoCardOutline size={12} className="text-primary-500 shrink-0" />
                           <span className="text-[11px] font-mono font-semibold text-primary-700 bg-primary-50 px-2 py-0.5 rounded-lg">
-                            {enr.certificateId}
+                            {enr.rollNumber}
                           </span>
                         </div>
                       ) : (
-                        <span className="text-[10px] text-slate-400 italic">Not issued</span>
+                        <span className="text-[10px] text-slate-400 italic">Not assigned</span>
                       )}
                     </td>
 
