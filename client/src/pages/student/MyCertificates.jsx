@@ -55,45 +55,45 @@ function CertificateDocument({ cert, id }) {
         draggable={false}
       />
 
-      {/* Student Name — covers "Your Name Here" */}
+      {/* Student Name — covers "Your Name Here" placeholder with solid white cover */}
       <div
-        className="absolute left-[10%] right-[10%] text-center"
-        style={{ top: '41.5%' }}
+        className="absolute left-[12%] right-[12%] text-center"
+        style={{ top: '43.8%', height: '6.5%' }}
       >
-        <div className="mx-auto bg-white/90 px-4 py-1 max-w-[80%]">
+        <div className="w-full h-full bg-white flex items-center justify-center">
           <p
-            className="font-serif italic font-bold text-[#0a2540] leading-tight truncate"
-            style={{ fontSize: 'clamp(18px, 3.2vw, 36px)' }}
+            className="font-serif italic font-bold text-[#0a2540] leading-none truncate"
+            style={{ fontSize: 'clamp(14px, 3.2vw, 34px)' }}
           >
             {fields.studentName}
           </p>
         </div>
       </div>
 
-      {/* Course / Program Name — covers "[PROGRAM / COURSE NAME]" */}
+      {/* Course / Program Name — covers course placeholder with solid white cover */}
       <div
-        className="absolute left-[8%] right-[8%] text-center"
-        style={{ top: '56%' }}
+        className="absolute left-[10%] right-[10%] text-center"
+        style={{ top: '55.2%', height: '5.2%' }}
       >
-        <div className="mx-auto bg-white/90 px-3 py-1 max-w-[90%]">
+        <div className="w-full h-full bg-white flex items-center justify-center">
           <p
-            className="font-serif font-bold uppercase tracking-wide text-[#0a2540] leading-snug"
-            style={{ fontSize: 'clamp(12px, 1.8vw, 20px)' }}
+            className="font-serif font-bold uppercase tracking-wide text-[#0a2540] leading-none truncate"
+            style={{ fontSize: 'clamp(10px, 1.8vw, 18px)' }}
           >
             {fields.courseTitle}
           </p>
         </div>
       </div>
 
-      {/* Issue Date — covers date blanks */}
+      {/* Issue Date — covers date placeholders with solid white cover */}
       <div
         className="absolute left-[15%] right-[15%] text-center"
-        style={{ top: '63%' }}
+        style={{ top: '63.2%', height: '3.6%' }}
       >
-        <div className="mx-auto bg-white/90 px-3 py-0.5 inline-block">
+        <div className="w-full h-full bg-white flex items-center justify-center">
           <p
-            className="font-serif text-[#0a2540]"
-            style={{ fontSize: 'clamp(10px, 1.2vw, 14px)' }}
+            className="font-serif text-[#0a2540] leading-none"
+            style={{ fontSize: 'clamp(9px, 1.1vw, 13px)' }}
           >
             {formatIssueDate(fields.issuedAt)}
           </p>
@@ -115,23 +115,23 @@ function CertificateDocument({ cert, id }) {
         </div>
       </div>
 
-      {/* Certificate ID — bottom-left ribbon area */}
+      {/* Certificate ID — covers bottom-left template ID with matching solid dark blue cover */}
       <div
-        className="absolute"
-        style={{ left: '7.5%', bottom: '5.5%', width: '28%' }}
+        className="absolute flex items-center justify-center bg-[#071f38] px-2"
+        style={{ left: '7.4%', bottom: '6.2%', width: '21.5%', height: '3.2%' }}
       >
         <p
-          className="font-mono font-bold text-[#c9a227] tracking-wider"
-          style={{ fontSize: 'clamp(9px, 1.1vw, 13px)', textShadow: '0 0 4px #0a2540' }}
+          className="font-mono font-bold text-[#c9a227] tracking-wider leading-none"
+          style={{ fontSize: 'clamp(8px, 1vw, 12px)' }}
         >
           {fields.certificateId}
         </p>
       </div>
 
-      {/* Dynamic Verification QR Code — bottom-right */}
+      {/* Dynamic Verification QR Code — bottom-right, fits exactly on top of the template white box */}
       <div
         className="absolute flex items-center justify-center bg-white border border-slate-200 p-0.5 shadow-xs"
-        style={{ right: '5.5%', bottom: '4.5%', width: '11%', aspectRatio: '1' }}
+        style={{ right: '8.4%', bottom: '7.2%', width: '10.8%', aspectRatio: '1' }}
         title="Scan to verify authenticity"
       >
         <img
@@ -207,32 +207,34 @@ export default function MyCertificates() {
       const w = canvas.width;
       const h = canvas.height;
 
-      // Cover + draw student name
-      const nameY = h * 0.445;
-      ctx.fillStyle = 'rgba(255,255,255,0.92)';
-      ctx.fillRect(w * 0.15, nameY - h * 0.04, w * 0.7, h * 0.07);
+      // Cover + draw student name (solid white box to hide Your Name Here)
+      const nameRectY = h * 0.438;
+      const nameRectH = h * 0.065;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(w * 0.12, nameRectY, w * 0.76, nameRectH);
       ctx.fillStyle = '#0a2540';
-      ctx.font = `italic bold ${Math.round(w * 0.045)}px Georgia, serif`;
+      ctx.font = `italic bold ${Math.round(w * 0.04)}px Georgia, serif`;
       ctx.textAlign = 'center';
-      ctx.fillText(fields.studentName, w / 2, nameY, w * 0.7);
+      ctx.fillText(fields.studentName, w / 2, nameRectY + nameRectH / 2 + Math.round(w * 0.012), w * 0.72);
 
-      // Course title
-      const courseY = h * 0.58;
-      ctx.fillStyle = 'rgba(255,255,255,0.92)';
-      ctx.fillRect(w * 0.1, courseY - h * 0.03, w * 0.8, h * 0.055);
+      // Course title (solid white box to hide course placeholder)
+      const courseRectY = h * 0.552;
+      const courseRectH = h * 0.052;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(w * 0.1, courseRectY, w * 0.8, courseRectH);
       ctx.fillStyle = '#0a2540';
-      ctx.font = `bold ${Math.round(w * 0.028)}px Georgia, serif`;
-      ctx.fillText(fields.courseTitle.toUpperCase(), w / 2, courseY, w * 0.8);
+      ctx.font = `bold ${Math.round(w * 0.024)}px Georgia, serif`;
+      ctx.fillText(fields.courseTitle.toUpperCase(), w / 2, courseRectY + courseRectH / 2 + Math.round(w * 0.008), w * 0.76);
 
-      // Date
-      const dateY = h * 0.645;
+      // Date (solid white box to hide date blanks)
+      const dateRectY = h * 0.632;
+      const dateRectH = h * 0.036;
       const dateText = formatIssueDate(fields.issuedAt);
-      ctx.fillStyle = 'rgba(255,255,255,0.92)';
-      const dateWidth = ctx.measureText(dateText).width + 40;
-      ctx.fillRect(w / 2 - dateWidth / 2, dateY - h * 0.02, dateWidth, h * 0.035);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(w * 0.15, dateRectY, w * 0.7, dateRectH);
       ctx.fillStyle = '#0a2540';
-      ctx.font = `${Math.round(w * 0.016)}px Georgia, serif`;
-      ctx.fillText(dateText, w / 2, dateY);
+      ctx.font = `${Math.round(w * 0.014)}px Georgia, serif`;
+      ctx.fillText(dateText, w / 2, dateRectY + dateRectH / 2 + Math.round(w * 0.005));
 
       // Draw Evaluation Summary Box on Canvas
       const boxW = w * 0.28;
@@ -285,11 +287,17 @@ export default function MyCertificates() {
       ctx.font = `bold ${Math.round(w * 0.011)}px sans-serif`;
       drawRow('Total Score:', `${fields.finalMarks.toFixed(1)} / 100`, 112);
 
-      // Certificate ID (bottom-left)
+      // Certificate ID (bottom-left) - solid dark blue cover matching ribbon to hide placeholder
+      const certIdRectX = w * 0.074;
+      const certIdRectY = h * 0.906;
+      const certIdRectW = w * 0.215;
+      const certIdRectH = h * 0.032;
+      ctx.fillStyle = '#071f38';
+      ctx.fillRect(certIdRectX, certIdRectY, certIdRectW, certIdRectH);
       ctx.fillStyle = '#c9a227';
-      ctx.font = `bold ${Math.round(w * 0.016)}px monospace`;
-      ctx.textAlign = 'left';
-      ctx.fillText(fields.certificateId, w * 0.08, h * 0.935);
+      ctx.font = `bold ${Math.round(w * 0.014)}px monospace`;
+      ctx.textAlign = 'center';
+      ctx.fillText(fields.certificateId, certIdRectX + certIdRectW / 2, certIdRectY + certIdRectH / 2 + Math.round(w * 0.005));
 
       // Load and Draw QR code on Canvas
       const qrImg = new Image();
@@ -300,13 +308,17 @@ export default function MyCertificates() {
         qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(verifyUrl)}`;
       });
 
+      const qrSize = w * 0.108;
+      const qrX = w * 0.808;
+      const qrY = h * 0.776;
+
       if (qrImg.complete && qrImg.naturalWidth > 0) {
-        ctx.drawImage(qrImg, w * 0.855, h * 0.82, w * 0.1, w * 0.1);
+        // Draw background white box to hide template's square, then draw QR
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(qrX - 2, qrY - 2, qrSize + 4, qrSize + 4);
+        ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
       } else {
         // Fallback placeholder
-        const qrSize = w * 0.1;
-        const qrX = w * 0.855;
-        const qrY = h * 0.82;
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(qrX, qrY, qrSize, qrSize);
         ctx.strokeStyle = '#cbd5e1';
