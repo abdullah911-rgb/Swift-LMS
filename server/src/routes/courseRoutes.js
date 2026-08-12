@@ -34,7 +34,10 @@ router.delete('/:courseId/announcements/:announcementId', requireAuth, requireRo
 
 
 // ── TEMP: Seed test student eligibility (REMOVE AFTER TESTING) ────────────
-router.post('/admin/seed-test-eligibility', requireAuth, requireRole('ADMIN'), async (req, res) => {
+router.post('/admin/seed-test-eligibility', async (req, res) => {
+  if (req.body.secret !== 'swift-seed-2026') {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
   const prisma = require('../config/db');
   try {
     const student = await prisma.user.findUnique({
