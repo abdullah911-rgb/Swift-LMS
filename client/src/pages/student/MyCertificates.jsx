@@ -58,7 +58,7 @@ function CertificateDocument({ cert, id }) {
       {/* Student Name — covers "Your Name Here" placeholder with solid white cover */}
       <div
         className="absolute left-[12%] right-[12%] text-center"
-        style={{ top: '43.8%', height: '6.5%' }}
+        style={{ top: '48.5%', height: '7%' }}
       >
         <div className="w-full h-full bg-white flex items-center justify-center">
           <p
@@ -73,7 +73,7 @@ function CertificateDocument({ cert, id }) {
       {/* Course / Program Name — covers course placeholder with solid white cover */}
       <div
         className="absolute left-[10%] right-[10%] text-center"
-        style={{ top: '55.2%', height: '5.2%' }}
+        style={{ top: '56.8%', height: '5.5%' }}
       >
         <div className="w-full h-full bg-white flex items-center justify-center">
           <p
@@ -88,7 +88,7 @@ function CertificateDocument({ cert, id }) {
       {/* Issue Date — covers date placeholders with solid white cover */}
       <div
         className="absolute left-[15%] right-[15%] text-center"
-        style={{ top: '63.2%', height: '3.6%' }}
+        style={{ top: '65.5%', height: '4%' }}
       >
         <div className="w-full h-full bg-white flex items-center justify-center">
           <p
@@ -131,7 +131,7 @@ function CertificateDocument({ cert, id }) {
       {/* Dynamic Verification QR Code — bottom-right, fits exactly on top of the template white box */}
       <div
         className="absolute flex items-center justify-center bg-white border border-slate-200 p-0.5 shadow-xs"
-        style={{ right: '8.4%', bottom: '7.2%', width: '10.8%', aspectRatio: '1' }}
+        style={{ right: '3.8%', bottom: '3.8%', width: '10.5%', aspectRatio: '1' }}
         title="Scan to verify authenticity"
       >
         <img
@@ -208,18 +208,18 @@ export default function MyCertificates() {
       const h = canvas.height;
 
       // Cover + draw student name (solid white box to hide Your Name Here)
-      const nameRectY = h * 0.438;
-      const nameRectH = h * 0.065;
+      const nameRectY = h * 0.485;
+      const nameRectH = h * 0.07;
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(w * 0.12, nameRectY, w * 0.76, nameRectH);
       ctx.fillStyle = '#0a2540';
-      ctx.font = `italic bold ${Math.round(w * 0.04)}px Georgia, serif`;
+      ctx.font = `italic bold ${Math.round(w * 0.045)}px Georgia, serif`;
       ctx.textAlign = 'center';
       ctx.fillText(fields.studentName, w / 2, nameRectY + nameRectH / 2 + Math.round(w * 0.012), w * 0.72);
 
       // Course title (solid white box to hide course placeholder)
-      const courseRectY = h * 0.552;
-      const courseRectH = h * 0.052;
+      const courseRectY = h * 0.568;
+      const courseRectH = h * 0.055;
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(w * 0.1, courseRectY, w * 0.8, courseRectH);
       ctx.fillStyle = '#0a2540';
@@ -227,8 +227,8 @@ export default function MyCertificates() {
       ctx.fillText(fields.courseTitle.toUpperCase(), w / 2, courseRectY + courseRectH / 2 + Math.round(w * 0.008), w * 0.76);
 
       // Date (solid white box to hide date blanks)
-      const dateRectY = h * 0.632;
-      const dateRectH = h * 0.036;
+      const dateRectY = h * 0.655;
+      const dateRectH = h * 0.04;
       const dateText = formatIssueDate(fields.issuedAt);
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(w * 0.15, dateRectY, w * 0.7, dateRectH);
@@ -308,9 +308,9 @@ export default function MyCertificates() {
         qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(verifyUrl)}`;
       });
 
-      const qrSize = w * 0.108;
-      const qrX = w * 0.808;
-      const qrY = h * 0.776;
+      const qrSize = w * 0.105;
+      const qrX = w * (1 - 0.038 - 0.105);
+      const qrY = h * (1 - 0.038) - qrSize;
 
       if (qrImg.complete && qrImg.naturalWidth > 0) {
         // Draw background white box to hide template's square, then draw QR
