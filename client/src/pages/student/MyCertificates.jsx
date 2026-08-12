@@ -125,7 +125,7 @@ function CertificateDocument({ cert, id }) {
       {/* Date Day — fills first blank space */}
       <div
         className="absolute text-center flex items-center justify-center"
-        style={{ left: '45.8%', width: '4.5%', top: '67.4%', height: '3.2%' }}
+        style={{ left: '43.2%', width: '3.6%', top: '68.2%', height: '3.2%' }}
       >
         <span
           className="text-[#0a2540] leading-none font-bold"
@@ -141,7 +141,7 @@ function CertificateDocument({ cert, id }) {
       {/* Date Month — fills second blank space */}
       <div
         className="absolute text-center flex items-center justify-center"
-        style={{ left: '54.5%', width: '9.5%', top: '67.4%', height: '3.2%' }}
+        style={{ left: '51.2%', width: '7.6%', top: '68.2%', height: '3.2%' }}
       >
         <span
           className="text-[#0a2540] leading-none font-bold"
@@ -157,7 +157,7 @@ function CertificateDocument({ cert, id }) {
       {/* Date Year — fills third blank space */}
       <div
         className="absolute text-center flex items-center justify-center"
-        style={{ left: '68.0%', width: '2.5%', top: '67.4%', height: '3.2%' }}
+        style={{ left: '62.2%', width: '3.0%', top: '68.2%', height: '3.2%' }}
       >
         <span
           className="text-[#0a2540] leading-none font-bold"
@@ -187,8 +187,8 @@ function CertificateDocument({ cert, id }) {
 
       {/* Certificate ID — covers bottom-left template ID with matching solid dark blue cover */}
       <div
-        className="absolute flex items-center justify-center bg-[#0a2540] px-2 text-center"
-        style={{ left: '9.4%', bottom: '6.2%', width: '14.8%', height: '3.4%' }}
+        className="absolute flex items-center justify-center bg-[#0a2540] px-1 text-center"
+        style={{ left: '7.6%', bottom: '6.2%', width: '14.8%', height: '3.4%' }}
       >
         <p
           className="font-mono font-bold text-[#c9a227] tracking-wider leading-none text-center w-full"
