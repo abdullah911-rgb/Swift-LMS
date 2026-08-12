@@ -10,16 +10,16 @@ const CERT_TEMPLATE = '/Certificate.png';
 const CERT_LAYOUT = {
   name: {
     left: 0.195,
-    top: 0.426,
+    top: 0.404,
     width: 0.61,
-    height: 0.08,
+    height: 0.10,
     fontSize: 'clamp(24px, 4vw, 52px)',
     canvasFontScale: 0.05,
     textYOffset: 0.017,
   },
   course: {
     left: 0.255,
-    top: 0.590,
+    top: 0.576,
     width: 0.49,
     height: 0.05,
     fontSize: 'clamp(12px, 1.7vw, 23px)',
@@ -27,11 +27,12 @@ const CERT_LAYOUT = {
     textYOffset: 0.006,
   },
   date: {
-    top: 0.668,
-    height: 0.026,
-    day: { left: 0.468, width: 0.055 },
-    month: { left: 0.555, width: 0.09 },
-    year: { left: 0.68, width: 0.032 },
+    top: 0.672,
+    height: 0.032,
+    // Oversize masks to fully hide template handwriting placeholders
+    day: { left: 0.458, width: 0.075 },
+    month: { left: 0.541, width: 0.115 },
+    year: { left: 0.673, width: 0.045 },
     fontSize: 'clamp(11px, 1.65vw, 23px)',
     canvasFontScale: 0.019,
   },
@@ -198,6 +199,7 @@ function CertificateDocument({ cert, id }) {
           width: `${CERT_LAYOUT.date.day.width * 100}%`,
           top: `${CERT_LAYOUT.date.top * 100}%`,
           height: `${CERT_LAYOUT.date.height * 100}%`,
+          backgroundColor: '#ffffff',
         }}
       >
         <span
@@ -219,6 +221,7 @@ function CertificateDocument({ cert, id }) {
           width: `${CERT_LAYOUT.date.month.width * 100}%`,
           top: `${CERT_LAYOUT.date.top * 100}%`,
           height: `${CERT_LAYOUT.date.height * 100}%`,
+          backgroundColor: '#ffffff',
         }}
       >
         <span
@@ -240,6 +243,7 @@ function CertificateDocument({ cert, id }) {
           width: `${CERT_LAYOUT.date.year.width * 100}%`,
           top: `${CERT_LAYOUT.date.top * 100}%`,
           height: `${CERT_LAYOUT.date.height * 100}%`,
+          backgroundColor: '#ffffff',
         }}
       >
         <span
@@ -410,11 +414,38 @@ export default function MyCertificates() {
         courseRectW * 0.96
       );
 
-      // Date blanks
+      // Date blanks (mask first, then draw text)
+      const dateMaskTop = h * CERT_LAYOUT.date.top;
+      const dateMaskH = h * CERT_LAYOUT.date.height;
+      ctx.fillStyle = '#ffffff';
+
+      // Day mask
+      ctx.fillRect(
+        w * CERT_LAYOUT.date.day.left,
+        dateMaskTop,
+        w * CERT_LAYOUT.date.day.width,
+        dateMaskH
+      );
+      // Month mask
+      ctx.fillRect(
+        w * CERT_LAYOUT.date.month.left,
+        dateMaskTop,
+        w * CERT_LAYOUT.date.month.width,
+        dateMaskH
+      );
+      // Year mask
+      ctx.fillRect(
+        w * CERT_LAYOUT.date.year.left,
+        dateMaskTop,
+        w * CERT_LAYOUT.date.year.width,
+        dateMaskH
+      );
+
       ctx.fillStyle = '#0a2540';
       ctx.font = `bold ${Math.round(w * CERT_LAYOUT.date.canvasFontScale)}px 'Great Vibes', 'Brush Script MT', cursive`;
       ctx.textAlign = 'center';
-      const dateBaselineY = h * (CERT_LAYOUT.date.top + CERT_LAYOUT.date.height * 0.82);
+      const dateBaselineY = dateMaskTop + dateMaskH * 0.72;
+
       ctx.fillText(dayText, w * (CERT_LAYOUT.date.day.left + CERT_LAYOUT.date.day.width / 2), dateBaselineY);
       ctx.fillText(monthName, w * (CERT_LAYOUT.date.month.left + CERT_LAYOUT.date.month.width / 2), dateBaselineY);
       ctx.fillText(yearShort, w * (CERT_LAYOUT.date.year.left + CERT_LAYOUT.date.year.width / 2), dateBaselineY);
