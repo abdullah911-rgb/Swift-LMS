@@ -26,6 +26,6 @@
     "uuid": "^14.0.1"
   },
   "scripts": {
-    "build": "npx prisma generate --schema=server/prisma/schema.prisma && npm run build --workspace=client"
+    "build": "npx prisma migrate deploy --schema=server/prisma/schema.prisma && npx prisma generate --schema=server/prisma/schema.prisma && npm run build --workspace=client"
   }
 }
