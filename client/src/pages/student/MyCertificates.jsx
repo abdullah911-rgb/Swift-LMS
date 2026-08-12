@@ -7,6 +7,55 @@ import QRCode from 'qrcode';
 
 const CERT_TEMPLATE = '/Certificate.png';
 
+const CERT_LAYOUT = {
+  name: {
+    left: 0.195,
+    top: 0.434,
+    width: 0.61,
+    height: 0.072,
+    fontSize: 'clamp(24px, 4vw, 52px)',
+    canvasFontScale: 0.05,
+    textYOffset: 0.017,
+  },
+  course: {
+    left: 0.255,
+    top: 0.596,
+    width: 0.49,
+    height: 0.043,
+    fontSize: 'clamp(12px, 1.7vw, 23px)',
+    canvasFontScale: 0.023,
+    textYOffset: 0.006,
+  },
+  date: {
+    top: 0.668,
+    height: 0.026,
+    day: { left: 0.468, width: 0.055 },
+    month: { left: 0.555, width: 0.09 },
+    year: { left: 0.68, width: 0.032 },
+    fontSize: 'clamp(11px, 1.65vw, 23px)',
+    canvasFontScale: 0.019,
+  },
+  summary: {
+    left: 0.08,
+    top: 0.73,
+    width: 0.275,
+    height: 0.13,
+  },
+  certificateId: {
+    left: 0.075,
+    top: 0.902,
+    width: 0.165,
+    height: 0.041,
+    fontSize: 'clamp(7px, 0.95vw, 12px)',
+    canvasFontScale: 0.0135,
+  },
+  qr: {
+    right: 0.041,
+    bottom: 0.038,
+    width: 0.086,
+  },
+};
+
 function formatIssueDate(dateStr) {
   const d = new Date(dateStr);
   const day = d.getDate();
@@ -38,6 +87,28 @@ function getCertFields(cert) {
   };
 }
 
+function getDateParts(issuedAt) {
+  const dateObj = new Date(issuedAt);
+  const dayNum = dateObj.getDate();
+  const monthName = dateObj.toLocaleString('en-US', { month: 'long' });
+  const yearShort = String(dateObj.getFullYear()).substring(2);
+  const getSuffix = (n) => {
+    if (n > 3 && n < 21) return 'th';
+    switch (n % 10) {
+      case 1: return 'st';
+      case 2: return 'nd';
+      case 3: return 'rd';
+      default: return 'th';
+    }
+  };
+
+  return {
+    dayText: `${dayNum}${getSuffix(dayNum)}`,
+    monthName,
+    yearShort,
+  };
+}
+
 /** Visual certificate using the approved template + dynamic overlays */
 function CertificateDocument({ cert, id }) {
   const fields = getCertFields(cert);
@@ -54,21 +125,7 @@ function CertificateDocument({ cert, id }) {
     }
   }, [verifyUrl]);
 
-  // Extract day, month, and 2-digit year for the template blanks
-  const dateObj = new Date(fields.issuedAt);
-  const dayNum = dateObj.getDate();
-  const monthName = dateObj.toLocaleString('en-US', { month: 'long' });
-  const yearShort = String(dateObj.getFullYear()).substring(2); // e.g. "26"
-  const getSuffix = (n) => {
-    if (n > 3 && n < 21) return 'th';
-    switch (n % 10) {
-      case 1: return 'st';
-      case 2: return 'nd';
-      case 3: return 'rd';
-      default: return 'th';
-    }
-  };
-  const dayText = `${dayNum}${getSuffix(dayNum)}`;
+  const { dayText, monthName, yearShort } = getDateParts(fields.issuedAt);
 
   return (
     <div
@@ -88,18 +145,26 @@ function CertificateDocument({ cert, id }) {
         draggable={false}
       />
 
-      {/* Student Name — covers "Your Name Here" placeholder with solid white cover */}
+      {/* Student name */}
       <div
-        className="absolute left-[15%] right-[15%] text-center"
-        style={{ top: '51.2%', height: '8.5%' }}
+        className="absolute text-center"
+        style={{
+          left: `${CERT_LAYOUT.name.left * 100}%`,
+          top: `${CERT_LAYOUT.name.top * 100}%`,
+          width: `${CERT_LAYOUT.name.width * 100}%`,
+          height: `${CERT_LAYOUT.name.height * 100}%`,
+        }}
       >
-        <div className="w-full h-full bg-white flex items-center justify-center">
+        <div className="w-full h-full bg-white/92 flex items-center justify-center">
           <p
-            className="text-[#0a2540] leading-none truncate"
+            className="text-[#0a2540] leading-none whitespace-nowrap"
             style={{ 
               fontFamily: "'Great Vibes', cursive", 
-              fontSize: 'clamp(20px, 4.5vw, 48px)',
-              fontWeight: 'normal'
+              fontSize: CERT_LAYOUT.name.fontSize,
+              fontWeight: 'normal',
+              textShadow: '0 1px 0 rgba(255,255,255,0.35)',
+              transform: 'translateY(4%)',
+              maxWidth: '100%',
             }}
           >
             {fields.studentName}
@@ -107,63 +172,86 @@ function CertificateDocument({ cert, id }) {
         </div>
       </div>
 
-      {/* Course / Program Name — covers "[PROGRAM / COURSE NAME]" placeholder with solid white cover */}
+      {/* Course / program name */}
       <div
-        className="absolute left-[10%] right-[10%] text-center"
-        style={{ top: '63.0%', height: '5.5%' }}
+        className="absolute text-center"
+        style={{
+          left: `${CERT_LAYOUT.course.left * 100}%`,
+          top: `${CERT_LAYOUT.course.top * 100}%`,
+          width: `${CERT_LAYOUT.course.width * 100}%`,
+          height: `${CERT_LAYOUT.course.height * 100}%`,
+        }}
       >
-        <div className="w-full h-full bg-white flex items-center justify-center">
+        <div className="w-full h-full bg-white/94 flex items-center justify-center px-[1%]">
           <p
-            className="font-serif font-bold uppercase tracking-wide text-[#0a2540] leading-none truncate"
-            style={{ fontSize: 'clamp(10px, 1.8vw, 18px)' }}
+            className="font-serif font-bold uppercase tracking-wide text-[#0a2540] leading-none whitespace-nowrap"
+            style={{ fontSize: CERT_LAYOUT.course.fontSize, maxWidth: '100%' }}
           >
             {fields.courseTitle}
           </p>
         </div>
       </div>
 
-      {/* Date Day — fills first blank space */}
+      {/* Date day */}
       <div
         className="absolute text-center flex items-center justify-center"
-        style={{ left: '46.8%', width: '4.0%', top: '68.6%', height: '3.2%' }}
+        style={{
+          left: `${CERT_LAYOUT.date.day.left * 100}%`,
+          width: `${CERT_LAYOUT.date.day.width * 100}%`,
+          top: `${CERT_LAYOUT.date.top * 100}%`,
+          height: `${CERT_LAYOUT.date.height * 100}%`,
+        }}
       >
         <span
           className="text-[#0a2540] leading-none font-bold"
           style={{ 
             fontFamily: "'Great Vibes', cursive",
-            fontSize: 'clamp(10px, 1.8vw, 20px)' 
+            fontSize: CERT_LAYOUT.date.fontSize,
+            transform: 'translateY(8%)',
           }}
         >
           {dayText}
         </span>
       </div>
 
-      {/* Date Month — fills second blank space */}
+      {/* Date month */}
       <div
         className="absolute text-center flex items-center justify-center"
-        style={{ left: '55.5%', width: '9.5%', top: '68.6%', height: '3.2%' }}
+        style={{
+          left: `${CERT_LAYOUT.date.month.left * 100}%`,
+          width: `${CERT_LAYOUT.date.month.width * 100}%`,
+          top: `${CERT_LAYOUT.date.top * 100}%`,
+          height: `${CERT_LAYOUT.date.height * 100}%`,
+        }}
       >
         <span
           className="text-[#0a2540] leading-none font-bold"
           style={{ 
             fontFamily: "'Great Vibes', cursive",
-            fontSize: 'clamp(10px, 1.8vw, 20px)' 
+            fontSize: CERT_LAYOUT.date.fontSize,
+            transform: 'translateY(8%)',
           }}
         >
           {monthName}
         </span>
       </div>
 
-      {/* Date Year — fills third blank space */}
+      {/* Date year */}
       <div
         className="absolute text-center flex items-center justify-center"
-        style={{ left: '68.2%', width: '2.5%', top: '68.6%', height: '3.2%' }}
+        style={{
+          left: `${CERT_LAYOUT.date.year.left * 100}%`,
+          width: `${CERT_LAYOUT.date.year.width * 100}%`,
+          top: `${CERT_LAYOUT.date.top * 100}%`,
+          height: `${CERT_LAYOUT.date.height * 100}%`,
+        }}
       >
         <span
           className="text-[#0a2540] leading-none font-bold"
           style={{ 
             fontFamily: "'Great Vibes', cursive",
-            fontSize: 'clamp(10px, 1.8vw, 20px)' 
+            fontSize: CERT_LAYOUT.date.fontSize,
+            transform: 'translateY(8%)',
           }}
         >
           {yearShort}
@@ -173,7 +261,12 @@ function CertificateDocument({ cert, id }) {
       {/* Marks Breakdown Box — placed on left bottom overlay */}
       <div
         className="absolute bg-white/95 backdrop-blur-xs border border-[#c9a227]/30 rounded-lg p-2 shadow-xs font-sans flex flex-col gap-0.5 text-[#0a2540]"
-        style={{ left: '7.5%', bottom: '15%', width: '28%' }}
+        style={{
+          left: `${CERT_LAYOUT.summary.left * 100}%`,
+          top: `${CERT_LAYOUT.summary.top * 100}%`,
+          width: `${CERT_LAYOUT.summary.width * 100}%`,
+          height: `${CERT_LAYOUT.summary.height * 100}%`,
+        }}
       >
         <span className="text-[6px] sm:text-[9px] font-extrabold uppercase tracking-wide text-[#c9a227]">Evaluation Summary</span>
         <div className="grid grid-cols-2 gap-x-2 text-[5px] sm:text-[8px] font-medium border-t border-slate-100 pt-0.5">
@@ -188,11 +281,16 @@ function CertificateDocument({ cert, id }) {
       {/* Certificate ID — covers bottom-left template ID with matching solid dark blue cover */}
       <div
         className="absolute flex items-center justify-center bg-[#0a2540] px-1 text-center"
-        style={{ left: '9.6%', bottom: '6.2%', width: '14.2%', height: '3.4%' }}
+        style={{
+          left: `${CERT_LAYOUT.certificateId.left * 100}%`,
+          top: `${CERT_LAYOUT.certificateId.top * 100}%`,
+          width: `${CERT_LAYOUT.certificateId.width * 100}%`,
+          height: `${CERT_LAYOUT.certificateId.height * 100}%`,
+        }}
       >
         <p
           className="font-mono font-bold text-[#c9a227] tracking-wider leading-none text-center w-full"
-          style={{ fontSize: 'clamp(7px, 0.9vw, 11px)' }}
+          style={{ fontSize: CERT_LAYOUT.certificateId.fontSize }}
         >
           {fields.certificateId}
         </p>
@@ -201,7 +299,12 @@ function CertificateDocument({ cert, id }) {
       {/* Dynamic Verification QR Code — bottom-right, fits exactly on top of the template printed QR code */}
       <div
         className="absolute flex items-center justify-center bg-white p-0.5"
-        style={{ right: '3.5%', bottom: '4.2%', width: '8.8%', aspectRatio: '1' }}
+        style={{
+          right: `${CERT_LAYOUT.qr.right * 100}%`,
+          bottom: `${CERT_LAYOUT.qr.bottom * 100}%`,
+          width: `${CERT_LAYOUT.qr.width * 100}%`,
+          aspectRatio: '1',
+        }}
         title="Scan to verify authenticity"
       >
         {qrCodeDataUrl ? (
@@ -261,6 +364,7 @@ export default function MyCertificates() {
     try {
       const fields = getCertFields(cert);
       const verifyUrl = `${window.location.origin}/verify/${fields.verificationCode}`;
+      const { dayText, monthName, yearShort } = getDateParts(fields.issuedAt);
 
       const img = new Image();
       await new Promise((resolve, reject) => {
@@ -278,56 +382,53 @@ export default function MyCertificates() {
       const w = canvas.width;
       const h = canvas.height;
 
-      // Cover + draw student name (solid white box to hide Your Name Here)
-      const nameRectY = h * 0.475;
-      const nameRectH = h * 0.085;
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(w * 0.15, nameRectY, w * 0.7, nameRectH);
+      // Student name
+      const nameRectX = w * CERT_LAYOUT.name.left;
+      const nameRectY = h * CERT_LAYOUT.name.top;
+      const nameRectW = w * CERT_LAYOUT.name.width;
+      const nameRectH = h * CERT_LAYOUT.name.height;
+      ctx.fillStyle = 'rgba(255,255,255,0.92)';
+      ctx.fillRect(nameRectX, nameRectY, nameRectW, nameRectH);
       ctx.fillStyle = '#0a2540';
-      ctx.font = `normal ${Math.round(w * 0.052)}px 'Great Vibes', 'Brush Script MT', cursive`;
+      ctx.font = `normal ${Math.round(w * CERT_LAYOUT.name.canvasFontScale)}px 'Great Vibes', 'Brush Script MT', cursive`;
       ctx.textAlign = 'center';
-      ctx.fillText(fields.studentName, w / 2, nameRectY + nameRectH / 2 + Math.round(w * 0.018), w * 0.68);
+      ctx.fillText(
+        fields.studentName,
+        nameRectX + nameRectW / 2,
+        nameRectY + nameRectH / 2 + Math.round(w * CERT_LAYOUT.name.textYOffset),
+        nameRectW * 0.96
+      );
 
-      // Course title (solid white box to hide course placeholder)
-      const courseRectY = h * 0.615;
-      const courseRectH = h * 0.055;
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(w * 0.1, courseRectY, w * 0.8, courseRectH);
+      // Course title
+      const courseRectX = w * CERT_LAYOUT.course.left;
+      const courseRectY = h * CERT_LAYOUT.course.top;
+      const courseRectW = w * CERT_LAYOUT.course.width;
+      const courseRectH = h * CERT_LAYOUT.course.height;
+      ctx.fillStyle = 'rgba(255,255,255,0.94)';
+      ctx.fillRect(courseRectX, courseRectY, courseRectW, courseRectH);
       ctx.fillStyle = '#0a2540';
-      ctx.font = `bold ${Math.round(w * 0.024)}px Georgia, serif`;
-      ctx.fillText(fields.courseTitle.toUpperCase(), w / 2, courseRectY + courseRectH / 2 + Math.round(w * 0.008), w * 0.76);
+      ctx.font = `bold ${Math.round(w * CERT_LAYOUT.course.canvasFontScale)}px Georgia, serif`;
+      ctx.fillText(
+        fields.courseTitle.toUpperCase(),
+        courseRectX + courseRectW / 2,
+        courseRectY + courseRectH / 2 + Math.round(w * CERT_LAYOUT.course.textYOffset),
+        courseRectW * 0.96
+      );
 
-      // Date blanks (draw day, month, and year separately on top of template lines)
-      const dateObj = new Date(fields.issuedAt);
-      const dayNum = dateObj.getDate();
-      const monthName = dateObj.toLocaleString('en-US', { month: 'long' });
-      const yearShort = String(dateObj.getFullYear()).substring(2); // e.g. "26"
-      const getSuffix = (n) => {
-        if (n > 3 && n < 21) return 'th';
-        switch (n % 10) {
-          case 1: return 'st';
-          case 2: return 'nd';
-          case 3: return 'rd';
-          default: return 'th';
-        }
-      };
-      const dayText = `${dayNum}${getSuffix(dayNum)}`;
-
+      // Date blanks
       ctx.fillStyle = '#0a2540';
-      ctx.font = `bold ${Math.round(w * 0.02)}px 'Great Vibes', 'Brush Script MT', cursive`;
+      ctx.font = `bold ${Math.round(w * CERT_LAYOUT.date.canvasFontScale)}px 'Great Vibes', 'Brush Script MT', cursive`;
       ctx.textAlign = 'center';
-
-      // Place day, month, and year exactly in the template blank lines
-      const dateY = h * 0.702;
-      ctx.fillText(dayText, w * 0.48, dateY);
-      ctx.fillText(monthName, w * 0.59, dateY);
-      ctx.fillText(yearShort, w * 0.692, dateY);
+      const dateBaselineY = h * (CERT_LAYOUT.date.top + CERT_LAYOUT.date.height * 0.82);
+      ctx.fillText(dayText, w * (CERT_LAYOUT.date.day.left + CERT_LAYOUT.date.day.width / 2), dateBaselineY);
+      ctx.fillText(monthName, w * (CERT_LAYOUT.date.month.left + CERT_LAYOUT.date.month.width / 2), dateBaselineY);
+      ctx.fillText(yearShort, w * (CERT_LAYOUT.date.year.left + CERT_LAYOUT.date.year.width / 2), dateBaselineY);
 
       // Draw Evaluation Summary Box on Canvas
-      const boxW = w * 0.28;
-      const boxH = h * 0.18;
-      const boxX = w * 0.08;
-      const boxY = h * 0.69;
+      const boxW = w * CERT_LAYOUT.summary.width;
+      const boxH = h * CERT_LAYOUT.summary.height;
+      const boxX = w * CERT_LAYOUT.summary.left;
+      const boxY = h * CERT_LAYOUT.summary.top;
 
       ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
       ctx.strokeStyle = '#c9a227';
@@ -375,14 +476,14 @@ export default function MyCertificates() {
       drawRow('Total Score:', `${fields.finalMarks.toFixed(1)} / 100`, 112);
 
       // Certificate ID (bottom-left) - solid dark blue cover matching ribbon to hide placeholder
-      const certIdRectX = w * 0.094;
-      const certIdRectY = h * 0.904;
-      const certIdRectW = w * 0.148;
-      const certIdRectH = h * 0.034;
+      const certIdRectX = w * CERT_LAYOUT.certificateId.left;
+      const certIdRectY = h * CERT_LAYOUT.certificateId.top;
+      const certIdRectW = w * CERT_LAYOUT.certificateId.width;
+      const certIdRectH = h * CERT_LAYOUT.certificateId.height;
       ctx.fillStyle = '#0a2540';
       ctx.fillRect(certIdRectX, certIdRectY, certIdRectW, certIdRectH);
       ctx.fillStyle = '#c9a227';
-      ctx.font = `bold ${Math.round(w * 0.014)}px monospace`;
+      ctx.font = `bold ${Math.round(w * CERT_LAYOUT.certificateId.canvasFontScale)}px monospace`;
       ctx.textAlign = 'center';
       ctx.fillText(fields.certificateId, certIdRectX + certIdRectW / 2, certIdRectY + certIdRectH / 2 + Math.round(w * 0.005));
 
@@ -395,9 +496,9 @@ export default function MyCertificates() {
         qrImg.src = qrDataUrl;
       });
 
-      const qrSize = w * 0.088;
-      const qrX = w * (1 - 0.035 - 0.088);
-      const qrY = h * (1 - 0.042) - qrSize;
+      const qrSize = w * CERT_LAYOUT.qr.width;
+      const qrX = w * (1 - CERT_LAYOUT.qr.right - CERT_LAYOUT.qr.width);
+      const qrY = h * (1 - CERT_LAYOUT.qr.bottom) - qrSize;
 
       if (qrImg.complete && qrImg.naturalWidth > 0) {
         ctx.fillStyle = '#ffffff';
