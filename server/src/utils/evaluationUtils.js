@@ -12,7 +12,7 @@ async function calculateAttendanceMarks(studentId, courseId) {
 
   const totalMeetings = meetings.length;
   if (totalMeetings === 0) {
-    return { totalMeetings: 0, attendedMeetings: 0, percentage: 0, marks20: 0 };
+    return { totalMeetings: 0, attendedMeetings: 0, percentage: 100, marks20: 20 };
   }
 
   const meetingIds = meetings.map((m) => m.id);
@@ -44,7 +44,7 @@ async function calculateAssignmentMarks(studentId, courseId) {
 
   const total = allAssignments.length;
   if (total === 0) {
-    return { total: 0, submitted: 0, graded: 0, allSubmitted: true, allGraded: true, marks20: 0 };
+    return { total: 0, submitted: 0, graded: 0, allSubmitted: true, allGraded: true, marks20: 20 };
   }
 
   const assignmentIds = allAssignments.map((a) => a.id);
@@ -121,14 +121,14 @@ async function computeFinalScore(studentId, courseId) {
 
   const attendanceMarks = attendanceData.marks20;
   const assignmentMarks = assignmentData.marks20;
-  const mcqMarks = quizData?.mcqMarks ?? 0;
+  const mcqMarks = quizData ? (quizData.mcqMarks ?? 0) : 60;
   const finalMarks = Math.round((attendanceMarks + assignmentMarks + mcqMarks) * 100) / 100;
 
   // Eligibility checks
   const attendanceOk = attendanceData.percentage >= 80;
   const assignmentSubmittedOk = assignmentData.allSubmitted;
   const assignmentGradedOk = assignmentData.allGraded;
-  const quizPassedOk = quizData?.passed === true;
+  const quizPassedOk = quizData === null || quizData.passed === true;
   const finalMarksOk = finalMarks >= 60;
 
   const eligible = attendanceOk && assignmentSubmittedOk && assignmentGradedOk && quizPassedOk && finalMarksOk;

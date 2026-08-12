@@ -176,7 +176,6 @@ export default function MyCertificates() {
       const verifyUrl = `${window.location.origin}/verify/${fields.verificationCode}`;
 
       const img = new Image();
-      img.crossOrigin = 'anonymous';
       await new Promise((resolve, reject) => {
         img.onload = resolve;
         img.onerror = reject;
