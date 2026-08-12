@@ -10,9 +10,9 @@ const CERT_TEMPLATE = '/Certificate.png';
 const CERT_LAYOUT = {
   name: {
     left: 0.195,
-    top: 0.473,
+    top: 0.476,
     width: 0.61,
-    height: 0.7,
+    height: 0.075,
     fontSize: 'clamp(22px, 4vw, 49px)',
     canvasFontScale: 0.05,
     textYOffset: 0.017,
