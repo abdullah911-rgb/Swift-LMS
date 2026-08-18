@@ -225,58 +225,60 @@ const HomePage = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {featuredCourses.map((course) => (
-                <Card key={course.id} hover={true} className="flex flex-col h-full overflow-hidden p-0 rounded-2xl bg-white border border-slate-100 group">
-                  {/* Thumbnail */}
-                  <div className="aspect-video w-full bg-slate-100 relative overflow-hidden">
-                    {course.thumbnail ? (
-                      <img 
-                        src={getImageUrl(course.thumbnail)} 
-                        alt={course.title} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-700 to-accent-500 text-white font-heading font-bold text-lg">
-                        Swift
-                      </div>
-                    )}
-                    <span className="absolute top-4 right-4 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide uppercase bg-white/90 backdrop-blur text-slate-800 border border-white/50">
-                      {course.level}
-                    </span>
-                  </div>
-
-                  {/* Body */}
-                  <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
-                    <div className="space-y-2">
-                      <span className="text-[10px] font-bold text-primary-600 uppercase tracking-wider">
-                        {course.category?.name}
-                      </span>
-                      <h3 className="font-heading font-bold text-slate-800 text-base sm:text-lg hover:text-primary-600 transition-colors line-clamp-1">
-                        <Link to={`/courses/${course.slug}`}>{course.title}</Link>
-                      </h3>
-                      <p className="text-xs sm:text-sm text-slate-400 line-clamp-2 leading-relaxed">
-                        {course.shortDescription || course.description}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-4 border-t border-slate-50">
-                      <div className="flex items-center gap-2">
-                        <div className="h-7 w-7 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-heading font-bold text-xs uppercase">
-                          {course.instructor?.name?.charAt(0)}
+                <Link key={course.id} to={`/courses/${course.slug}`} className="block h-full group">
+                  <Card hover={true} className="flex flex-col h-full overflow-hidden p-0 rounded-2xl bg-white border border-slate-100">
+                    {/* Thumbnail */}
+                    <div className="aspect-video w-full bg-slate-100 relative overflow-hidden">
+                      {course.thumbnail ? (
+                        <img 
+                          src={getImageUrl(course.thumbnail)} 
+                          alt={course.title} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-700 to-accent-500 text-white font-heading font-bold text-lg">
+                          Swift
                         </div>
-                        <span className="text-xs text-slate-500 font-semibold">{course.instructor?.name}</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm font-bold text-slate-800">
-                          {course.isFree ? 'Free' : `PKR ${Number(course.price).toLocaleString()}`}
+                      )}
+                      <span className="absolute top-4 right-4 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide uppercase bg-white/90 backdrop-blur text-slate-800 border border-white/50">
+                        {course.level}
+                      </span>
+                    </div>
+
+                    {/* Body */}
+                    <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+                      <div className="space-y-2">
+                        <span className="text-[10px] font-bold text-primary-600 uppercase tracking-wider">
+                          {course.category?.name}
                         </span>
-                        <Link to={`/courses/${course.slug}`} className="text-xs font-bold text-primary-600 hover:text-primary-700 transition-colors">
-                          View Details →
-                        </Link>
+                        <h3 className="font-heading font-bold text-slate-800 text-base sm:text-lg group-hover:text-primary-600 transition-colors line-clamp-1">
+                          {course.title}
+                        </h3>
+                        <p className="text-xs sm:text-sm text-slate-400 line-clamp-2 leading-relaxed">
+                          {course.shortDescription || course.description}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+                        <div className="flex items-center gap-2">
+                          <div className="h-7 w-7 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-heading font-bold text-xs uppercase">
+                            {course.instructor?.name?.charAt(0)}
+                          </div>
+                          <span className="text-xs text-slate-500 font-semibold">{course.instructor?.name}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-bold text-slate-800">
+                            {course.isFree ? 'Free' : `PKR ${Number(course.price).toLocaleString()}`}
+                          </span>
+                          <span className="text-xs font-bold text-primary-600 group-hover:text-primary-700 transition-colors">
+                            View Details →
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Card>
+                  </Card>
+                </Link>
               ))}
             </div>
           )}

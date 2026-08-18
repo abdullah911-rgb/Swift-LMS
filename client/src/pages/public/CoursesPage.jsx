@@ -216,62 +216,64 @@ const CoursesPage = () => {
               <>
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                   {courses.map((course) => (
-                    <Card key={course.id} hover={true} className="flex flex-col overflow-hidden p-0 rounded-2xl bg-white border border-slate-100 group h-full">
-                      {/* Image Thumbnail */}
-                      <div className="aspect-video w-full bg-slate-100 relative overflow-hidden shrink-0">
-                        {course.thumbnail ? (
-                          <img
-                            src={getImageUrl(course.thumbnail)}
-                            alt={course.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-600 to-primary-500 text-white font-heading font-bold text-lg">
-                            LMS
-                          </div>
-                        )}
-                        <span className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase bg-white/90 backdrop-blur text-slate-800 border border-white/50">
-                          {course.level}
-                        </span>
-                      </div>
-
-                      {/* Content details */}
-                      <div className="p-5 flex-1 flex flex-col justify-between gap-4">
-                        <div className="space-y-1.5">
-                          <span className="text-[10px] font-bold text-primary-600 uppercase tracking-wider">
-                            {course.category?.name}
-                          </span>
-                          <h3 className="font-heading font-bold text-slate-800 text-sm sm:text-base hover:text-primary-600 transition-colors line-clamp-2 leading-snug">
-                            <Link to={`/courses/${course.slug}`}>{course.title}</Link>
-                          </h3>
-                          <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
-                            {course.shortDescription || course.description}
-                          </p>
-                          <div className="flex flex-wrap gap-x-3 gap-y-1 items-center text-[10px] font-bold text-slate-400 pt-1">
-                            <span>⏱️ {course.durationInMonths && course.durationInMonths > 0 ? `${course.durationInMonths} ${course.durationInMonths === 1 ? 'Month' : 'Months'}` : course.duration ? `${Math.round(course.duration / 60)} Hours` : '—'}</span>
-                          </div>
-                        </div>
-
-                        {/* Bottom Metadata bar */}
-                        <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <div className="h-6 w-6 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-heading font-bold text-[10px] uppercase shrink-0">
-                              {course.instructor?.name?.charAt(0)}
+                    <Link key={course.id} to={`/courses/${course.slug}`} className="block h-full group">
+                      <Card hover={true} className="flex flex-col overflow-hidden p-0 rounded-2xl bg-white border border-slate-100 h-full">
+                        {/* Image Thumbnail */}
+                        <div className="aspect-video w-full bg-slate-100 relative overflow-hidden shrink-0">
+                          {course.thumbnail ? (
+                            <img
+                              src={getImageUrl(course.thumbnail)}
+                              alt={course.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-600 to-primary-500 text-white font-heading font-bold text-lg">
+                              LMS
                             </div>
-                            <span className="text-[11px] text-slate-500 font-semibold truncate">{course.instructor?.name}</span>
+                          )}
+                          <span className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase bg-white/90 backdrop-blur text-slate-800 border border-white/50">
+                            {course.level}
+                          </span>
+                        </div>
+
+                        {/* Content details */}
+                        <div className="p-5 flex-1 flex flex-col justify-between gap-4">
+                          <div className="space-y-1.5">
+                            <span className="text-[10px] font-bold text-primary-600 uppercase tracking-wider">
+                              {course.category?.name}
+                            </span>
+                            <h3 className="font-heading font-bold text-slate-800 text-sm sm:text-base group-hover:text-primary-600 transition-colors line-clamp-2 leading-snug">
+                              {course.title}
+                            </h3>
+                            <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                              {course.shortDescription || course.description}
+                            </p>
+                            <div className="flex flex-wrap gap-x-3 gap-y-1 items-center text-[10px] font-bold text-slate-400 pt-1">
+                              <span>⏱️ {course.durationInMonths && course.durationInMonths > 0 ? `${course.durationInMonths} ${course.durationInMonths === 1 ? 'Month' : 'Months'}` : course.duration ? `${Math.round(course.duration / 60)} Hours` : '—'}</span>
+                            </div>
                           </div>
 
-                          <div className="flex items-center gap-2 shrink-0">
-                            <span className="text-xs font-bold text-slate-800">
-                              {course.isFree ? 'Free' : `PKR ${Number(course.price).toLocaleString()}`}
-                            </span>
-                            <Link to={`/courses/${course.slug}`} className="text-xs font-bold text-primary-600 hover:text-primary-700 transition-colors whitespace-nowrap">
-                              View →
-                            </Link>
+                          {/* Bottom Metadata bar */}
+                          <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div className="h-6 w-6 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-heading font-bold text-[10px] uppercase shrink-0">
+                                {course.instructor?.name?.charAt(0)}
+                              </div>
+                              <span className="text-[11px] text-slate-500 font-semibold truncate">{course.instructor?.name}</span>
+                            </div>
+
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className="text-xs font-bold text-slate-800">
+                                {course.isFree ? 'Free' : `PKR ${Number(course.price).toLocaleString()}`}
+                              </span>
+                              <span className="text-xs font-bold text-primary-600 group-hover:text-primary-700 transition-colors whitespace-nowrap">
+                                View →
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </Card>
+                      </Card>
+                    </Link>
                   ))}
                 </div>
 

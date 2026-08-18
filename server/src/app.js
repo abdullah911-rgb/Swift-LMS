@@ -72,6 +72,8 @@ const uploadDir = isServerless
   ? '/tmp/uploads' 
   : path.join(__dirname, '../uploads');
 
+const committedUploadsDir = path.join(__dirname, '../uploads');
+
 const fs = require('fs');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
@@ -82,7 +84,7 @@ app.use('/uploads', (req, res, next) => {
     res.setHeader('Content-Type', 'image/jpeg');
   }
   next();
-}, express.static(uploadDir));
+}, express.static(committedUploadsDir), express.static(uploadDir));
 
 
 // Routes
