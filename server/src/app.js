@@ -88,44 +88,6 @@ app.use('/uploads', (req, res, next) => {
 
 
 // Routes
-app.get('/api/temp-update-db-911', async (req, res) => {
-  const prisma = require('./config/db');
-  try {
-    console.log('🔄 Updating database records via temp endpoint...');
-    const u1 = await prisma.course.updateMany({
-      where: { slug: 'nebosh-international-safety-course' },
-      data: { title: 'Nebosh International Safety Course' }
-    });
-    const u2 = await prisma.course.updateMany({
-      where: { slug: 'fire-safety-first-aid-training' },
-      data: { thumbnail: '/uploads/fire-safety-first-aid-training.jfif' }
-    });
-    const u3 = await prisma.course.updateMany({
-      where: { slug: 'hse-officer-training' },
-      data: { thumbnail: '/uploads/hse-officer-training.jfif' }
-    });
-    const u4 = await prisma.course.updateMany({
-      where: { slug: 'risk-assessment-permit-to-work-training' },
-      data: { thumbnail: '/uploads/risk-assessment-permit-to-work-training.jfif' }
-    });
-    res.json({
-      success: true,
-      message: 'Database updated successfully!',
-      updates: {
-        neboshCourseTitle: u1.count,
-        fireSafetyThumbnail: u2.count,
-        hseOfficerThumbnail: u3.count,
-        riskAssessmentThumbnail: u4.count,
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-});
-
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/categories', categoryRoutes);
