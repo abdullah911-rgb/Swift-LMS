@@ -83,7 +83,7 @@ const AdminUsers = () => {
         <div>
           <h1 className="text-2xl font-heading font-bold text-primary-900">User Management</h1>
           <p className="text-sm text-slate-500 mt-1">
-            {pagination.total} total users · manage roles, access, and accounts.
+            {pagination.total} Total Users · Manage Roles, Access, and Accounts.
           </p>
         </div>
         <button

@@ -56,7 +56,7 @@ const AdminDashboard = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="min-w-0">
           <h1 className="text-xl sm:text-2xl font-heading font-bold text-primary-900">Admin Dashboard</h1>
-          <p className="text-sm text-slate-500 mt-1">Full platform overview — users, courses, and enrollments.</p>
+          <p className="text-sm text-slate-500 mt-1">Full Platform Overview — Users, Courses, and Enrollments.</p>
         </div>
         <button
           onClick={fetchData}

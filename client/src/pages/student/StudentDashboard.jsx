@@ -48,7 +48,7 @@ const StudentDashboard = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-heading font-bold text-primary-900">Welcome back, {user?.name}!</h1>
-          <p className="text-sm text-slate-500">Track your learning progress and certification status.</p>
+          <p className="text-sm text-slate-500">Track your learning Progress and Certification Status.</p>
         </div>
         <Link to={ROUTES.COURSES}>
           <Button variant="primary" size="md">

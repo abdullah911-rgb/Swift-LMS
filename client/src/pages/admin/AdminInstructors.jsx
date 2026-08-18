@@ -179,7 +179,7 @@ const AdminInstructors = () => {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-heading font-bold text-slate-900">Instructors Management</h1>
-          <p className="text-sm text-slate-500 mt-1">Create instructor accounts, assign courses, and manage trainers.</p>
+          <p className="text-sm text-slate-500 mt-1">Create Instructor Accounts, Assign Courses, and Manage Trainers.</p>
         </div>
         <div className="flex items-center gap-2">
           <button

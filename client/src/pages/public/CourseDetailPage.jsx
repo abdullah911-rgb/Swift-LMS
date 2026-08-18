@@ -150,11 +150,33 @@ const CourseDetailPage = () => {
               </span>
             </div>
 
+            {/* Course Description */}
+            {course.description && (
+              <div className="space-y-3">
+                <h3 className="text-lg font-heading font-bold text-slate-800">About This Course</h3>
+                <div className="text-sm text-slate-600 leading-relaxed space-y-1.5 bg-white border border-slate-100 rounded-2xl p-5">
+                  {course.description.split('\n').map((line, i) => {
+                    const trimmed = line.trim();
+                    if (!trimmed) return null;
+                    if (trimmed.startsWith('•')) {
+                      return (
+                        <div key={i} className="flex items-start gap-2">
+                          <span className="text-primary-600 mt-0.5 font-bold shrink-0">•</span>
+                          <span>{trimmed.slice(1).trim()}</span>
+                        </div>
+                      );
+                    }
+                    return <p key={i} className="font-semibold text-slate-700">{trimmed}</p>;
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Curriculum Modules */}
             <div className="space-y-4">
               <h3 className="text-lg font-heading font-bold text-slate-800">Curriculum Syllabus</h3>
               {course.modules?.length === 0 ? (
-                <p className="text-sm text-slate-450 text-slate-500 pl-2">Syllabus is being updated by the instructor.</p>
+                <p className="text-sm text-slate-500 pl-2">Syllabus is being updated by the instructor.</p>
               ) : (
                 <div className="space-y-3">
                   {course.modules?.map((mod, index) => {

@@ -122,7 +122,7 @@ export default function AdminPayments() {
       <div style={{ marginBottom: 28 }}>
         <h1 style={{ fontSize: 26, fontWeight: 800, color: '#0f172a', margin: 0 }}>💰 Payment Management</h1>
         <p style={{ color: '#64748b', fontSize: 14, margin: '4px 0 0' }}>
-          Review payment proofs, manage payment accounts, and approve student enrollments.
+          Review Payment Proofs, Manage Payment Accounts, and Approve Student Enrollments.
         </p>
       </div>
 

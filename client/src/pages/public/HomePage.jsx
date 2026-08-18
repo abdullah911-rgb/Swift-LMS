@@ -97,7 +97,7 @@ const HomePage = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="lg:col-span-6 mt-12 lg:mt-0 relative flex justify-center"
             >
-              <div className="relative w-full max-w-xs lg:max-w-sm aspect-square bg-gradient-to-tr from-primary-500/10 to-primary-300/5 rounded-2xl p-3 border border-slate-100 shadow-xl flex items-center justify-center overflow-hidden">
+              <div className="relative w-full max-w-sm lg:max-w-lg aspect-square bg-gradient-to-tr from-primary-500/10 to-primary-300/5 rounded-2xl p-3 border border-slate-100 shadow-xl flex items-center justify-center overflow-hidden">
 
                 {/* Floating UI Elements */}
                 <div className="absolute top-4 left-4 p-3 bg-white/90 backdrop-blur border border-slate-100 rounded-xl soft-shadow space-y-1.5 z-10" style={{ animation: 'float1 6s ease-in-out infinite' }}>
