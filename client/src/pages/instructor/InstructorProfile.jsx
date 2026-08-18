@@ -182,7 +182,7 @@ const InstructorProfile = () => {
     <div className="space-y-6 font-sans">
       <div>
         <h1 className="text-2xl font-heading font-bold text-primary-900">Instructor Settings</h1>
-        <p className="text-sm text-slate-500">Manage your trainer details, professional biography, profile photo, and credentials.</p>
+        <p className="text-sm text-slate-500">Manage your Trainer Details, Professional Biography, Profile Photo, and Credentials.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">

@@ -101,7 +101,7 @@ const InstructorStudents = () => {
       <div>
         <h1 className="text-2xl font-heading font-bold text-primary-900">Enrolled Students View</h1>
         <p className="text-sm text-slate-500">
-          Monitor attendance, progress, and enrollment status for your classes.
+          Monitor Attendance, Progress, and Enrollment Status for Your Classes.
         </p>
       </div>
 

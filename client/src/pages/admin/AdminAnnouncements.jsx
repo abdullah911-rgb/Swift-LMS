@@ -97,7 +97,7 @@ const AdminAnnouncements = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-heading font-bold text-slate-900">Platform Announcements</h1>
-            <p className="text-sm text-slate-500 mt-1">Broadcast system maintenance, news, alerts, or holiday updates.</p>
+            <p className="text-sm text-slate-500 mt-1">Broadcast System Maintenance, News, Alerts, or Holiday Updates.</p>
           </div>
           <button
             onClick={fetchAnnouncements}
