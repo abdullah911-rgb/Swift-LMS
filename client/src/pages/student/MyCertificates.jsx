@@ -28,7 +28,7 @@ const CERT_LAYOUT = {
   },
   date: {
     top: 0.674,
-    height: 0.028,
+    height: 0.028,  
     // Oversize masks to fully hide template handwriting placeholders
     day: { left: 0.420, width: 0.055 },
     month: { left: 0.515, width: 0.080 },
