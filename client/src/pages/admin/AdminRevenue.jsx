@@ -60,24 +60,26 @@ export default function AdminRevenue() {
       {data.monthlyRevenue?.length > 0 && (
         <div style={{ background: '#fff', borderRadius: 20, border: '1px solid #f1f5f9', padding: '24px 28px', marginBottom: 28, boxShadow: '0 1px 6px rgba(0,0,0,0.05)' }}>
           <h2 style={{ margin: '0 0 24px', fontSize: 17, fontWeight: 700, color: '#0f172a' }}>📈 Monthly Revenue (Last 6 Months)</h2>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, height: 200 }}>
-            {data.monthlyRevenue.map((m, i) => {
-              const pct = maxRevenue > 0 ? (m.revenue / maxRevenue) * 100 : 0;
-              return (
-                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#6366f1' }}>PKR {Number(m.revenue || 0).toLocaleString()}</div>
-                  <div style={{ width: '100%', height: '160px', display: 'flex', alignItems: 'flex-end' }}>
-                    <div style={{
-                      width: '100%', height: `${pct}%`, minHeight: 6,
-                      background: 'linear-gradient(180deg, #818cf8, #6366f1)',
-                      borderRadius: '6px 6px 0 0', transition: 'height 0.6s ease',
-                    }} />
+          <div style={{ overflowX: 'auto', paddingBottom: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, height: 220, minWidth: 500, paddingTop: 10 }}>
+              {data.monthlyRevenue.map((m, i) => {
+                const pct = maxRevenue > 0 ? (m.revenue / maxRevenue) * 100 : 0;
+                return (
+                  <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, minWidth: 70 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#6366f1', whiteSpace: 'nowrap' }}>PKR {Number(m.revenue || 0).toLocaleString()}</div>
+                    <div style={{ width: '100%', height: '160px', display: 'flex', alignItems: 'flex-end' }}>
+                      <div style={{
+                        width: '100%', height: `${pct}%`, minHeight: 6,
+                        background: 'linear-gradient(180deg, #818cf8, #6366f1)',
+                        borderRadius: '6px 6px 0 0', transition: 'height 0.6s ease',
+                      }} />
+                    </div>
+                    <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, whiteSpace: 'nowrap' }}>{m.month}</div>
+                    <div style={{ fontSize: 10, color: '#cbd5e1', whiteSpace: 'nowrap' }}>{m.count} payment{m.count !== 1 ? 's' : ''}</div>
                   </div>
-                  <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>{m.month}</div>
-                  <div style={{ fontSize: 10, color: '#cbd5e1' }}>{m.count} payment{m.count !== 1 ? 's' : ''}</div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

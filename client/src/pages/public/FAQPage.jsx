@@ -10,9 +10,9 @@ const newsItems = [
     categoryBg: '#eef2ff',
     icon: <IoBookOutline size={22} />,
     date: 'August 10, 2026',
-    title: 'New NEBOSH International General Certificate Course Now Available',
+    title: 'New Nebosh International General Certificate Course Now Available',
     summary:
-      'Swift Institute is proud to announce the launch of the highly anticipated NEBOSH IGC program. This internationally recognised qualification covers all aspects of occupational health and safety management and is ideal for safety officers, engineers, and supervisors across all industries.',
+      'Swift Institute is proud to announce the launch of the highly anticipated Nebosh IGC program. This internationally recognised qualification covers all aspects of occupational health and safety management and is ideal for safety officers, engineers, and supervisors across all industries.',
     badge: 'New',
     badgeColor: '#059669',
     badgeBg: '#d1fae5',
@@ -57,7 +57,7 @@ const newsItems = [
     date: 'July 20, 2026',
     title: 'Free Webinar: Safety Culture in the Workplace — Register Now',
     summary:
-      'Join us for a free, interactive webinar on building a proactive safety culture within your organisation. The session will be hosted by our lead safety instructors and will cover risk assessment frameworks, incident prevention strategies, and how to prepare for NEBOSH & IOSH examinations. Open to all registered students and professionals.',
+      'Join us for a free, interactive webinar on building a proactive safety culture within your organisation. The session will be hosted by our lead safety instructors and will cover risk assessment frameworks, incident prevention strategies, and how to prepare for Nebosh & IOSH examinations. Open to all registered students and professionals.',
     badge: 'Free Event',
     badgeColor: '#7c3aed',
     badgeBg: '#ede9fe',

@@ -398,7 +398,7 @@ export default function CheckoutPage() {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-700 to-primary-500 text-white font-heading font-extrabold text-xl">
-                    SWIFT
+                    Swift
                   </div>
                 )}
               </div>

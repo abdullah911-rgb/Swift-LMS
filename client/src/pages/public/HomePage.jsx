@@ -158,7 +158,7 @@ const HomePage = () => {
       <section className="py-20 sm:py-28 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4">
           <span className="inline-block text-xs font-bold uppercase tracking-wider text-primary-700 bg-primary-50 px-3 py-1 rounded-full mb-3">Core Pillars</span>
-          <h2 className="text-3xl sm:text-4xl font-heading font-bold text-slate-900">Why Train With SWIFT?</h2>
+          <h2 className="text-3xl sm:text-4xl font-heading font-bold text-slate-900">Why Train With Swift?</h2>
           <p className="text-slate-500 max-w-lg mx-auto text-sm sm:text-base">Everything you need to successfully gain professional safety & technology certifications.</p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-10">
@@ -236,7 +236,7 @@ const HomePage = () => {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-700 to-accent-500 text-white font-heading font-bold text-lg">
-                        SWIFT
+                        Swift
                       </div>
                     )}
                     <span className="absolute top-4 right-4 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide uppercase bg-white/90 backdrop-blur text-slate-800 border border-white/50">

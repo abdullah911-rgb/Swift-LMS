@@ -35,7 +35,7 @@ const InstructorLayout = () => {
       {/* Sidebar header */}
       <div className="p-5 border-b border-primary-900 flex items-center justify-between gap-3 shrink-0">
         <div className="flex items-center gap-3 min-w-0">
-          <img src="/Logo1.jpeg" alt="SWIFT Logo" className="h-8 w-8 object-contain rounded bg-white p-0.5 shrink-0" />
+          <img src="/Logo1.jpeg" alt="Swift Logo" className="h-8 w-8 object-contain rounded bg-white p-0.5 shrink-0" />
           <Link
             to={ROUTES.HOME}
             className="font-heading font-bold text-lg tracking-tight text-white truncate"

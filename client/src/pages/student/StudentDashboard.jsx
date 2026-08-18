@@ -106,7 +106,7 @@ const StudentDashboard = () => {
             <div className="text-center py-12 space-y-4">
               <p className="text-sm text-slate-400">You are not enrolled in any courses yet.</p>
               <Link to={ROUTES.COURSES}>
-                <Button variant="secondary" size="sm">Explore SWIFT Catalog</Button>
+                <Button variant="secondary" size="sm">Explore Swift Catalog</Button>
               </Link>
             </div>
           ) : (
@@ -122,7 +122,7 @@ const StudentDashboard = () => {
                       />
                     ) : (
                       <div className="h-12 w-16 bg-primary-700 text-white rounded-lg flex items-center justify-center font-bold text-[10px]">
-                        SWIFT
+                        Swift
                       </div>
                     )}
                     <div>
@@ -154,7 +154,7 @@ const StudentDashboard = () => {
           <div>
             <h3 className="text-base font-heading font-bold text-primary-900 mb-3">Live Class Hub</h3>
             <p className="text-xs text-slate-500 mb-4 leading-relaxed">
-              Join active Zoom classes scheduled by SWIFT trainers. Download manuals and complete modules to prepare for exams.
+              Join active Zoom classes scheduled by Swift trainers. Download manuals and complete modules to prepare for exams.
             </p>
           </div>
           <div className="p-4 rounded-xl bg-primary-50 border border-primary-100 text-center space-y-3">

@@ -251,10 +251,10 @@ export default function VerifyCertificate() {
                 <div className="flex items-center gap-1">
                   <img
                     src="/Logo1.jpeg"
-                    alt="SWIFT logo"
+                    alt="Swift logo"
                     className="h-8 object-contain bg-white rounded p-0.5"
                   />
-                  <span className="text-[10px] font-extrabold text-primary-900 tracking-wider uppercase">SWIFT</span>
+                  <span className="text-[10px] font-extrabold text-primary-900 tracking-wider">Swift</span>
                 </div>
               </div>
 
@@ -290,7 +290,7 @@ export default function VerifyCertificate() {
                     <div>
                       <p className="text-xs font-black tracking-wide uppercase text-emerald-800">Verified Authentic</p>
                       <p className="text-[11px] text-slate-600 mt-1 leading-relaxed m-0 font-medium">
-                        This completion certificate is officially issued by **SWIFT Institute of Safety & Technology**. The registry matches a validated graduate database record.
+                        This completion certificate is officially issued by **Swift Institute of Safety & Technology**. The registry matches a validated graduate database record.
                       </p>
                     </div>
                   </div>
@@ -404,7 +404,7 @@ export default function VerifyCertificate() {
                   {/* Registry Verification code */}
                   <div className="pt-6 border-t border-slate-100 text-center text-[10px] text-slate-400 font-medium space-y-1">
                     <p className="m-0 font-mono">Verification Code: {cert.verificationCode}</p>
-                    <p className="m-0">Verified successfully via SWIFT Credential Authenticity Registry Node.</p>
+                    <p className="m-0">Verified successfully via Swift Credential Authenticity Registry Node.</p>
                   </div>
                 </div>
               ) : null}
@@ -585,7 +585,7 @@ export default function VerifyCertificate() {
 
                   <div className="text-center pt-2">
                     <span className="text-[10px] text-slate-400 font-semibold tracking-wide block leading-relaxed">
-                      Unique QR codes are generated bottom-right on every issued SWIFT certificate. Scan using camera or upload screenshot to verify graduation credentials instantly.
+                      Unique QR codes are generated bottom-right on every issued Swift certificate. Scan using camera or upload screenshot to verify graduation credentials instantly.
                     </span>
                   </div>
                 </div>

@@ -111,19 +111,7 @@ const AdminDashboard = () => {
           value={stats?.publishedCourses}
           color="bg-teal-50 text-teal-600"
         />
-        <div className="col-span-1 bg-gradient-to-br from-primary-700 to-primary-900 rounded-2xl flex items-center justify-center p-5">
-          <div className="text-center text-white">
-            <p className="text-xs font-bold uppercase tracking-widest text-primary-300 mb-1">Quick Links</p>
-            <div className="flex flex-col gap-1.5 mt-2">
-              <Link to="/admin/approvals" className="text-xs bg-accent-500 text-primary-900 font-bold px-3 py-1.5 rounded-lg hover:bg-accent-400 transition-all">
-                Review Approvals →
-              </Link>
-              <Link to="/admin/users" className="text-xs bg-white/10 hover:bg-white/20 text-white font-semibold px-3 py-1.5 rounded-lg transition-all">
-                Manage Users →
-              </Link>
-            </div>
-          </div>
-        </div>
+
       </div>
 
       {/* Bottom panels */}

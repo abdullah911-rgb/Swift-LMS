@@ -7,7 +7,7 @@
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-heading: 'Outfit', system-ui, -apple-system, sans-serif;
   
-  /* ── SWIFT Navy Blue primary palette ── */
+  /* ── Swift Navy Blue primary palette ── */
   --color-primary-50:  #eef1f9;
   --color-primary-100: #d5daf0;
   --color-primary-200: #aab5e1;
@@ -20,7 +20,7 @@
   --color-primary-900: #081336;
   --color-primary-950: #04091b;
 
-  /* ── SWIFT Gold accent palette ── */
+  /* ── Swift Gold accent palette ── */
   --color-accent-50:  #fdf9ec;
   --color-accent-100: #faf0c8;
   --color-accent-200: #f5e091;

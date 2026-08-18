@@ -120,6 +120,19 @@ const adminController = {
   deleteUser: asyncHandler(async (req, res) => {
     const { id } = req.params;
     if (id === req.user.id) return sendError(res, 'Cannot delete yourself.', 400);
+
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user) return sendError(res, 'User not found.', 404);
+
+    // If instructor, reassign all their courses to null (unassigned) before deleting
+    // to avoid foreign key constraint violation on courses_instructorId_fkey
+    if (user.role === 'INSTRUCTOR') {
+      await prisma.course.updateMany({
+        where: { instructorId: id },
+        data: { instructorId: null },
+      });
+    }
+
     await prisma.user.delete({ where: { id } });
     sendSuccess(res, 'User deleted.');
   }),

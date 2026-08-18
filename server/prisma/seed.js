@@ -92,7 +92,7 @@ async function main() {
   // ── Seed All 15 Courses ───────────────────────────────────────────────────
   const courses = [
     {
-      title: 'NEBOSH International Safety Course',
+      title: 'Nebosh International Safety Course',
       slug: 'nebosh-international-safety-course',
       thumbnail: '/uploads/nebosh.jfif',
       description: 'Comprehensive health and safety management training covering international standards and best practices.\n\nCourse Contents:\n• Health & Safety Management System\n• Risk Assessment\n• Hazard Identification\n• Workplace Safety\n• Incident Investigation\n• Occupational Health & Safety\n• Fire Safety\n• Emergency Management',
@@ -154,7 +154,7 @@ async function main() {
     {
       title: 'Fire Safety & First Aid Training',
       slug: 'fire-safety-first-aid-training',
-      thumbnail: '/uploads/confined-space-safety-work-at-height.jfif',
+      thumbnail: '/uploads/fire-safety-first-aid-training.jfif',
       description: 'Essential fire safety and first aid training covering fire prevention, extinguisher handling, emergency response, basic first aid, and CPR awareness.\n\nCourse Contents:\n• Fire Prevention\n• Fire Extinguisher Handling\n• Emergency Response\n• Basic First Aid\n• CPR Awareness',
       shortDescription: 'Fire safety and basic first aid certification',
       categoryId: safetyCategory.id,
@@ -174,7 +174,7 @@ async function main() {
     {
       title: 'HSE Officer Training',
       slug: 'hse-officer-training',
-      thumbnail: '/uploads/iosh-safety-training.jfif',
+      thumbnail: '/uploads/hse-officer-training.jfif',
       description: 'Comprehensive Health, Safety, and Environment (HSE) officer training covering safety inspection, risk assessment, documentation, toolbox talks, and incident reporting.\n\nCourse Contents:\n• HSE Officer Responsibilities\n• Safety Inspection\n• Risk Assessment\n• Safety Documentation\n• Toolbox Talks\n• Incident Reporting',
       shortDescription: 'Professional HSE officer certification course',
       categoryId: safetyCategory.id,
@@ -195,7 +195,7 @@ async function main() {
     {
       title: 'Risk Assessment & Permit To Work Training',
       slug: 'risk-assessment-permit-to-work-training',
-      thumbnail: '/uploads/confined-space-safety-work-at-height.jfif',
+      thumbnail: '/uploads/risk-assessment-permit-to-work-training.jfif',
       description: 'Specialized training in risk identification, evaluation, control measures, and permit to work systems including hot work and confined space permits.\n\nCourse Contents:\n• Risk Identification\n• Risk Evaluation\n• Control Measures\n• Permit To Work System\n• Hot Work Permit\n• Confined Space Permit',
       shortDescription: 'Risk assessment and permit to work systems training',
       categoryId: safetyCategory.id,

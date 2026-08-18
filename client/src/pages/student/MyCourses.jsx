@@ -98,7 +98,7 @@ const MyCourses = () => {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-700 to-accent-500 text-white font-heading font-bold text-lg">
-                    SWIFT
+                    Swift
                   </div>
                 )}
                 <span className="absolute top-4 right-4 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide uppercase bg-white/90 backdrop-blur text-slate-800 border border-white/50">

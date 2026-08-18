@@ -30,7 +30,7 @@ const Footer = () => {
             </span>
           </div>
           <p className="text-sm leading-relaxed text-slate-400">
-            Swift empowering professionals with industry-certified safety and technology education.
+            Swift Empowering Professionals with Industry Certified Safety and Technology Education.
           </p>
           
           {/* Social Links */}
@@ -49,7 +49,7 @@ const Footer = () => {
 
         {/* Quick Links */}
         <div>
-          <h4 className="text-sm font-heading font-semibold text-white uppercase tracking-wider mb-5">Quick Links</h4>
+          <h4 className="text-sm font-heading font-semibold text-white tracking-wider mb-5">Quick Links</h4>
           <ul className="space-y-3 text-sm">
             <li>
               <Link to={ROUTES.HOME} className="hover:text-accent-400 transition-colors">Home</Link>
@@ -58,7 +58,7 @@ const Footer = () => {
               <Link to={ROUTES.COURSES} className="hover:text-accent-400 transition-colors">All Courses</Link>
             </li>
             <li>
-              <Link to={ROUTES.ABOUT} className="hover:text-accent-400 transition-colors">About SWIFT</Link>
+              <Link to={ROUTES.ABOUT} className="hover:text-accent-400 transition-colors">About Swift</Link>
             </li>
             <li>
               <Link to={ROUTES.FAQ} className="hover:text-accent-400 transition-colors">News &amp; Updates</Link>
@@ -71,7 +71,7 @@ const Footer = () => {
 
         {/* Student Resources */}
         <div>
-          <h4 className="text-sm font-heading font-semibold text-white uppercase tracking-wider mb-5">Student Portal</h4>
+          <h4 className="text-sm font-heading font-semibold text-white tracking-wider mb-5">Student Portal</h4>
           <ul className="space-y-3 text-sm">
             <li>
               <Link to={ROUTES.LOGIN} className="hover:text-accent-400 transition-colors">Student Log In</Link>
@@ -87,7 +87,7 @@ const Footer = () => {
 
         {/* Contact Info */}
         <div className="space-y-4">
-          <h4 className="text-sm font-heading font-semibold text-white uppercase tracking-wider mb-5">Contact Info</h4>
+          <h4 className="text-sm font-heading font-semibold text-white tracking-wider mb-5">Contact Info</h4>
           <ul className="space-y-3.5 text-sm">
             <li className="flex items-start gap-3">
               <IoMailOutline size={18} className="text-white mt-0.5 shrink-0" />

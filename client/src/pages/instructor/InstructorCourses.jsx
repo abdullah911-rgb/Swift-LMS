@@ -84,7 +84,7 @@ const InstructorCourses = () => {
                           />
                         ) : (
                           <div className="h-10 w-14 bg-primary-700 text-white rounded-lg flex items-center justify-center font-bold text-[9px]">
-                            SWIFT
+                            Swift
                           </div>
                         )}
                         <div className="min-w-0">

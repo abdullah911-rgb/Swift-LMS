@@ -106,8 +106,8 @@ const InstructorStudents = () => {
       </div>
 
       {/* Course Selector */}
-      <Card hover={false} className="bg-white border border-slate-100 p-6 rounded-2xl space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <Card hover={false} className="bg-white border border-slate-100 p-6 rounded-2xl" style={{ overflow: 'visible' }}>
+        <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2">
             <IoBookOutline size={18} className="text-primary-700" />
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -117,7 +117,7 @@ const InstructorStudents = () => {
           <select
             value={selectedCourseId}
             onChange={(e) => setSelectedCourseId(e.target.value)}
-            className="px-4 py-2.5 rounded-xl border border-slate-100 bg-white focus:outline-none focus:border-primary-600 text-sm w-full sm:w-72"
+            className="px-4 py-2.5 rounded-xl border border-slate-100 bg-white focus:outline-none focus:border-primary-600 text-sm w-full max-w-sm"
           >
             {courses.length === 0 ? (
               <option value="">No courses created</option>
