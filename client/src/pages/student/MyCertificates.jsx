@@ -31,9 +31,9 @@ const CERT_LAYOUT = {
     height: 0.028,  
     // Oversize masks to fully hide template handwriting placeholders
     day: { left: 0.420, width: 0.055 },
-    month: { left: 0.519, width: 0.080 },
+    month: { left: 0.522, width: 0.077 },
     year: { left: 0.627, width: 0.023 },
-    fontSize: 'clamp(10px, 1.65vw, 20px)',
+    fontSize: 'clamp(8px, 1.65vw, 16px)',
     canvasFontScale: 0.019,
   },
   summary: {
