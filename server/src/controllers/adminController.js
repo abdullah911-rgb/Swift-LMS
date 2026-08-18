@@ -124,14 +124,32 @@ const adminController = {
     const user = await prisma.user.findUnique({ where: { id } });
     if (!user) return sendError(res, 'User not found.', 404);
 
-    // If instructor, reassign all their courses to null (unassigned) before deleting
-    // to avoid foreign key constraint violation on courses_instructorId_fkey
+    // Reassign relations that do not Cascade to the admin user executing the deletion
     if (user.role === 'INSTRUCTOR') {
       await prisma.course.updateMany({
         where: { instructorId: id },
-        data: { instructorId: null },
+        data: { instructorId: req.user.id },
+      });
+      await prisma.zoomMeeting.updateMany({
+        where: { instructorId: id },
+        data: { instructorId: req.user.id },
+      });
+      await prisma.assignment.updateMany({
+        where: { instructorId: id },
+        data: { instructorId: req.user.id },
       });
     }
+
+    // Platform announcements & course announcements authored by this user
+    await prisma.announcement.updateMany({
+      where: { authorId: id },
+      data: { authorId: req.user.id },
+    });
+
+    await prisma.platformAnnouncement.updateMany({
+      where: { authorId: id },
+      data: { authorId: req.user.id },
+    });
 
     await prisma.user.delete({ where: { id } });
     sendSuccess(res, 'User deleted.');

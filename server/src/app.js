@@ -84,7 +84,15 @@ app.use('/uploads', (req, res, next) => {
     res.setHeader('Content-Type', 'image/jpeg');
   }
   next();
-}, express.static(committedUploadsDir), express.static(uploadDir));
+}, express.static(committedUploadsDir), express.static(uploadDir), (req, res, next) => {
+  // Fallback for missing uploads images (e.g. on serverless Vercel)
+  const ext = path.extname(req.path).toLowerCase();
+  if (['.png', '.jpg', '.jpeg', '.gif', '.webp', '.jfif'].includes(ext)) {
+    res.setHeader('Content-Type', 'image/jpeg');
+    return res.sendFile(path.join(committedUploadsDir, 'nebosh.jfif'));
+  }
+  next();
+});
 
 
 // Routes
