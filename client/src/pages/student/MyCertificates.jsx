@@ -9,10 +9,10 @@ const CERT_TEMPLATE = '/Certificate.png';
 
 const CERT_LAYOUT = {
   name: {
-    left: 0.195,
+    left: 0.197,
     top: 0.490,
     width: 0.61,
-    height: 0.078,
+    height: 0.080,
     fontSize: 'clamp(24px, 4vw, 51px)',
     canvasFontScale: 0.05,
     textYOffset: 0.017,
@@ -27,11 +27,11 @@ const CERT_LAYOUT = {
     textYOffset: 0.006,
   },
   date: {
-    top: 0.674,
+    top: 0.675,
     height: 0.028,  
     // Oversize masks to fully hide template handwriting placeholders
     day: { left: 0.420, width: 0.055 },
-    month: { left: 0.515, width: 0.080 },
+    month: { left: 0.519, width: 0.080 },
     year: { left: 0.627, width: 0.023 },
     fontSize: 'clamp(10px, 1.65vw, 20px)',
     canvasFontScale: 0.019,
