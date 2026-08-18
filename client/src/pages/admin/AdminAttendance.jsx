@@ -130,6 +130,29 @@ const AdminAttendance = () => {
                 </div>
               </div>
 
+              {/* Attendance Distribution Graph */}
+              <div className="bg-slate-50/50 border border-slate-100/80 rounded-2xl p-5 mb-6 space-y-4">
+                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide">📈 Attendance Distribution Graph</h4>
+                <div className="space-y-3">
+                  {attendance.students.map((s) => (
+                    <div key={s.studentId} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs">
+                      <span className="w-full sm:w-28 font-bold text-slate-700 truncate">{s.name}</span>
+                      <div className="flex-1 h-6 bg-slate-100 rounded-lg overflow-hidden relative border border-slate-200/40">
+                        <div
+                          className={`h-full transition-all duration-500 rounded-lg flex items-center justify-end pr-2.5 text-[9px] font-black text-white ${
+                            s.percentage >= 80 ? 'bg-gradient-to-r from-emerald-500 to-emerald-600' : 'bg-gradient-to-r from-rose-500 to-rose-600'
+                          }`}
+                          style={{ width: `${s.percentage}%` }}
+                        >
+                          {s.percentage}%
+                        </div>
+                      </div>
+                      <span className="w-20 text-right text-slate-400 font-bold hidden sm:inline">{s.attended} / {s.totalMeetings} Classes</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div className="overflow-x-auto">
                 <table className="w-full text-xs sm:text-sm text-left border-collapse">
                   <thead>
@@ -152,16 +175,37 @@ const AdminAttendance = () => {
                           {s.attended} / {s.totalMeetings}
                         </td>
                         <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden">
-                              <div
-                                className={`h-full rounded-full ${s.percentage >= 80 ? 'bg-green-500' : s.percentage >= 50 ? 'bg-amber-400' : 'bg-red-500'}`}
-                                style={{ width: `${s.percentage}%` }}
+                          <div className="flex items-center gap-3">
+                            {/* SVG Radial Gauge Chart */}
+                            <svg className="w-8 h-8 transform -rotate-90 shrink-0" viewBox="0 0 36 36">
+                              <circle
+                                className="text-slate-100"
+                                strokeWidth="3.5"
+                                stroke="currentColor"
+                                fill="transparent"
+                                r="16"
+                                cx="18"
+                                cy="18"
                               />
+                              <circle
+                                className={s.percentage >= 80 ? 'text-emerald-500' : s.percentage >= 50 ? 'text-amber-500' : 'text-rose-500'}
+                                strokeWidth="3.5"
+                                strokeDasharray="100, 100"
+                                strokeDashoffset={100 - s.percentage}
+                                strokeLinecap="round"
+                                stroke="currentColor"
+                                fill="transparent"
+                                r="16"
+                                cx="18"
+                                cy="18"
+                              />
+                            </svg>
+                            <div>
+                              <span className={`font-black text-xs block ${s.percentage >= 80 ? 'text-emerald-700' : 'text-rose-600'}`}>
+                                {s.percentage}%
+                              </span>
+                              <span className="text-[9px] text-slate-400 font-semibold uppercase">Attended</span>
                             </div>
-                            <span className={`font-bold ${s.percentage >= 80 ? 'text-green-700' : 'text-red-600'}`}>
-                              {s.percentage}%
-                            </span>
                           </div>
                         </td>
                         <td className="px-4 py-3">

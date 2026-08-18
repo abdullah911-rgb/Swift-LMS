@@ -563,38 +563,61 @@ export default function FinalQuiz() {
         {attempts.length === 0 ? (
           <p className="text-xs text-slate-400 m-0">No quiz attempts recorded yet.</p>
         ) : (
-          <div className="space-y-3">
-            {attempts.map((att) => (
-              <div key={att.id} className="p-4 border border-slate-100 rounded-xl bg-slate-50/50 hover:border-slate-200 transition-colors flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <div>
-                  <span className="text-xs font-bold text-slate-700">Attempt #{att.attemptNumber}</span>
-                  <span className="text-[10px] text-slate-400 ml-2">
-                    {new Date(att.completedAt).toLocaleString()}
-                  </span>
-                  <p className="text-xs text-slate-500 m-0 mt-1">
-                    Correct answers: {att.rawScore} | Duration: {att.timeTaken ? `${Math.floor(att.timeTaken / 60)}m ${att.timeTaken % 60}s` : 'N/A'}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-4 shrink-0">
-                  <div className="text-right">
-                    <span className="text-[9px] font-bold text-slate-400 block">MCQ Marks</span>
-                    <span className="text-xs font-extrabold text-primary-600">{att.mcqMarks.toFixed(1)} / 60</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[9px] font-bold text-slate-400 block">Score</span>
-                    <span className={`text-xs font-extrabold ${att.passed ? 'text-emerald-600' : 'text-rose-600'}`}>
+          <div className="space-y-4">
+            {/* Visual Quiz score progression chart */}
+            <div className="bg-slate-50/60 border border-slate-100/80 rounded-xl p-4 space-y-3">
+              <h5 className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">📈 Score Progression Graph</h5>
+              <div className="flex items-end gap-3 h-28 pt-6 px-4">
+                {attempts.map((att) => (
+                  <div key={att.id} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
+                    <span className={`text-[10px] font-extrabold ${att.passed ? 'text-emerald-600' : 'text-rose-600'}`}>
                       {att.score}%
                     </span>
+                    <div className="w-full relative">
+                      <div 
+                        className={`w-full rounded-t-md transition-all duration-500 ${att.passed ? 'bg-gradient-to-t from-emerald-500 to-emerald-400' : 'bg-gradient-to-t from-rose-500 to-rose-400'}`}
+                        style={{ height: `${(att.score / 100) * 60}px`, minHeight: '4px' }}
+                      />
+                    </div>
+                    <span className="text-[9px] font-bold text-slate-400 whitespace-nowrap">Attempt {att.attemptNumber}</span>
                   </div>
-                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                    att.passed ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
-                  }`}>
-                    {att.passed ? 'Passed' : 'Failed'}
-                  </span>
-                </div>
+                ))}
               </div>
-            ))}
+            </div>
+
+            <div className="space-y-3">
+              {attempts.map((att) => (
+                <div key={att.id} className="p-4 border border-slate-100 rounded-xl bg-slate-50/50 hover:border-slate-200 transition-colors flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                  <div>
+                    <span className="text-xs font-bold text-slate-700">Attempt #{att.attemptNumber}</span>
+                    <span className="text-[10px] text-slate-400 ml-2">
+                      {new Date(att.completedAt).toLocaleString()}
+                    </span>
+                    <p className="text-xs text-slate-500 m-0 mt-1">
+                      Correct answers: {att.rawScore} | Duration: {att.timeTaken ? `${Math.floor(att.timeTaken / 60)}m ${att.timeTaken % 60}s` : 'N/A'}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-4 shrink-0">
+                    <div className="text-right">
+                      <span className="text-[9px] font-bold text-slate-400 block">MCQ Marks</span>
+                      <span className="text-xs font-extrabold text-primary-600">{att.mcqMarks.toFixed(1)} / 60</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[9px] font-bold text-slate-400 block">Score</span>
+                      <span className={`text-xs font-extrabold ${att.passed ? 'text-emerald-600' : 'text-rose-600'}`}>
+                        {att.score}%
+                      </span>
+                    </div>
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                      att.passed ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
+                    }`}>
+                      {att.passed ? 'Passed' : 'Failed'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </Card>
