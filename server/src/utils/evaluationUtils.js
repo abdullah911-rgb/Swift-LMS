@@ -124,13 +124,6 @@ async function computeFinalScore(studentId, courseId) {
   const mcqMarks = quizData ? (quizData.mcqMarks ?? 0) : 60;
   const finalMarks = Math.round((attendanceMarks + assignmentMarks + mcqMarks) * 100) / 100;
 
-  // Check admin certificate eligibility override
-  const enrollment = await prisma.enrollment.findUnique({
-    where: { studentId_courseId: { studentId, courseId } },
-    select: { certificateEligible: true },
-  });
-  const adminOverrideIneligible = enrollment && enrollment.certificateEligible === false;
-
   // Eligibility checks
   const attendanceOk = attendanceData.percentage >= 80;
   const assignmentSubmittedOk = assignmentData.allSubmitted;
@@ -138,14 +131,11 @@ async function computeFinalScore(studentId, courseId) {
   const quizPassedOk = quizData === null || quizData.passed === true;
   const finalMarksOk = finalMarks >= 60;
 
-  // If admin has explicitly marked as ineligible, override regardless of marks
-  const eligible = !adminOverrideIneligible && attendanceOk && assignmentSubmittedOk && assignmentGradedOk && quizPassedOk && finalMarksOk;
+  const eligible = attendanceOk && assignmentSubmittedOk && assignmentGradedOk && quizPassedOk && finalMarksOk;
 
   let reason = null;
   if (!eligible) {
-    if (adminOverrideIneligible) {
-      reason = 'Certificate eligibility has been revoked by an administrator. Please contact support.';
-    } else if (!attendanceOk) {
+    if (!attendanceOk) {
       reason = `Attendance too low: ${attendanceData.percentage.toFixed(1)}% (minimum 80% required).`;
     } else if (!assignmentSubmittedOk) {
       reason = `Not all assignments submitted: ${assignmentData.submitted}/${assignmentData.total} submitted.`;
@@ -163,7 +153,6 @@ async function computeFinalScore(studentId, courseId) {
   return {
     eligible,
     reason,
-    adminOverride: adminOverrideIneligible,
     breakdown: {
       attendanceMarks: Math.round(attendanceMarks * 100) / 100,
       assignmentMarks: Math.round(assignmentMarks * 100) / 100,

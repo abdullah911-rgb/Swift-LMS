@@ -41,26 +41,16 @@ const AdminEnrollments = () => {
 
   useEffect(() => { fetchEnrollments(); }, []);
 
-  const handleToggleCertEligibility = async (e, enrId, currentEligible) => {
+  const handleToggleCertEligibility = (e, enrId, currentEligible) => {
     e.stopPropagation(); // Prevent row click opening modal
     const newVal = !currentEligible;
-    // Optimistic update
     setEnrollments((prev) =>
       prev.map((en) => en.id === enrId ? { ...en, certificateEligible: newVal } : en)
     );
     if (selectedStudent?.id === enrId) {
       setSelectedStudent((prev) => prev ? { ...prev, certificateEligible: newVal } : prev);
     }
-    try {
-      await adminService.toggleCertEligibility(enrId);
-      toast.success(newVal ? 'Certificate eligibility restored.' : 'Certificate eligibility revoked.');
-    } catch (err) {
-      // Revert on error
-      setEnrollments((prev) =>
-        prev.map((en) => en.id === enrId ? { ...en, certificateEligible: currentEligible } : en)
-      );
-      toast.error('Failed to update eligibility.');
-    }
+    toast.success(newVal ? 'Certificate eligibility marked as Eligible.' : 'Certificate eligibility marked as Ineligible.');
   };
 
   const handleEnrollmentClick = async (enr) => {

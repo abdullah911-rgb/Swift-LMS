@@ -132,10 +132,10 @@ const adminController = {
       // Delete assignments (non-cascaded, instructorId is non-nullable on Assignment)
       await prisma.assignment.deleteMany({ where: { instructorId: id } });
 
-      // Set courses to unassigned (instructorId is now nullable on Course)
+      // Reassign courses to admin executing deletion (instructorId stays valid & non-null)
       await prisma.course.updateMany({
         where: { instructorId: id },
-        data: { instructorId: null },
+        data: { instructorId: req.user.id },
       });
     }
 
@@ -362,37 +362,7 @@ const adminController = {
     sendSuccess(res, 'Course reassigned to instructor successfully.', { course: updated });
   }),
 
-  // PATCH /api/admin/enrollments/:enrollmentId/certificate-eligibility — Toggle cert eligibility
-  toggleCertificateEligibility: asyncHandler(async (req, res) => {
-    const { enrollmentId } = req.params;
 
-    const enrollment = await prisma.enrollment.findUnique({ where: { id: enrollmentId } });
-    if (!enrollment) return sendError(res, 'Enrollment not found.', 404);
-
-    const newValue = !enrollment.certificateEligible;
-    const updated = await prisma.enrollment.update({
-      where: { id: enrollmentId },
-      data: { certificateEligible: newValue },
-    });
-
-    // Notify student
-    await prisma.notification.create({
-      data: {
-        userId: enrollment.studentId,
-        title: newValue ? 'Certificate Eligibility Restored' : 'Certificate Eligibility Revoked',
-        message: newValue
-          ? 'An admin has marked you as eligible for the course certificate. Keep up the great work!'
-          : 'An admin has marked you as ineligible for the course certificate. Please contact support for more information.',
-        type: newValue ? 'SUCCESS' : 'WARNING',
-        link: '/student/my-courses',
-      },
-    });
-
-    sendSuccess(res, `Certificate eligibility ${newValue ? 'restored' : 'revoked'} successfully.`, {
-      enrollmentId,
-      certificateEligible: newValue,
-    });
-  }),
 
   // PATCH /api/admin/instructors/:id/approve — Approve instructor
   approveInstructor: asyncHandler(async (req, res) => {
