@@ -10,12 +10,13 @@ import {
   IoPersonOutline,
   IoSearchOutline,
   IoRefreshOutline,
-  IoTrashOutline,
   IoCheckmarkCircleOutline,
   IoTimeOutline,
-  IoArchiveOutline,
   IoEyeOffOutline,
   IoAddOutline,
+  IoAlertCircleOutline,
+  IoSwapHorizontalOutline,
+  IoCloseOutline,
 } from 'react-icons/io5';
 
 const statusBadge = {
@@ -32,6 +33,12 @@ const AdminCourses = () => {
   const [actionId, setActionId] = useState(null);
   const [pagination, setPagination] = useState({ total: 0, page: 1, totalPages: 1 });
 
+  // Reassign state
+  const [instructors, setInstructors] = useState([]);
+  const [reassignCourseId, setReassignCourseId] = useState(null);
+  const [selectedInstructorId, setSelectedInstructorId] = useState('');
+  const [reassigning, setReassigning] = useState(false);
+
   const fetchCourses = async (page = 1) => {
     setLoading(true);
     try {
@@ -45,6 +52,13 @@ const AdminCourses = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchInstructors = async () => {
+    try {
+      const res = await adminService.getInstructors();
+      if (res.data?.data?.instructors) setInstructors(res.data.data.instructors);
+    } catch {}
   };
 
   useEffect(() => { fetchCourses(); }, [search, statusFilter]);
@@ -65,6 +79,34 @@ const AdminCourses = () => {
       toast.error(err.response?.data?.message || 'Failed.');
     } finally {
       setActionId(null);
+    }
+  };
+
+  const openReassign = async (courseId) => {
+    setReassignCourseId(courseId);
+    setSelectedInstructorId('');
+    if (instructors.length === 0) await fetchInstructors();
+  };
+
+  const handleReassign = async () => {
+    if (!selectedInstructorId) { toast.error('Please select an instructor.'); return; }
+    setReassigning(true);
+    try {
+      await adminService.reassignCourseInstructor(reassignCourseId, selectedInstructorId);
+      const instructor = instructors.find((i) => i.id === selectedInstructorId);
+      setCourses((prev) =>
+        prev.map((c) =>
+          c.id === reassignCourseId
+            ? { ...c, instructor: { name: instructor?.name || '' }, instructorId: selectedInstructorId }
+            : c
+        )
+      );
+      toast.success('Course reassigned successfully!');
+      setReassignCourseId(null);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to reassign.');
+    } finally {
+      setReassigning(false);
     }
   };
 
@@ -129,82 +171,134 @@ const AdminCourses = () => {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {courses.map((course) => (
-            <Card key={course.id} hover={false} className="bg-white border border-slate-100 rounded-2xl overflow-hidden flex flex-col">
-              {/* Thumbnail */}
-              <div className="relative h-36 bg-slate-50">
-                {course.thumbnail ? (
-                  <img
-                    src={getImageUrl(course.thumbnail)}
-                    alt={course.title}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="h-full flex items-center justify-center">
-                    <IoBookOutline size={36} className="text-slate-200" />
-                  </div>
-                )}
-                <div className="absolute top-2 right-2 flex gap-1">
-                  <span className={`text-[10px] font-bold border px-2 py-0.5 rounded-full ${statusBadge[course.status] || statusBadge.DRAFT}`}>
-                    {course.status}
-                  </span>
-                  {course.pendingApproval && (
-                    <span className="text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100 px-2 py-0.5 rounded-full flex items-center gap-0.5">
-                      <IoTimeOutline size={9} /> Pending
-                    </span>
+          {courses.map((course) => {
+            const isUnassigned = !course.instructor && !course.instructorId;
+            const isReassigning = reassignCourseId === course.id;
+
+            return (
+              <Card key={course.id} hover={false} className={`bg-white border rounded-2xl overflow-hidden flex flex-col transition-all ${isUnassigned ? 'border-amber-200 ring-1 ring-amber-100' : 'border-slate-100'}`}>
+                {/* Thumbnail */}
+                <div className="relative h-36 bg-slate-50">
+                  {course.thumbnail ? (
+                    <img
+                      src={getImageUrl(course.thumbnail)}
+                      alt={course.title}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-full flex items-center justify-center">
+                      <IoBookOutline size={36} className="text-slate-200" />
+                    </div>
                   )}
-                </div>
-              </div>
-
-              {/* Info */}
-              <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
-                <div>
-                  <h3 className="text-sm font-heading font-bold text-slate-900 line-clamp-2 leading-snug">{course.title}</h3>
-                  <div className="flex items-center gap-1.5 mt-1.5 text-xs text-slate-500">
-                    <IoPersonOutline size={12} />
-                    <span>{course.instructor?.name}</span>
-                    <span className="text-slate-300">·</span>
-                    <IoLayersOutline size={12} />
-                    <span>{course._count?.modules} modules</span>
-                    <span className="text-slate-300">·</span>
-                    <span>{course._count?.enrollments} enrolled</span>
-                  </div>
-                  <div className="mt-1.5 flex items-center gap-1.5">
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary-50 border border-primary-100 text-primary-700">
-                      {course.category?.name}
+                  <div className="absolute top-2 right-2 flex gap-1 flex-wrap justify-end">
+                    <span className={`text-[10px] font-bold border px-2 py-0.5 rounded-full ${statusBadge[course.status] || statusBadge.DRAFT}`}>
+                      {course.status}
                     </span>
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-50 border border-slate-100 text-slate-600">
-                      {course.level}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center gap-2 pt-2 border-t border-slate-50">
-                  <Link to={`/admin/courses/${course.id}/manage`} className="flex-1">
-                    <button className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold border border-slate-200 text-slate-750 text-slate-700 bg-white hover:bg-slate-50 transition-all cursor-pointer">
-                      Manage
-                    </button>
-                  </Link>
-                  <button
-                    onClick={() => handleTogglePublish(course.id, course.status)}
-                    disabled={actionId === course.id}
-                    className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer disabled:opacity-50 ${
-                      course.status === 'PUBLISHED'
-                        ? 'border-amber-100 text-amber-700 bg-amber-50 hover:bg-amber-100'
-                        : 'border-emerald-100 text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
-                    }`}
-                  >
-                    {course.status === 'PUBLISHED' ? (
-                      <><IoEyeOffOutline size={13} /> Unpublish</>
-                    ) : (
-                      <><IoCheckmarkCircleOutline size={13} /> Publish</>
+                    {isUnassigned && (
+                      <span className="text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full flex items-center gap-0.5">
+                        <IoAlertCircleOutline size={9} /> Unassigned
+                      </span>
                     )}
-                  </button>
+                    {course.pendingApproval && (
+                      <span className="text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100 px-2 py-0.5 rounded-full flex items-center gap-0.5">
+                        <IoTimeOutline size={9} /> Pending
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </Card>
-          ))}
+
+                {/* Info */}
+                <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+                  <div>
+                    <h3 className="text-sm font-heading font-bold text-slate-900 line-clamp-2 leading-snug">{course.title}</h3>
+                    <div className="flex items-center gap-1.5 mt-1.5 text-xs text-slate-500">
+                      <IoPersonOutline size={12} />
+                      {isUnassigned ? (
+                        <span className="text-amber-600 font-semibold italic">No instructor assigned</span>
+                      ) : (
+                        <span>{course.instructor?.name}</span>
+                      )}
+                      <span className="text-slate-300">·</span>
+                      <IoLayersOutline size={12} />
+                      <span>{course._count?.modules} modules</span>
+                      <span className="text-slate-300">·</span>
+                      <span>{course._count?.enrollments} enrolled</span>
+                    </div>
+                    <div className="mt-1.5 flex items-center gap-1.5">
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary-50 border border-primary-100 text-primary-700">
+                        {course.category?.name}
+                      </span>
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-50 border border-slate-100 text-slate-600">
+                        {course.level}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Reassign Panel (inline, shown when clicked) */}
+                  {isReassigning && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 space-y-2 animate-in fade-in">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[11px] font-bold text-amber-800">Reassign Instructor</p>
+                        <button onClick={() => setReassignCourseId(null)} className="text-amber-400 hover:text-amber-600">
+                          <IoCloseOutline size={14} />
+                        </button>
+                      </div>
+                      <select
+                        value={selectedInstructorId}
+                        onChange={(e) => setSelectedInstructorId(e.target.value)}
+                        className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-amber-200 bg-white focus:outline-none focus:border-amber-400"
+                      >
+                        <option value="">— Select instructor —</option>
+                        {instructors.map((ins) => (
+                          <option key={ins.id} value={ins.id}>{ins.name}</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={handleReassign}
+                        disabled={reassigning || !selectedInstructorId}
+                        className="w-full py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
+                      >
+                        {reassigning ? 'Reassigning...' : 'Confirm Reassign'}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 pt-2 border-t border-slate-50">
+                    <Link to={`/admin/courses/${course.id}/manage`} className="flex-1">
+                      <button className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 transition-all cursor-pointer">
+                        Manage
+                      </button>
+                    </Link>
+                    {isUnassigned ? (
+                      <button
+                        onClick={() => isReassigning ? setReassignCourseId(null) : openReassign(course.id)}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold border border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100 transition-all cursor-pointer"
+                      >
+                        <IoSwapHorizontalOutline size={13} /> Reassign
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleTogglePublish(course.id, course.status)}
+                        disabled={actionId === course.id}
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer disabled:opacity-50 ${
+                          course.status === 'PUBLISHED'
+                            ? 'border-amber-100 text-amber-700 bg-amber-50 hover:bg-amber-100'
+                            : 'border-emerald-100 text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
+                        }`}
+                      >
+                        {course.status === 'PUBLISHED' ? (
+                          <><IoEyeOffOutline size={13} /> Unpublish</>
+                        ) : (
+                          <><IoCheckmarkCircleOutline size={13} /> Publish</>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            );
+          })}
         </div>
       )}
 

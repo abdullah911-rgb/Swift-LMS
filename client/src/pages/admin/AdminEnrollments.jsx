@@ -13,6 +13,9 @@ import {
   IoCardOutline,
   IoCashOutline,
   IoCloseOutline,
+  IoRibbonOutline,
+  IoCheckmarkCircle,
+  IoCloseCircle,
 } from 'react-icons/io5';
 
 const AdminEnrollments = () => {
@@ -37,6 +40,28 @@ const AdminEnrollments = () => {
   };
 
   useEffect(() => { fetchEnrollments(); }, []);
+
+  const handleToggleCertEligibility = async (e, enrId, currentEligible) => {
+    e.stopPropagation(); // Prevent row click opening modal
+    const newVal = !currentEligible;
+    // Optimistic update
+    setEnrollments((prev) =>
+      prev.map((en) => en.id === enrId ? { ...en, certificateEligible: newVal } : en)
+    );
+    if (selectedStudent?.id === enrId) {
+      setSelectedStudent((prev) => prev ? { ...prev, certificateEligible: newVal } : prev);
+    }
+    try {
+      await adminService.toggleCertEligibility(enrId);
+      toast.success(newVal ? 'Certificate eligibility restored.' : 'Certificate eligibility revoked.');
+    } catch (err) {
+      // Revert on error
+      setEnrollments((prev) =>
+        prev.map((en) => en.id === enrId ? { ...en, certificateEligible: currentEligible } : en)
+      );
+      toast.error('Failed to update eligibility.');
+    }
+  };
 
   const handleEnrollmentClick = async (enr) => {
     setSelectedStudent(enr);
@@ -114,6 +139,7 @@ const AdminEnrollments = () => {
                   <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Paid (PKR)</th>
                   <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Progress</th>
                   <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Enrolled</th>
+                  <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Certificate</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -212,6 +238,23 @@ const AdminEnrollments = () => {
                         <IoCalendarOutline size={12} />
                         {new Date(enr.enrolledAt).toLocaleDateString()}
                       </div>
+                    </td>
+
+                    {/* Certificate Eligibility Toggle */}
+                    <td className="px-5 py-4">
+                      <button
+                        onClick={(e) => handleToggleCertEligibility(e, enr.id, enr.certificateEligible !== false)}
+                        title={enr.certificateEligible !== false ? 'Click to revoke eligibility' : 'Click to restore eligibility'}
+                        className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all cursor-pointer ${
+                          enr.certificateEligible !== false
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                            : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
+                        }`}
+                      >
+                        {enr.certificateEligible !== false
+                          ? <><IoCheckmarkCircle size={12} /> Eligible</>
+                          : <><IoCloseCircle size={12} /> Ineligible</>}
+                      </button>
                     </td>
 
                   </tr>
@@ -377,7 +420,19 @@ const AdminEnrollments = () => {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-3">
+              {/* Cert eligibility toggle in modal */}
+              <button
+                onClick={(e) => handleToggleCertEligibility(e, selectedStudent.id, selectedStudent.certificateEligible !== false)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                  selectedStudent.certificateEligible !== false
+                    ? 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
+                    : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                }`}
+              >
+                <IoRibbonOutline size={13} />
+                {selectedStudent.certificateEligible !== false ? 'Revoke Certificate Eligibility' : 'Restore Certificate Eligibility'}
+              </button>
               <Button
                 variant="secondary"
                 size="sm"

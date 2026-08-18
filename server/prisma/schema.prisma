@@ -234,7 +234,7 @@ model Course {
   shortDescription String?
   thumbnail        String?
   categoryId       String
-  instructorId     String
+  instructorId     String?      // nullable — null means course is unassigned (instructor was deleted)
   status           CourseStatus @default(DRAFT)
   level            CourseLevel  @default(BEGINNER)
   price            Decimal      @default(0) @db.Decimal(10, 2)
@@ -253,7 +253,7 @@ model Course {
   pendingEdits     Json?
 
   category         Category     @relation(fields: [categoryId], references: [id])
-  instructor       User         @relation("InstructorCourses", fields: [instructorId], references: [id])
+  instructor       User?        @relation("InstructorCourses", fields: [instructorId], references: [id])
   modules          Module[]
   enrollments      Enrollment[]
   zoomMeetings     ZoomMeeting[]
@@ -346,6 +346,7 @@ model Enrollment {
   rollNumber  String?          @unique // e.g. SST-2026-00000001, assigned at enrollment time
   status      EnrollmentStatus @default(ACTIVE)
   progress    Float            @default(0) // Percentage 0-100
+  certificateEligible Boolean  @default(true) // Admin can override certificate eligibility
   enrolledAt  DateTime         @default(now())
   completedAt DateTime?
   updatedAt   DateTime         @updatedAt

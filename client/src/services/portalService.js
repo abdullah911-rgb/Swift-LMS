@@ -136,6 +136,10 @@ export const adminService = {
 
   // Enrollments
   getRecentEnrollments: () => api.get('/admin/enrollments'),
+  toggleCertEligibility: (enrollmentId) => api.patch(`/admin/enrollments/${enrollmentId}/certificate-eligibility`),
+
+  // Courses - reassign instructor
+  reassignCourseInstructor: (courseId, instructorId) => api.patch(`/admin/courses/${courseId}/reassign-instructor`, { instructorId }),
 
   // Platform Announcements
   createAnnouncement: (data) => api.post('/admin/announcements', data),

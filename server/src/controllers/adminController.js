@@ -124,23 +124,22 @@ const adminController = {
     const user = await prisma.user.findUnique({ where: { id } });
     if (!user) return sendError(res, 'User not found.', 404);
 
-    // Reassign relations that do not Cascade to the admin user executing the deletion
+    // Reassign / clean up instructor's owned resources before deleting the user
     if (user.role === 'INSTRUCTOR') {
+      // Delete zoom meetings (non-cascaded, instructorId is non-nullable on ZoomMeeting)
+      await prisma.zoomMeeting.deleteMany({ where: { instructorId: id } });
+
+      // Delete assignments (non-cascaded, instructorId is non-nullable on Assignment)
+      await prisma.assignment.deleteMany({ where: { instructorId: id } });
+
+      // Set courses to unassigned (instructorId is now nullable on Course)
       await prisma.course.updateMany({
         where: { instructorId: id },
-        data: { instructorId: req.user.id },
-      });
-      await prisma.zoomMeeting.updateMany({
-        where: { instructorId: id },
-        data: { instructorId: req.user.id },
-      });
-      await prisma.assignment.updateMany({
-        where: { instructorId: id },
-        data: { instructorId: req.user.id },
+        data: { instructorId: null },
       });
     }
 
-    // Platform announcements & course announcements authored by this user
+    // Reassign authored announcements (non-cascade, authorId non-nullable)
     await prisma.announcement.updateMany({
       where: { authorId: id },
       data: { authorId: req.user.id },
@@ -339,6 +338,60 @@ const adminController = {
     });
 
     sendSuccess(res, 'Course assigned to instructor successfully.', { course: updated });
+  }),
+
+  // PATCH /api/admin/courses/:courseId/reassign-instructor — Reassign an unassigned course to an instructor
+  reassignCourseInstructor: asyncHandler(async (req, res) => {
+    const { courseId } = req.params;
+    const { instructorId } = req.body;
+    if (!instructorId) return sendError(res, 'instructorId is required.', 400);
+
+    const instructor = await prisma.user.findUnique({ where: { id: instructorId } });
+    if (!instructor || instructor.role !== 'INSTRUCTOR') {
+      return sendError(res, 'Instructor not found.', 404);
+    }
+    const course = await prisma.course.findUnique({ where: { id: courseId } });
+    if (!course) return sendError(res, 'Course not found.', 404);
+
+    const updated = await prisma.course.update({
+      where: { id: courseId },
+      data: { instructorId },
+      include: { instructor: { select: { id: true, name: true, email: true } } },
+    });
+
+    sendSuccess(res, 'Course reassigned to instructor successfully.', { course: updated });
+  }),
+
+  // PATCH /api/admin/enrollments/:enrollmentId/certificate-eligibility — Toggle cert eligibility
+  toggleCertificateEligibility: asyncHandler(async (req, res) => {
+    const { enrollmentId } = req.params;
+
+    const enrollment = await prisma.enrollment.findUnique({ where: { id: enrollmentId } });
+    if (!enrollment) return sendError(res, 'Enrollment not found.', 404);
+
+    const newValue = !enrollment.certificateEligible;
+    const updated = await prisma.enrollment.update({
+      where: { id: enrollmentId },
+      data: { certificateEligible: newValue },
+    });
+
+    // Notify student
+    await prisma.notification.create({
+      data: {
+        userId: enrollment.studentId,
+        title: newValue ? 'Certificate Eligibility Restored' : 'Certificate Eligibility Revoked',
+        message: newValue
+          ? 'An admin has marked you as eligible for the course certificate. Keep up the great work!'
+          : 'An admin has marked you as ineligible for the course certificate. Please contact support for more information.',
+        type: newValue ? 'SUCCESS' : 'WARNING',
+        link: '/student/my-courses',
+      },
+    });
+
+    sendSuccess(res, `Certificate eligibility ${newValue ? 'restored' : 'revoked'} successfully.`, {
+      enrollmentId,
+      certificateEligible: newValue,
+    });
   }),
 
   // PATCH /api/admin/instructors/:id/approve — Approve instructor
