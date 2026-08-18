@@ -113,29 +113,12 @@ app.use('/api/assignments', assignmentRoutes);
 app.use('/api/quiz', quizRoutes);
 
 
-// ── TEMP MIGRATION ROUTE (delete after running once) ──────────────────────────
-const prisma = require('./config/db');
-app.get('/api/temp-migrate-cert-unassigned-911', async (req, res) => {
-  try {
-    // 1. Make Course.instructorId nullable
-    await prisma.$executeRawUnsafe(
-      `ALTER TABLE "courses" ALTER COLUMN "instructorId" DROP NOT NULL;`
-    );
-    // 2. Add certificateEligible to enrollments if not exists
-    await prisma.$executeRawUnsafe(
-      `ALTER TABLE "enrollments" ADD COLUMN IF NOT EXISTS "certificateEligible" BOOLEAN NOT NULL DEFAULT true;`
-    );
-    res.json({ success: true, message: 'Migration applied: nullable instructorId + certificateEligible column added.' });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-// ── END TEMP ──────────────────────────────────────────────────────────────────
 
 // Health check
 app.get('/health', (req, res) => {
   res.status(200).json({ success: true, message: 'Server is healthy.', timestamp: new Date() });
 });
+
 
 
 // 404 Route handler
