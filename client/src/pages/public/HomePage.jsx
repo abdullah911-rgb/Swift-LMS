@@ -95,41 +95,65 @@ const HomePage = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="lg:col-span-6 mt-12 lg:mt-0 relative flex justify-center"
+              className="lg:col-span-6 mt-12 lg:mt-0 relative flex justify-center px-4 sm:px-0"
             >
-              <div className="relative w-full max-w-sm lg:max-w-lg aspect-square bg-gradient-to-tr from-primary-500/10 to-primary-300/5 rounded-2xl p-3 border border-slate-100 shadow-xl flex items-center justify-center overflow-hidden">
+              <div className="relative w-full max-w-xl lg:max-w-2xl">
+                
+                {/* Background Ambient Glow */}
+                <div className="absolute -inset-2 bg-gradient-to-r from-primary-600/20 to-accent-500/20 rounded-3xl blur-2xl opacity-70 pointer-events-none"></div>
 
-                {/* Floating UI Elements */}
-                <div className="absolute top-4 left-4 p-3 bg-white/90 backdrop-blur border border-slate-100 rounded-xl soft-shadow space-y-1.5 z-10" style={{ animation: 'float1 6s ease-in-out infinite' }}>
-                  <div className="flex items-center gap-1.5">
-                    <div className="h-2 w-2 rounded-full bg-emerald-500 animate-ping"></div>
-                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Live Zoom Session</span>
+                {/* Glass Container Frame */}
+                <div className="relative rounded-3xl p-2.5 sm:p-3 bg-white/90 backdrop-blur-md border border-slate-200/80 shadow-2xl shadow-slate-900/10">
+                  <div className="rounded-2xl overflow-hidden aspect-[16/10] bg-slate-900 relative group">
+                    <img
+                      src="/hero-illustration.jpg"
+                      alt="Student studying online with Swift Institute"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                    />
+                    {/* Subtle Gradient Shadow Overlay at bottom */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-transparent pointer-events-none" />
                   </div>
-                  <p className="text-[10px] font-bold text-slate-800">Safety Management</p>
                 </div>
 
-                <div className="absolute bottom-4 right-4 p-2.5 bg-white/90 backdrop-blur border border-slate-100 rounded-xl soft-shadow flex items-center gap-2 z-10" style={{ animation: 'float2 7s ease-in-out infinite' }}>
-                  <div className="p-2 rounded-lg bg-primary-100 text-primary-700">
-                    <IoRibbonOutline size={16} />
+                {/* Floating UI Element - Top Left */}
+                <div 
+                  className="absolute -top-4 -left-2 sm:-left-6 p-3 sm:p-3.5 bg-white/95 backdrop-blur-md border border-slate-100 rounded-2xl shadow-xl space-y-1 z-20"
+                  style={{ animation: 'float1 6s ease-in-out infinite' }}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    </span>
+                    <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Live Zoom Classes</span>
+                  </div>
+                  <p className="text-xs font-bold text-slate-800 m-0">Safety & Tech Management</p>
+                </div>
+
+                {/* Floating UI Element - Bottom Right */}
+                <div 
+                  className="absolute -bottom-4 -right-2 sm:-right-6 p-2.5 sm:p-3.5 bg-white/95 backdrop-blur-md border border-slate-100 rounded-2xl shadow-xl flex items-center gap-3 z-20"
+                  style={{ animation: 'float2 7s ease-in-out infinite' }}
+                >
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-primary-700 text-white shadow-sm shrink-0">
+                    <IoRibbonOutline size={20} />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold text-slate-800">Certificate Issued</p>
-                    <p className="text-[8px] text-slate-400 font-semibold">Verified on Blockchain</p>
+                    <p className="text-xs font-extrabold text-slate-800 m-0">Verifiable Certificate</p>
+                    <p className="text-[10px] text-slate-400 font-semibold m-0">Internationally Accredited</p>
                   </div>
                 </div>
 
-                {/* Progress badge */}
-                <div className="absolute top-4 right-4 px-2.5 py-1.5 bg-accent-500/90 text-white rounded-lg text-[9px] font-bold shadow-md z-10" style={{ animation: 'float1 8s ease-in-out infinite reverse' }}>
-                  🎓 48 Experts
+                {/* Floating UI Element - Top Right */}
+                <div 
+                  className="absolute -top-5 right-4 sm:right-8 px-3.5 py-1.5 bg-slate-900/90 backdrop-blur-md text-amber-400 rounded-full text-xs font-bold shadow-lg border border-slate-700/50 flex items-center gap-2 z-20"
+                  style={{ animation: 'float1 8s ease-in-out infinite reverse' }}
+                >
+                  <span>🎓</span>
+                  <span className="text-white font-semibold">48 Certified Experts</span>
                 </div>
 
-                {/* Hero Study Illustration */}
-                <img
-                  src="/hero-illustration.jpg"
-                  alt="Student studying online with Swift Institute"
-                  className="w-full h-full object-cover rounded-2xl"
-                  style={{ animation: 'subtleFloat 8s ease-in-out infinite' }}
-                />
+              </div>
 
                 <style>{`
                   @keyframes float1 {
@@ -145,7 +169,6 @@ const HomePage = () => {
                     50% { transform: scale(1.02); }
                   }
                 `}</style>
-              </div>
             </motion.div>
 
           </div>
