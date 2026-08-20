@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { certificateService, enrollmentService } from '../../services/portalService';
 import toast from 'react-hot-toast';
-import { IoDownloadOutline, IoPrintOutline, IoCloseOutline, IoRibbonOutline } from 'react-icons/io5';
+import { IoDownloadOutline, IoPrintOutline, IoCloseOutline } from 'react-icons/io5';
 import QRCode from 'qrcode';
 
 const CERT_TEMPLATE = '/Certificate.png';
@@ -13,28 +13,28 @@ const CERT_LAYOUT = {
   baseHeight: 765,
   name: {
     left: 0.166,     // 179 / 1078
-    top: 0.477,      // 365 / 765
+    top: 0.470,      // 360 / 765
     width: 0.668,    // 720 / 1078
-    height: 0.075,   // 57 / 765
+    height: 0.085,   // 65 / 765
   },
   course: {
     left: 0.147,     // 159 / 1078
     top: 0.605,      // 463 / 765
     width: 0.705,    // 760 / 1078
-    height: 0.052,   // 40 / 765
+    height: 0.055,   // 42 / 765
   },
   date: {
-    top: 0.677,      // 518 / 765
-    height: 0.033,   // 25 / 765
-    day: { left: 0.408, width: 0.055 },    // 440 / 1078
-    month: { left: 0.502, width: 0.088 },  // 542 / 1078
-    year: { left: 0.614, width: 0.030 },   // 662 / 1078
+    top: 0.686,      // 525 / 765
+    height: 0.035,   // 27 / 765
+    day: { left: 0.395, width: 0.065 },    // center ~460px
+    month: { left: 0.496, width: 0.095 },  // center ~585px
+    year: { left: 0.612, width: 0.035 },   // center ~675px
   },
   summary: {
     left: 0.067,     // 72 / 1078
-    top: 0.686,      // 525 / 765
+    top: 0.673,      // 515 / 765
     width: 0.255,    // 275 / 1078
-    height: 0.163,   // 125 / 765
+    height: 0.170,   // 130 / 765
   },
   certificateId: {
     left: 0.072,     // 78 / 1078
@@ -43,9 +43,9 @@ const CERT_LAYOUT = {
     height: 0.042,   // 32 / 765
   },
   qr: {
-    right: 0.072,    // 78 / 1078
-    bottom: 0.075,   // 58 / 765
-    width: 0.070,    // 75 / 1078
+    right: 0.060,    // 65 / 1078
+    bottom: 0.085,   // 65 / 765
+    width: 0.092,    // 100 / 1078
   },
 };
 
@@ -113,7 +113,7 @@ function CertificateDocument({ cert, id }) {
         @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
       `}</style>
 
-      {/* Template Image */}
+      {/* Pristine Clean Template Image */}
       <img
         src={CERT_TEMPLATE}
         alt="Certificate template"
@@ -132,10 +132,10 @@ function CertificateDocument({ cert, id }) {
         }}
       >
         <p
-          className="text-[#0a2540] leading-none whitespace-nowrap m-0 p-0"
+          className="text-[#082447] leading-none whitespace-nowrap m-0 p-0"
           style={{ 
             fontFamily: "'Great Vibes', cursive", 
-            fontSize: 'clamp(18px, 3.8vw, 44px)',
+            fontSize: 'clamp(20px, 3.8vw, 44px)',
             fontWeight: 'normal',
             maxWidth: '100%',
           }}
@@ -155,7 +155,7 @@ function CertificateDocument({ cert, id }) {
         }}
       >
         <p
-          className="font-serif font-bold uppercase tracking-wide text-[#0a2540] leading-none whitespace-nowrap m-0 p-0"
+          className="font-serif font-bold uppercase tracking-wide text-[#082447] leading-none whitespace-nowrap m-0 p-0"
           style={{
             fontFamily: "Georgia, 'Times New Roman', serif",
             fontSize: 'clamp(10px, 1.8vw, 20px)',
@@ -177,7 +177,7 @@ function CertificateDocument({ cert, id }) {
         }}
       >
         <span
-          className="text-[#0a2540] leading-none font-bold"
+          className="text-[#082447] leading-none font-bold"
           style={{ 
             fontFamily: "'Great Vibes', cursive",
             fontSize: 'clamp(8px, 1.4vw, 17px)',
@@ -198,7 +198,7 @@ function CertificateDocument({ cert, id }) {
         }}
       >
         <span
-          className="text-[#0a2540] leading-none font-bold"
+          className="text-[#082447] leading-none font-bold"
           style={{ 
             fontFamily: "'Great Vibes', cursive",
             fontSize: 'clamp(8px, 1.4vw, 17px)',
@@ -219,7 +219,7 @@ function CertificateDocument({ cert, id }) {
         }}
       >
         <span
-          className="text-[#0a2540] leading-none font-bold"
+          className="text-[#082447] leading-none font-bold"
           style={{ 
             fontFamily: "'Great Vibes', cursive",
             fontSize: 'clamp(8px, 1.4vw, 17px)',
@@ -231,7 +231,7 @@ function CertificateDocument({ cert, id }) {
 
       {/* Marks Evaluation Summary Box */}
       <div
-        className="absolute bg-white/95 backdrop-blur-xs border border-[#c9a227]/40 rounded-xl p-2.5 shadow-xs font-sans flex flex-col gap-0.5 text-[#0a2540]"
+        className="absolute bg-white/95 backdrop-blur-xs border border-[#c9a227]/40 rounded-xl p-2.5 shadow-xs font-sans flex flex-col gap-0.5 text-[#082447]"
         style={{
           left: `${CERT_LAYOUT.summary.left * 100}%`,
           top: `${CERT_LAYOUT.summary.top * 100}%`,
@@ -350,27 +350,27 @@ export default function MyCertificates() {
       // Draw background template
       ctx.drawImage(img, 0, 0, 1078, 765);
 
-      // 1. Student Name (centered at x=539, y=418)
-      const nameFont = fields.studentName.length > 30 ? '30px' : fields.studentName.length > 22 ? '36px' : '46px';
-      ctx.fillStyle = '#0a2540';
+      // 1. Student Name (centered at x=539, y=415)
+      const nameFont = fields.studentName.length > 30 ? '30px' : fields.studentName.length > 20 ? '36px' : '46px';
+      ctx.fillStyle = '#082447';
       ctx.font = `normal ${nameFont} 'Great Vibes', 'Brush Script MT', cursive`;
       ctx.textAlign = 'center';
-      ctx.fillText(fields.studentName, 539, 418, 720);
+      ctx.fillText(fields.studentName, 539, 415, 720);
 
-      // 2. Course Title (centered at x=539, y=492)
-      const courseFont = fields.courseTitle.length > 40 ? '15px' : fields.courseTitle.length > 28 ? '18px' : '22px';
-      ctx.fillStyle = '#0a2540';
+      // 2. Course Title (centered at x=539, y=498)
+      const courseFont = fields.courseTitle.length > 40 ? '14px' : fields.courseTitle.length > 28 ? '18px' : '22px';
+      ctx.fillStyle = '#082447';
       ctx.font = `bold ${courseFont} Georgia, 'Times New Roman', serif`;
       ctx.textAlign = 'center';
-      ctx.fillText(fields.courseTitle.toUpperCase(), 539, 492, 760);
+      ctx.fillText(fields.courseTitle.toUpperCase(), 539, 498, 760);
 
       // 3. Date Parts
-      ctx.fillStyle = '#0a2540';
+      ctx.fillStyle = '#082447';
       ctx.font = "bold 17px 'Great Vibes', 'Brush Script MT', cursive";
       ctx.textAlign = 'center';
-      ctx.fillText(dayText, 468, 536);
-      ctx.fillText(monthName, 589, 536);
-      ctx.fillText(yearShort, 676, 536);
+      ctx.fillText(dayText, 460, 536);
+      ctx.fillText(monthName, 585, 536);
+      ctx.fillText(yearShort, 675, 536);
 
       // 4. Evaluation Summary Box
       ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
@@ -378,20 +378,20 @@ export default function MyCertificates() {
       ctx.lineWidth = 1.5;
       if (ctx.roundRect) {
         ctx.beginPath();
-        ctx.roundRect(72, 525, 275, 125, 10);
+        ctx.roundRect(72, 515, 275, 130, 10);
         ctx.fill();
         ctx.stroke();
       } else {
-        ctx.fillRect(72, 525, 275, 125);
-        ctx.strokeRect(72, 525, 275, 125);
+        ctx.fillRect(72, 515, 275, 130);
+        ctx.strokeRect(72, 515, 275, 130);
       }
 
       ctx.fillStyle = '#c9a227';
       ctx.font = 'bold 12px sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText('EVALUATION SUMMARY', 87, 547);
+      ctx.fillText('EVALUATION SUMMARY', 87, 537);
 
-      ctx.fillStyle = '#0a2540';
+      ctx.fillStyle = '#082447';
       ctx.font = '11px sans-serif';
       const drawSummaryRow = (label, val, yOff) => {
         ctx.textAlign = 'left';
@@ -400,28 +400,28 @@ export default function MyCertificates() {
         ctx.fillText(val, 332, yOff);
       };
 
-      drawSummaryRow('Attendance:', `${fields.attendanceMarks.toFixed(1)}/20`, 568);
-      drawSummaryRow('Assignments:', `${fields.assignmentMarks.toFixed(1)}/20`, 588);
-      drawSummaryRow('Final MCQ:', `${fields.mcqMarks.toFixed(1)}/60`, 608);
+      drawSummaryRow('Attendance:', `${fields.attendanceMarks.toFixed(1)}/20`, 558);
+      drawSummaryRow('Assignments:', `${fields.assignmentMarks.toFixed(1)}/20`, 578);
+      drawSummaryRow('Final MCQ:', `${fields.mcqMarks.toFixed(1)}/60`, 598);
 
       ctx.strokeStyle = '#cbd5e1';
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(87, 618);
-      ctx.lineTo(332, 618);
+      ctx.moveTo(87, 608);
+      ctx.lineTo(332, 608);
       ctx.stroke();
 
       ctx.fillStyle = '#c9a227';
       ctx.font = 'bold 12px sans-serif';
-      drawSummaryRow('Total Score:', `${fields.finalMarks.toFixed(1)} / 100`, 636);
+      drawSummaryRow('Total Score:', `${fields.finalMarks.toFixed(1)} / 100`, 626);
 
       // 5. Certificate ID (gold text directly inside blue badge)
       ctx.fillStyle = '#c9a227';
       ctx.font = 'bold 12px monospace';
       ctx.textAlign = 'center';
-      ctx.fillText(fields.certificateId, 165, 709);
+      ctx.fillText(fields.certificateId, 165, 708);
 
-      // 6. Dynamic QR Code
+      // 6. Dynamic QR Code (at bottom right corner x: 915..1015, y: 600..700)
       const qrDataUrl = await QRCode.toDataURL(verifyUrl, { margin: 1, scale: 6 });
       const qrImg = new Image();
       await new Promise((resolve) => {
@@ -432,8 +432,8 @@ export default function MyCertificates() {
 
       if (qrImg.complete && qrImg.naturalWidth > 0) {
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(925, 635, 75, 75);
-        ctx.drawImage(qrImg, 925, 635, 75, 75);
+        ctx.fillRect(915, 600, 100, 100);
+        ctx.drawImage(qrImg, 915, 600, 100, 100);
       }
 
       canvas.toBlob((blob) => {
