@@ -12,29 +12,29 @@ const CERT_LAYOUT = {
   baseWidth: 1078,
   baseHeight: 765,
   name: {
-    left: 0.166,     // 179 / 1078
-    top: 0.473,      // 360 / 765
-    width: 0.668,    // 720 / 1078
-    height: 0.085,   // 65 / 765
+    left: 0.150,     // 162 / 1078
+    top: 0.482,      // 368 / 765
+    width: 0.700,    // 754 / 1078
+    height: 0.075,   // 57 / 765
   },
   course: {
-    left: 0.147,     // 159 / 1078
-    top: 0.615,      // 463 / 765
-    width: 0.705,    // 760 / 1078
-    height: 0.055,   // 42 / 765
+    left: 0.150,     // 162 / 1078
+    top: 0.612,      // 468 / 765
+    width: 0.700,    // 754 / 1078
+    height: 0.052,   // 40 / 765
   },
   date: {
-    top: 0.682,      // 525 / 765
+    top: 0.688,      // 526 / 765
     height: 0.035,   // 27 / 765
-    day: { left: 0.395, width: 0.030 },    // center ~460px
-    month: { left: 0.496, width: 0.040 },  // center ~585px
-    year: { left: 0.612, width: 0.030 },   // center ~675px
+    day: { left: 0.394, width: 0.044 },    // 425px..472px (center ~448px)
+    month: { left: 0.494, width: 0.072 },  // 533px..610px (center ~571px)
+    year: { left: 0.598, width: 0.028 },   // 645px..675px (center ~660px)
   },
   summary: {
-    left: 0.075,     // 72 / 1078
-    top: 0.673,      // 515 / 765
-    width: 0.252,    // 275 / 1078
-    height: 0.160,   // 130 / 765
+    left: 0.082,     // 88 / 1078 (sits safely inside left gold border)
+    top: 0.685,      // 524 / 765
+    width: 0.195,    // 210 / 1078 (compact width, clear of center gold medal)
+    height: 0.145,   // 110 / 765
   },
   certificateId: {
     left: 0.072,     // 78 / 1078
@@ -43,9 +43,9 @@ const CERT_LAYOUT = {
     height: 0.042,   // 32 / 765
   },
   qr: {
-    right: 0.055,    // 65 / 1078
-    bottom: 0.060,   // 65 / 765
-    width: 0.080,    // 100 / 1078
+    right: 0.052,    // 56 / 1078 (small & compact inside bottom right corner)
+    bottom: 0.065,   // 50 / 765
+    width: 0.052,    // 56 / 1078 (small 56px square)
   },
 };
 
@@ -180,7 +180,7 @@ function CertificateDocument({ cert, id }) {
           className="text-[#082447] leading-none font-bold"
           style={{ 
             fontFamily: "'Great Vibes', cursive",
-            fontSize: 'clamp(8px, 1.4vw, 17px)',
+            fontSize: 'clamp(8px, 1.3vw, 16px)',
           }}
         >
           {dayText}
@@ -201,7 +201,7 @@ function CertificateDocument({ cert, id }) {
           className="text-[#082447] leading-none font-bold"
           style={{ 
             fontFamily: "'Great Vibes', cursive",
-            fontSize: 'clamp(8px, 1.4vw, 17px)',
+            fontSize: 'clamp(8px, 1.3vw, 16px)',
           }}
         >
           {monthName}
@@ -222,16 +222,16 @@ function CertificateDocument({ cert, id }) {
           className="text-[#082447] leading-none font-bold"
           style={{ 
             fontFamily: "'Great Vibes', cursive",
-            fontSize: 'clamp(8px, 1.4vw, 17px)',
+            fontSize: 'clamp(8px, 1.3vw, 16px)',
           }}
         >
           {yearShort}
         </span>
       </div>
 
-      {/* Marks Evaluation Summary Box */}
+      {/* Compact Evaluation Summary Box */}
       <div
-        className="absolute bg-white/95 backdrop-blur-xs border border-[#c9a227]/40 rounded-xl p-2.5 shadow-xs font-sans flex flex-col gap-0.5 text-[#082447]"
+        className="absolute bg-white/95 backdrop-blur-xs border border-[#c9a227]/40 rounded-lg p-2 shadow-xs font-sans flex flex-col gap-0.5 text-[#082447]"
         style={{
           left: `${CERT_LAYOUT.summary.left * 100}%`,
           top: `${CERT_LAYOUT.summary.top * 100}%`,
@@ -239,8 +239,8 @@ function CertificateDocument({ cert, id }) {
           height: `${CERT_LAYOUT.summary.height * 100}%`,
         }}
       >
-        <span className="text-[6px] sm:text-[9px] font-extrabold uppercase tracking-wide text-[#c9a227]">Evaluation Summary</span>
-        <div className="grid grid-cols-2 gap-x-2 text-[5px] sm:text-[8px] font-medium border-t border-slate-100 pt-1">
+        <span className="text-[5px] sm:text-[8px] font-extrabold uppercase tracking-wide text-[#c9a227]">Evaluation Summary</span>
+        <div className="grid grid-cols-2 gap-x-1.5 text-[4.5px] sm:text-[7.5px] font-medium border-t border-slate-100 pt-0.5 leading-tight">
           <span>Attendance:</span> <span className="font-bold text-right">{fields.attendanceMarks.toFixed(1)}/20</span>
           <span>Assignments:</span> <span className="font-bold text-right">{fields.assignmentMarks.toFixed(1)}/20</span>
           <span>Final MCQ:</span> <span className="font-bold text-right">{fields.mcqMarks.toFixed(1)}/60</span>
@@ -267,7 +267,7 @@ function CertificateDocument({ cert, id }) {
         </p>
       </div>
 
-      {/* Dynamic Verification QR Code */}
+      {/* Small Compact Verification QR Code */}
       <div
         className="absolute flex items-center justify-center bg-white p-0.5 rounded shadow-xs"
         style={{
@@ -364,56 +364,56 @@ export default function MyCertificates() {
       ctx.textAlign = 'center';
       ctx.fillText(fields.courseTitle.toUpperCase(), 539, 498, 760);
 
-      // 3. Date Parts
+      // 3. Compact Date Parts
       ctx.fillStyle = '#082447';
-      ctx.font = "bold 17px 'Great Vibes', 'Brush Script MT', cursive";
+      ctx.font = "bold 16px 'Great Vibes', 'Brush Script MT', cursive";
       ctx.textAlign = 'center';
-      ctx.fillText(dayText, 460, 536);
-      ctx.fillText(monthName, 585, 536);
-      ctx.fillText(yearShort, 675, 536);
+      ctx.fillText(dayText, 448, 536);
+      ctx.fillText(monthName, 571, 536);
+      ctx.fillText(yearShort, 660, 536);
 
-      // 4. Evaluation Summary Box
+      // 4. Compact Evaluation Summary Box (left: 88, top: 524, width: 210, height: 110)
       ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
       ctx.strokeStyle = '#c9a227';
       ctx.lineWidth = 1.5;
       if (ctx.roundRect) {
         ctx.beginPath();
-        ctx.roundRect(72, 515, 275, 130, 10);
+        ctx.roundRect(88, 524, 210, 110, 8);
         ctx.fill();
         ctx.stroke();
       } else {
-        ctx.fillRect(72, 515, 275, 130);
-        ctx.strokeRect(72, 515, 275, 130);
+        ctx.fillRect(88, 524, 210, 110);
+        ctx.strokeRect(88, 524, 210, 110);
       }
 
       ctx.fillStyle = '#c9a227';
-      ctx.font = 'bold 12px sans-serif';
+      ctx.font = 'bold 11px sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText('EVALUATION SUMMARY', 87, 537);
+      ctx.fillText('EVALUATION SUMMARY', 98, 543);
 
       ctx.fillStyle = '#082447';
-      ctx.font = '11px sans-serif';
+      ctx.font = '10px sans-serif';
       const drawSummaryRow = (label, val, yOff) => {
         ctx.textAlign = 'left';
-        ctx.fillText(label, 87, yOff);
+        ctx.fillText(label, 98, yOff);
         ctx.textAlign = 'right';
-        ctx.fillText(val, 332, yOff);
+        ctx.fillText(val, 286, yOff);
       };
 
-      drawSummaryRow('Attendance:', `${fields.attendanceMarks.toFixed(1)}/20`, 558);
+      drawSummaryRow('Attendance:', `${fields.attendanceMarks.toFixed(1)}/20`, 561);
       drawSummaryRow('Assignments:', `${fields.assignmentMarks.toFixed(1)}/20`, 578);
-      drawSummaryRow('Final MCQ:', `${fields.mcqMarks.toFixed(1)}/60`, 598);
+      drawSummaryRow('Final MCQ:', `${fields.mcqMarks.toFixed(1)}/60`, 595);
 
       ctx.strokeStyle = '#cbd5e1';
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(87, 608);
-      ctx.lineTo(332, 608);
+      ctx.moveTo(98, 604);
+      ctx.lineTo(286, 604);
       ctx.stroke();
 
       ctx.fillStyle = '#c9a227';
-      ctx.font = 'bold 12px sans-serif';
-      drawSummaryRow('Total Score:', `${fields.finalMarks.toFixed(1)} / 100`, 626);
+      ctx.font = 'bold 11px sans-serif';
+      drawSummaryRow('Total Score:', `${fields.finalMarks.toFixed(1)} / 100`, 620);
 
       // 5. Certificate ID (gold text directly inside blue badge)
       ctx.fillStyle = '#c9a227';
@@ -421,8 +421,8 @@ export default function MyCertificates() {
       ctx.textAlign = 'center';
       ctx.fillText(fields.certificateId, 165, 708);
 
-      // 6. Dynamic QR Code (at bottom right corner x: 915..1015, y: 600..700)
-      const qrDataUrl = await QRCode.toDataURL(verifyUrl, { margin: 1, scale: 6 });
+      // 6. Compact Dynamic QR Code (at bottom right corner x: 940, y: 635, 60x60 square)
+      const qrDataUrl = await QRCode.toDataURL(verifyUrl, { margin: 1, scale: 5 });
       const qrImg = new Image();
       await new Promise((resolve) => {
         qrImg.onload = resolve;
@@ -432,8 +432,8 @@ export default function MyCertificates() {
 
       if (qrImg.complete && qrImg.naturalWidth > 0) {
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(915, 600, 100, 100);
-        ctx.drawImage(qrImg, 915, 600, 100, 100);
+        ctx.fillRect(940, 630, 60, 60);
+        ctx.drawImage(qrImg, 940, 630, 60, 60);
       }
 
       canvas.toBlob((blob) => {
