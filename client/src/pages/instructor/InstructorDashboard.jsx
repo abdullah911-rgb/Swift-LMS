@@ -100,13 +100,15 @@ const InstructorDashboard = () => {
           ) : (
             <div className="space-y-3">
               {courses.slice(0, 4).map((course) => (
-                <div key={course.id} className="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-white hover:border-primary-100 transition-all">
-                  <div className="space-y-1 pr-4 min-w-0">
-                    <h4 className="text-sm font-bold text-slate-800 line-clamp-1">{course.title}</h4>
-                    <p className="text-[11px] text-slate-400">Category: {course.category?.name} • Level: {course.level}</p>
+                <div key={course.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-xl border border-slate-100 bg-white hover:border-primary-100 transition-all">
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <h4 className="text-xs sm:text-sm font-bold text-slate-800 line-clamp-1">{course.title}</h4>
+                    <p className="text-[10px] sm:text-[11px] text-slate-400 truncate">
+                      {course.category?.name ? `Cat: ${course.category.name} • ` : ''}Level: {course.level || 'Standard'}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                  <div className="flex items-center gap-2.5 shrink-0 self-start sm:self-auto flex-wrap">
+                    <span className={`text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
                       course.status === 'PUBLISHED'
                         ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
                         : course.status === 'DRAFT'
@@ -115,7 +117,7 @@ const InstructorDashboard = () => {
                     }`}>
                       {course.status}
                     </span>
-                    <span className="text-xs text-slate-500 font-semibold">{course._count?.enrollments || 0} Students</span>
+                    <span className="text-[11px] sm:text-xs text-slate-500 font-semibold">{course._count?.enrollments || 0} Students</span>
                   </div>
                 </div>
               ))}

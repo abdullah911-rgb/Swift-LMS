@@ -79,18 +79,18 @@ const AdminUsers = () => {
   return (
     <div className="space-y-6 font-sans">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-heading font-bold text-primary-900">User Management</h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <h1 className="text-xl sm:text-2xl font-heading font-bold text-primary-900">User Management</h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">
             {pagination.total} Total Users · Manage Roles, Access, and Accounts.
           </p>
         </div>
         <button
           onClick={() => fetchUsers()}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-100 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-600 transition-all cursor-pointer"
+          className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-600 transition-all cursor-pointer shrink-0"
         >
-          <IoRefreshOutline size={14} /> Refresh
+          <IoRefreshOutline size={15} /> <span>Refresh</span>
         </button>
       </div>
 
@@ -133,7 +133,7 @@ const AdminUsers = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm min-w-[650px]">
               <thead>
                 <tr className="border-b border-slate-50 bg-slate-50/80">
                   <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">User</th>

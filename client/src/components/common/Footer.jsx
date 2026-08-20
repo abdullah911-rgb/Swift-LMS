@@ -25,7 +25,7 @@ const Footer = () => {
               alt="Swift LMS"
               className="h-12 w-12 object-contain rounded-lg bg-white/5 p-0.5"
             />
-            <span className="font-heading font-extrabold text-xl tracking-tight text-white">
+            <span className="font-extrabold text-xl tracking-tight text-white" style={{ fontFamily: "'Times New Roman', Times, serif" }}>
               Swift
             </span>
           </div>

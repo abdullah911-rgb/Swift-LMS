@@ -76,13 +76,13 @@ const Navbar = () => {
           </Link>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden xl:flex items-center gap-1">
             {navLinks.map((link) => (
               <NavLink
                 key={link.path}
                 to={link.path}
                 className={({ isActive }) => 
-                  `px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 
+                  `px-3 py-2 rounded-lg text-xs xl:text-sm font-medium transition-all duration-200 
                   ${isActive 
                     ? 'text-primary-700 bg-primary-50/70 font-semibold' 
                     : 'text-slate-600 hover:text-primary-700 hover:bg-slate-50'
@@ -95,7 +95,7 @@ const Navbar = () => {
           </nav>
 
           {/* Action buttons / User dropdown */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden xl:flex items-center gap-4">
             {user ? (
               <div className="relative">
                 {/* User Info Bar */}
@@ -162,7 +162,7 @@ const Navbar = () => {
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
+          <div className="xl:hidden flex items-center">
             <button
               onClick={toggleMobileMenu}
               className="p-2 rounded-xl text-slate-600 hover:bg-slate-50 focus:outline-none cursor-pointer"
@@ -181,7 +181,7 @@ const Navbar = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden border-t border-slate-100 bg-white/95 backdrop-blur-md overflow-hidden"
+            className="xl:hidden border-t border-slate-100 bg-white/95 backdrop-blur-md overflow-hidden"
           >
             <div className="px-4 pt-3 pb-6 space-y-2">
               {navLinks.map((link) => (

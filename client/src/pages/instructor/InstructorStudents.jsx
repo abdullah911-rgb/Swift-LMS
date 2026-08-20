@@ -226,7 +226,7 @@ const InstructorStudents = () => {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs sm:text-sm">
+            <table className="w-full text-left border-collapse text-xs sm:text-sm min-w-[700px]">
               <thead>
                 <tr className="bg-slate-50/50 border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
                   <th className="px-6 py-4">Student Details</th>
@@ -348,7 +348,7 @@ const InstructorStudents = () => {
       {/* Student Performance Registry Modal */}
       {selectedStudent && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <Card hover={false} className="bg-white border border-slate-100 rounded-3xl w-full max-w-xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden p-0">
+          <Card hover={false} className="bg-white border border-slate-100 rounded-3xl w-[92vw] sm:w-full max-w-xl shadow-2xl flex flex-col max-h-[88vh] overflow-hidden p-0 my-auto">
             {/* Modal Header */}
             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
               <div>

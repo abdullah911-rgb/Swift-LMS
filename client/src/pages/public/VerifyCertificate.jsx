@@ -301,12 +301,12 @@ export default function VerifyCertificate() {
                       Graduate Credential Details
                     </h4>
 
-                    <div className="grid grid-cols-3 gap-y-4 text-xs font-semibold">
-                      <div className="col-span-1 text-slate-400 flex items-center gap-1.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-y-2 sm:gap-y-4 text-xs font-semibold">
+                      <div className="sm:col-span-1 text-slate-400 flex items-center gap-1.5">
                         <IoPersonOutline size={14} />
                         <span>Student:</span>
                       </div>
-                      <div className="col-span-2 text-slate-800 font-extrabold">
+                      <div className="sm:col-span-2 text-slate-800 font-extrabold">
                         {cert.studentName}
                       </div>
 

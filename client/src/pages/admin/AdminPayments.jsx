@@ -324,8 +324,8 @@ export default function AdminPayments() {
 
       {/* Reject dialog */}
       {rejectDialog.open && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div style={{ background: '#fff', borderRadius: 20, padding: 28, maxWidth: 440, width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.6)', display: 'flex', itemsCenter: 'center', justifyContent: 'center', padding: 16 }}>
+          <div style={{ background: '#fff', borderRadius: 20, padding: '24px 20px', maxWidth: '92vw', width: 440, boxShadow: '0 20px 60px rgba(0,0,0,0.2)', margin: 'auto' }}>
             <h3 style={{ margin: '0 0 16px', fontSize: 18, fontWeight: 700, color: '#0f172a' }}>❌ Reject Payment</h3>
             <p style={{ margin: '0 0 14px', fontSize: 13, color: '#64748b' }}>Provide a reason (optional). The student will see this message.</p>
             <textarea
@@ -345,8 +345,8 @@ export default function AdminPayments() {
 
       {/* Method form modal */}
       {showMethodForm && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div style={{ background: '#fff', borderRadius: 20, padding: 28, maxWidth: 480, width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div style={{ background: '#fff', borderRadius: 20, padding: '24px 20px', maxWidth: '92vw', width: 480, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', margin: 'auto' }}>
             <h3 style={{ margin: '0 0 20px', fontSize: 18, fontWeight: 700, color: '#0f172a' }}>
               {editingMethod ? 'Edit Payment Account' : 'Add Payment Account'}
             </h3>

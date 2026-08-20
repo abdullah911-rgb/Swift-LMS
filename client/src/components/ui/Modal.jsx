@@ -48,7 +48,7 @@ const Modal = ({
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 15 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className={`relative w-full ${sizes[size]} bg-white rounded-2xl soft-shadow overflow-hidden flex flex-col max-h-[90vh] z-10`}
+            className={`relative w-[92vw] sm:w-full ${sizes[size]} bg-white rounded-2xl soft-shadow overflow-hidden flex flex-col max-h-[88vh] z-10 my-auto`}
           >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">

@@ -113,22 +113,22 @@ const AdminCourses = () => {
   return (
     <div className="space-y-6 font-sans">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-heading font-bold text-primary-900">Course Management</h1>
-          <p className="text-sm text-slate-500 mt-1">{pagination.total} total courses on the platform.</p>
+          <h1 className="text-xl sm:text-2xl font-heading font-bold text-primary-900">Course Management</h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">{pagination.total} total courses on the platform.</p>
         </div>
-        <div className="flex gap-2.5">
+        <div className="flex items-center gap-2.5 flex-wrap">
           <Link to="/admin/courses/new">
-            <button className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary-700 hover:bg-primary-800 text-xs font-bold text-white transition-all cursor-pointer shadow-md shadow-primary-700/10">
-              <IoAddOutline size={14} /> Create Course
+            <button className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary-700 hover:bg-primary-800 text-xs font-bold text-white transition-all cursor-pointer shadow-md shadow-primary-700/10">
+              <IoAddOutline size={15} /> <span>Create Course</span>
             </button>
           </Link>
           <button
             onClick={() => fetchCourses()}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-100 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-600 transition-all cursor-pointer animate-none"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-600 transition-all cursor-pointer"
           >
-            <IoRefreshOutline size={14} /> Refresh
+            <IoRefreshOutline size={15} /> <span>Refresh</span>
           </button>
         </div>
       </div>

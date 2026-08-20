@@ -596,10 +596,10 @@ const CourseForm = () => {
       )}
 
       {isEditMode && (
-        <div className="flex border-b border-slate-100 pb-px gap-1">
+        <div className="flex overflow-x-auto whitespace-nowrap border-b border-slate-100 pb-px gap-1 scrollbar-none select-none">
           <button
             onClick={() => setActiveTab('DETAILS')}
-            className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
+            className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all cursor-pointer shrink-0 ${
               activeTab === 'DETAILS'
                 ? 'border-primary-600 text-primary-700 font-bold'
                 : 'border-transparent text-slate-400 hover:text-slate-600'
@@ -609,7 +609,7 @@ const CourseForm = () => {
           </button>
           <button
             onClick={() => setActiveTab('SYLLABUS')}
-            className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
+            className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all cursor-pointer shrink-0 ${
               activeTab === 'SYLLABUS'
                 ? 'border-primary-600 text-primary-700 font-bold'
                 : 'border-transparent text-slate-400 hover:text-slate-600'
@@ -619,7 +619,7 @@ const CourseForm = () => {
           </button>
           <button
             onClick={() => { setActiveTab('ZOOM'); }}
-            className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
+            className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all cursor-pointer shrink-0 ${
               activeTab === 'ZOOM'
                 ? 'border-primary-600 text-primary-700 font-bold'
                 : 'border-transparent text-slate-400 hover:text-slate-600'
@@ -629,7 +629,7 @@ const CourseForm = () => {
           </button>
           <button
             onClick={() => { setActiveTab('RESOURCES'); fetchResources(courseId); }}
-            className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
+            className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all cursor-pointer shrink-0 ${
               activeTab === 'RESOURCES'
                 ? 'border-primary-600 text-primary-700 font-bold'
                 : 'border-transparent text-slate-400 hover:text-slate-600'
@@ -639,7 +639,7 @@ const CourseForm = () => {
           </button>
           <button
             onClick={() => { setActiveTab('ASSIGNMENTS'); fetchAssignments(courseId); }}
-            className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
+            className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all cursor-pointer shrink-0 ${
               activeTab === 'ASSIGNMENTS'
                 ? 'border-primary-600 text-primary-700 font-bold'
                 : 'border-transparent text-slate-400 hover:text-slate-600'
@@ -649,7 +649,7 @@ const CourseForm = () => {
           </button>
           <button
             onClick={() => { setActiveTab('ANNOUNCEMENTS'); fetchAnnouncements(courseId); }}
-            className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
+            className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all cursor-pointer shrink-0 ${
               activeTab === 'ANNOUNCEMENTS'
                 ? 'border-primary-600 text-primary-700 font-bold'
                 : 'border-transparent text-slate-400 hover:text-slate-600'
@@ -659,7 +659,7 @@ const CourseForm = () => {
           </button>
           <button
             onClick={() => { setActiveTab('QUIZ'); }}
-            className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
+            className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all cursor-pointer shrink-0 ${
               activeTab === 'QUIZ'
                 ? 'border-primary-600 text-primary-700 font-bold'
                 : 'border-transparent text-slate-400 hover:text-slate-600'

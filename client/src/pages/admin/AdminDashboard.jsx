@@ -53,16 +53,16 @@ const AdminDashboard = () => {
   return (
     <div className="space-y-8 font-sans">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="min-w-0">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="min-w-0 flex-1">
           <h1 className="text-xl sm:text-2xl font-heading font-bold text-primary-900">Admin Dashboard</h1>
-          <p className="text-sm text-slate-500 mt-1">Full Platform Overview — Users, Courses, and Enrollments.</p>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">Full Platform Overview — Users, Courses, and Enrollments.</p>
         </div>
         <button
           onClick={fetchData}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-100 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-600 transition-all cursor-pointer"
+          className="flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 shadow-xs transition-all cursor-pointer shrink-0"
         >
-          <IoRefreshOutline size={14} /> Refresh
+          <IoRefreshOutline size={15} /> <span>Refresh</span>
         </button>
       </div>
 
