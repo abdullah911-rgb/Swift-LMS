@@ -90,9 +90,9 @@ const MyCourses = () => {
             <Card key={item.id} hover={true} className="flex flex-col h-full overflow-hidden p-0 rounded-2xl bg-white border border-slate-100 group">
               {/* Thumbnail */}
               <div className="aspect-video w-full bg-slate-100 relative overflow-hidden">
-                {item.course.thumbnail ? (
+                {item.course.thumbnail || item.course.slug ? (
                   <img
-                    src={getImageUrl(item.course.thumbnail)}
+                    src={getImageUrl(item.course.thumbnail, item.course.slug)}
                     alt={item.course.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />

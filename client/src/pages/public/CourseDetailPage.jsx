@@ -317,9 +317,9 @@ const CourseDetailPage = () => {
               
               {/* Image Preview */}
               <div className="aspect-video w-full rounded-xl bg-slate-100 overflow-hidden relative border border-slate-50">
-                {course.thumbnail ? (
+                {course.thumbnail || course.slug ? (
                   <img 
-                    src={getImageUrl(course.thumbnail)} 
+                    src={getImageUrl(course.thumbnail, course.slug)} 
                     alt={course.title} 
                     className="w-full h-full object-cover"
                   />

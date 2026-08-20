@@ -229,9 +229,9 @@ const HomePage = () => {
                   <Card hover={true} className="flex flex-col h-full overflow-hidden p-0 rounded-2xl bg-white border border-slate-100">
                     {/* Thumbnail */}
                     <div className="aspect-video w-full bg-slate-100 relative overflow-hidden">
-                      {course.thumbnail ? (
+                      {course.thumbnail || course.slug ? (
                         <img 
-                          src={getImageUrl(course.thumbnail)} 
+                          src={getImageUrl(course.thumbnail, course.slug)} 
                           alt={course.title} 
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />

@@ -220,13 +220,13 @@ const CoursesPage = () => {
                       <Card hover={true} className="flex flex-col overflow-hidden p-0 rounded-2xl bg-white border border-slate-100 h-full">
                         {/* Image Thumbnail */}
                         <div className="aspect-video w-full bg-slate-100 relative overflow-hidden shrink-0">
-                          {course.thumbnail ? (
-                            <img
-                              src={getImageUrl(course.thumbnail)}
-                              alt={course.title}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            />
-                          ) : (
+                            {course.thumbnail || course.slug ? (
+                              <img
+                                src={getImageUrl(course.thumbnail, course.slug)}
+                                alt={course.title}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                            ) : (
                             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-600 to-primary-500 text-white font-heading font-bold text-lg">
                               LMS
                             </div>
