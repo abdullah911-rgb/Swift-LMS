@@ -13,28 +13,28 @@ const CERT_LAYOUT = {
   baseHeight: 765,
   name: {
     left: 0.166,     // 179 / 1078
-    top: 0.470,      // 360 / 765
+    top: 0.473,      // 360 / 765
     width: 0.668,    // 720 / 1078
     height: 0.085,   // 65 / 765
   },
   course: {
     left: 0.147,     // 159 / 1078
-    top: 0.605,      // 463 / 765
+    top: 0.615,      // 463 / 765
     width: 0.705,    // 760 / 1078
     height: 0.055,   // 42 / 765
   },
   date: {
-    top: 0.686,      // 525 / 765
+    top: 0.682,      // 525 / 765
     height: 0.035,   // 27 / 765
-    day: { left: 0.395, width: 0.065 },    // center ~460px
-    month: { left: 0.496, width: 0.095 },  // center ~585px
-    year: { left: 0.612, width: 0.035 },   // center ~675px
+    day: { left: 0.395, width: 0.030 },    // center ~460px
+    month: { left: 0.496, width: 0.040 },  // center ~585px
+    year: { left: 0.612, width: 0.030 },   // center ~675px
   },
   summary: {
-    left: 0.067,     // 72 / 1078
+    left: 0.075,     // 72 / 1078
     top: 0.673,      // 515 / 765
-    width: 0.255,    // 275 / 1078
-    height: 0.170,   // 130 / 765
+    width: 0.252,    // 275 / 1078
+    height: 0.160,   // 130 / 765
   },
   certificateId: {
     left: 0.072,     // 78 / 1078
@@ -43,9 +43,9 @@ const CERT_LAYOUT = {
     height: 0.042,   // 32 / 765
   },
   qr: {
-    right: 0.060,    // 65 / 1078
-    bottom: 0.085,   // 65 / 765
-    width: 0.092,    // 100 / 1078
+    right: 0.055,    // 65 / 1078
+    bottom: 0.060,   // 65 / 765
+    width: 0.080,    // 100 / 1078
   },
 };
 
