@@ -13,28 +13,21 @@ const CERT_LAYOUT = {
   baseHeight: 765,
   name: {
     left: 0.150,     // 162 / 1078
-    top: 0.480,      // 367 / 765
+    top: 0.478,      // 365 / 765
     width: 0.700,    // 754 / 1078
     height: 0.075,   // 57 / 765
   },
   course: {
     left: 0.150,     // 162 / 1078
-    top: 0.610,      // 467 / 765
+    top: 0.608,      // 465 / 765
     width: 0.700,    // 754 / 1078
     height: 0.052,   // 40 / 765
   },
-  date: {
-    top: 0.675,      // 516 / 765 (positioned neatly ABOVE baseline line)
-    height: 0.035,   // 27 / 765
-    day: { left: 0.392, width: 0.048 },    // 422px..474px (center ~448px)
-    month: { left: 0.492, width: 0.076 },  // 530px..612px (center ~571px)
-    year: { left: 0.596, width: 0.030 },   // 642px..674px (center ~658px)
-  },
-  summary: {
-    left: 0.082,     // 88 / 1078 (compact width, clear of left gold border)
-    top: 0.682,      // 522 / 765
-    width: 0.195,    // 210 / 1078 (tight box wrapping summary text)
-    height: 0.145,   // 110 / 765
+  dateLine: {
+    left: 0.250,     // 269 / 1078
+    top: 0.678,      // 518 / 765
+    width: 0.500,    // 539 / 1078
+    height: 0.040,   // 30 / 765
   },
   certificateId: {
     left: 0.072,     // 78 / 1078
@@ -43,9 +36,9 @@ const CERT_LAYOUT = {
     height: 0.042,   // 32 / 765
   },
   qr: {
-    right: 0.058,    // 62 / 1078 (tight 64px box matching QR code size)
-    bottom: 0.072,   // 55 / 765
-    width: 0.059,    // 64 / 1078 (64px square container)
+    right: 0.048,    // 52 / 1078
+    bottom: 0.060,   // 46 / 765
+    width: 0.078,    // 84 / 1078 (~84px square)
   },
 };
 
@@ -166,90 +159,28 @@ function CertificateDocument({ cert, id }) {
         </p>
       </div>
 
-      {/* Date Day - Positioned ABOVE baseline */}
+      {/* Full Date Line Container with Template Words & Clean Underlines */}
       <div
-        className="absolute text-center flex items-center justify-center bg-transparent"
+        className="absolute text-center flex items-center justify-center bg-transparent whitespace-nowrap text-[#082447]"
         style={{
-          left: `${CERT_LAYOUT.date.day.left * 100}%`,
-          width: `${CERT_LAYOUT.date.day.width * 100}%`,
-          top: `${CERT_LAYOUT.date.top * 100}%`,
-          height: `${CERT_LAYOUT.date.height * 100}%`,
+          left: `${CERT_LAYOUT.dateLine.left * 100}%`,
+          top: `${CERT_LAYOUT.dateLine.top * 100}%`,
+          width: `${CERT_LAYOUT.dateLine.width * 100}%`,
+          height: `${CERT_LAYOUT.dateLine.height * 100}%`,
+          fontSize: 'clamp(9px, 1.4vw, 15px)',
+          fontFamily: "Georgia, 'Times New Roman', serif",
         }}
       >
-        <span
-          className="text-[#082447] leading-none font-bold"
-          style={{ 
-            fontFamily: "'Great Vibes', cursive",
-            fontSize: 'clamp(7px, 1.1vw, 13px)',
-          }}
-        >
-          {dayText}
-        </span>
+        <span>Issued on&nbsp;</span>
+        <span className="font-bold border-b border-[#082447]/60 px-1 text-center" style={{ fontFamily: "'Great Vibes', cursive", fontSize: 'clamp(10px, 1.5vw, 16px)' }}>{dayText}</span>
+        <span>&nbsp;day of&nbsp;</span>
+        <span className="font-bold border-b border-[#082447]/60 px-2 text-center" style={{ fontFamily: "'Great Vibes', cursive", fontSize: 'clamp(10px, 1.5vw, 16px)' }}>{monthName}</span>
+        <span>,&nbsp;20</span>
+        <span className="font-bold border-b border-[#082447]/60 px-1 text-center" style={{ fontFamily: "'Great Vibes', cursive", fontSize: 'clamp(10px, 1.5vw, 16px)' }}>{yearShort}</span>
+        <span>.</span>
       </div>
 
-      {/* Date Month - Positioned ABOVE baseline */}
-      <div
-        className="absolute text-center flex items-center justify-center bg-transparent"
-        style={{
-          left: `${CERT_LAYOUT.date.month.left * 100}%`,
-          width: `${CERT_LAYOUT.date.month.width * 100}%`,
-          top: `${CERT_LAYOUT.date.top * 100}%`,
-          height: `${CERT_LAYOUT.date.height * 100}%`,
-        }}
-      >
-        <span
-          className="text-[#082447] leading-none font-bold"
-          style={{ 
-            fontFamily: "'Great Vibes', cursive",
-            fontSize: 'clamp(7px, 1.1vw, 13px)',
-          }}
-        >
-          {monthName}
-        </span>
-      </div>
-
-      {/* Date Year - Positioned ABOVE baseline */}
-      <div
-        className="absolute text-center flex items-center justify-center bg-transparent"
-        style={{
-          left: `${CERT_LAYOUT.date.year.left * 100}%`,
-          width: `${CERT_LAYOUT.date.year.width * 100}%`,
-          top: `${CERT_LAYOUT.date.top * 100}%`,
-          height: `${CERT_LAYOUT.date.height * 100}%`,
-        }}
-      >
-        <span
-          className="text-[#082447] leading-none font-bold"
-          style={{ 
-            fontFamily: "'Great Vibes', cursive",
-            fontSize: 'clamp(7px, 1.1vw, 13px)',
-          }}
-        >
-          {yearShort}
-        </span>
-      </div>
-
-      {/* Compact Evaluation Summary Box - Box width reduced to fit content tightly */}
-      <div
-        className="absolute bg-white/95 backdrop-blur-xs border border-[#c9a227]/40 rounded-xl p-2.5 shadow-xs font-sans flex flex-col gap-0.5 text-[#082447]"
-        style={{
-          left: `${CERT_LAYOUT.summary.left * 100}%`,
-          top: `${CERT_LAYOUT.summary.top * 100}%`,
-          width: `${CERT_LAYOUT.summary.width * 100}%`,
-          height: `${CERT_LAYOUT.summary.height * 100}%`,
-        }}
-      >
-        <span className="text-[5.5px] sm:text-[8.5px] font-extrabold uppercase tracking-wide text-[#c9a227]">Evaluation Summary</span>
-        <div className="grid grid-cols-2 gap-x-1.5 text-[5px] sm:text-[7.5px] font-medium border-t border-slate-100 pt-0.5 leading-tight">
-          <span>Attendance:</span> <span className="font-bold text-right">{fields.attendanceMarks.toFixed(1)}/20</span>
-          <span>Assignments:</span> <span className="font-bold text-right">{fields.assignmentMarks.toFixed(1)}/20</span>
-          <span>Final MCQ:</span> <span className="font-bold text-right">{fields.mcqMarks.toFixed(1)}/60</span>
-          <span className="font-bold text-[#c9a227] border-t border-slate-100 mt-0.5">Total Score:</span>
-          <span className="font-extrabold text-[#c9a227] text-right border-t border-slate-100 mt-0.5">{fields.finalMarks.toFixed(1)}/100</span>
-        </div>
-      </div>
-
-      {/* Certificate ID Banner (gold text on dark blue badge) */}
+      {/* Certificate ID Banner (gold text directly on dark blue badge) */}
       <div
         className="absolute flex items-center justify-center bg-transparent px-1 text-center"
         style={{
@@ -267,9 +198,9 @@ function CertificateDocument({ cert, id }) {
         </p>
       </div>
 
-      {/* Tight White Container Box around QR Code (Matching QR Code size) */}
+      {/* QR Code directly on certificate (NO white background box!) */}
       <div
-        className="absolute flex items-center justify-center bg-white p-1 rounded-lg border border-slate-200/80 shadow-xs"
+        className="absolute flex items-center justify-center bg-transparent"
         style={{
           right: `${CERT_LAYOUT.qr.right * 100}%`,
           bottom: `${CERT_LAYOUT.qr.bottom * 100}%`,
@@ -285,7 +216,7 @@ function CertificateDocument({ cert, id }) {
             className="w-full h-full object-contain"
           />
         ) : (
-          <div className="w-full h-full bg-slate-100 animate-pulse" />
+          <div className="w-full h-full bg-slate-100/50 animate-pulse" />
         )}
       </div>
     </div>
@@ -364,64 +295,48 @@ export default function MyCertificates() {
       ctx.textAlign = 'center';
       ctx.fillText(fields.courseTitle.toUpperCase(), 539, 496, 760);
 
-      // 3. Compact Date Parts (positioned neatly ABOVE baseline line at y=530)
+      // 3. Full Date Line
       ctx.fillStyle = '#082447';
-      ctx.font = "bold 13px 'Great Vibes', 'Brush Script MT', cursive";
+      ctx.font = "14px Georgia, 'Times New Roman', serif";
+      ctx.textAlign = 'right';
+      ctx.fillText('Issued on ', 430, 534);
+
+      ctx.font = "bold 16px 'Great Vibes', 'Brush Script MT', cursive";
       ctx.textAlign = 'center';
-      ctx.fillText(dayText, 448, 530);
-      ctx.fillText(monthName, 571, 530);
-      ctx.fillText(yearShort, 658, 530);
-
-      // 4. Compact Evaluation Summary Box (left: 88, top: 522, width: 210, height: 110)
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-      ctx.strokeStyle = '#c9a227';
-      ctx.lineWidth = 1.5;
-      if (ctx.roundRect) {
-        ctx.beginPath();
-        ctx.roundRect(88, 522, 210, 110, 8);
-        ctx.fill();
-        ctx.stroke();
-      } else {
-        ctx.fillRect(88, 522, 210, 110);
-        ctx.strokeRect(88, 522, 210, 110);
-      }
-
-      ctx.fillStyle = '#c9a227';
-      ctx.font = 'bold 11px sans-serif';
-      ctx.textAlign = 'left';
-      ctx.fillText('EVALUATION SUMMARY', 98, 541);
-
-      ctx.fillStyle = '#082447';
-      ctx.font = '10px sans-serif';
-      const drawSummaryRow = (label, val, yOff) => {
-        ctx.textAlign = 'left';
-        ctx.fillText(label, 98, yOff);
-        ctx.textAlign = 'right';
-        ctx.fillText(val, 286, yOff);
-      };
-
-      drawSummaryRow('Attendance:', `${fields.attendanceMarks.toFixed(1)}/20`, 559);
-      drawSummaryRow('Assignments:', `${fields.assignmentMarks.toFixed(1)}/20`, 576);
-      drawSummaryRow('Final MCQ:', `${fields.mcqMarks.toFixed(1)}/60`, 593);
-
-      ctx.strokeStyle = '#cbd5e1';
+      ctx.fillText(dayText, 455, 532);
+      ctx.strokeStyle = '#082447';
       ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(98, 602);
-      ctx.lineTo(286, 602);
-      ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(432, 538); ctx.lineTo(478, 538); ctx.stroke();
 
-      ctx.fillStyle = '#c9a227';
-      ctx.font = 'bold 11px sans-serif';
-      drawSummaryRow('Total Score:', `${fields.finalMarks.toFixed(1)} / 100`, 618);
+      ctx.font = "14px Georgia, 'Times New Roman', serif";
+      ctx.textAlign = 'left';
+      ctx.fillText(' day of ', 480, 534);
 
-      // 5. Certificate ID (gold text directly inside blue badge)
+      ctx.font = "bold 16px 'Great Vibes', 'Brush Script MT', cursive";
+      ctx.textAlign = 'center';
+      ctx.fillText(monthName, 575, 532);
+      ctx.beginPath(); ctx.moveTo(532, 538); ctx.lineTo(618, 538); ctx.stroke();
+
+      ctx.font = "14px Georgia, 'Times New Roman', serif";
+      ctx.textAlign = 'left';
+      ctx.fillText(', 20', 620, 534);
+
+      ctx.font = "bold 16px 'Great Vibes', 'Brush Script MT', cursive";
+      ctx.textAlign = 'center';
+      ctx.fillText(yearShort, 663, 532);
+      ctx.beginPath(); ctx.moveTo(648, 538); ctx.lineTo(678, 538); ctx.stroke();
+
+      ctx.font = "14px Georgia, 'Times New Roman', serif";
+      ctx.textAlign = 'left';
+      ctx.fillText('.', 680, 534);
+
+      // 4. Certificate ID (gold text directly inside blue badge)
       ctx.fillStyle = '#c9a227';
       ctx.font = 'bold 12px monospace';
       ctx.textAlign = 'center';
       ctx.fillText(fields.certificateId, 165, 708);
 
-      // 6. Tight White Box matching QR Code size (x: 944, y: 630, 64x64)
+      // 5. QR Code directly on certificate (NO white background box!)
       const qrDataUrl = await QRCode.toDataURL(verifyUrl, { margin: 1, scale: 6 });
       const qrImg = new Image();
       await new Promise((resolve) => {
@@ -431,12 +346,7 @@ export default function MyCertificates() {
       });
 
       if (qrImg.complete && qrImg.naturalWidth > 0) {
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(944, 630, 64, 64);
-        ctx.strokeStyle = '#cbd5e1';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(944, 630, 64, 64);
-        ctx.drawImage(qrImg, 946, 632, 60, 60);
+        ctx.drawImage(qrImg, 935, 620, 84, 84);
       }
 
       canvas.toBlob((blob) => {
