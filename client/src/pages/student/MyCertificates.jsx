@@ -11,13 +11,13 @@ const CERT_TEMPLATE = '/Certificate.png';
 const CERT_LAYOUT = {
   name: {
     left: 0.150,
-    top:  0.480,
+    top:  0.490,
     width: 0.700,
     height: 0.080,
   },
   course: {
     left: 0.148,
-    top:  0.618,
+    top:  0.635,
     width: 0.706,
     height: 0.055,
   },
@@ -35,7 +35,7 @@ const CERT_LAYOUT = {
   },
   qr: {
     right:  0.040,   // 47px from right
-    bottom: 0.035,   // 37px from bottom
+    bottom: 0.030,   // 37px from bottom
     width:  0.080,   // 88px wide - slightly bigger than before
   },
 };
