@@ -134,7 +134,7 @@ async function main() {
     {
       title: 'OSHA Safety Training',
       slug: 'osha-safety-training',
-      thumbnail: '/uploads/iosh-safety-training.jfif',
+      thumbnail: '/uploads/osha-safety-training.jfif',
       description: 'Workers Safety and Health Administration (OSHA) compliant training covering workplace safety standards, hazard control, and personal protective equipment.\n\nCourse Contents:\n• OSHA Standards\n• Workplace Safety Rules\n• Hazard Control\n• Personal Protective Equipment (PPE)\n• Construction Safety\n• Industrial Safety',
       shortDescription: 'OSHA standards and workplace safety training',
       categoryId: safetyCategory.id,
