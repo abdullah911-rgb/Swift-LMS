@@ -26,6 +26,7 @@ router.get('/instructors', isAdmin, adminController.getInstructors);
 // Course management
 router.get('/courses', isAdmin, adminController.getAllCourses);
 router.patch('/courses/:courseId/reassign-instructor', isAdmin, adminController.reassignCourseInstructor);
+router.patch('/courses/:courseId/unassign-instructor', isAdmin, adminController.unassignCourse);
 
 // Enrollment reports
 router.get('/enrollments', isAdmin, adminController.getRecentEnrollments);

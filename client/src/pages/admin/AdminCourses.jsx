@@ -110,6 +110,24 @@ const AdminCourses = () => {
     }
   };
 
+  const handleUnassign = async (courseId) => {
+    if (!window.confirm('Are you sure you want to unassign the instructor from this course?')) return;
+    setActionId(courseId);
+    try {
+      await adminService.unassignCourse(courseId);
+      setCourses((prev) =>
+        prev.map((c) =>
+          c.id === courseId ? { ...c, instructor: null, instructorId: null } : c
+        )
+      );
+      toast.success('Instructor unassigned from course!');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to unassign.');
+    } finally {
+      setActionId(null);
+    }
+  };
+
   return (
     <div className="space-y-6 font-sans">
       {/* Header */}
@@ -270,28 +288,19 @@ const AdminCourses = () => {
                         Manage
                       </button>
                     </Link>
-                    {isUnassigned ? (
+                    <button
+                      onClick={() => isReassigning ? setReassignCourseId(null) : openReassign(course.id)}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold border border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100 transition-all cursor-pointer"
+                    >
+                      <IoSwapHorizontalOutline size={13} /> {isUnassigned ? 'Assign' : 'Reassign'}
+                    </button>
+                    {!isUnassigned && (
                       <button
-                        onClick={() => isReassigning ? setReassignCourseId(null) : openReassign(course.id)}
-                        className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold border border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100 transition-all cursor-pointer"
+                        onClick={() => handleUnassign(course.id)}
+                        title="Unassign instructor from this course"
+                        className="px-3 py-1.5 rounded-lg text-xs font-bold border border-rose-200 text-rose-700 bg-rose-50 hover:bg-rose-100 transition-all cursor-pointer"
                       >
-                        <IoSwapHorizontalOutline size={13} /> Reassign
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleTogglePublish(course.id, course.status)}
-                        disabled={actionId === course.id}
-                        className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer disabled:opacity-50 ${
-                          course.status === 'PUBLISHED'
-                            ? 'border-amber-100 text-amber-700 bg-amber-50 hover:bg-amber-100'
-                            : 'border-emerald-100 text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
-                        }`}
-                      >
-                        {course.status === 'PUBLISHED' ? (
-                          <><IoEyeOffOutline size={13} /> Unpublish</>
-                        ) : (
-                          <><IoCheckmarkCircleOutline size={13} /> Publish</>
-                        )}
+                        Unassign
                       </button>
                     )}
                   </div>

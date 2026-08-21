@@ -159,6 +159,20 @@ const AdminInstructors = () => {
     }
   };
 
+  const handleUnassignCourse = async (courseId) => {
+    if (!window.confirm('Are you sure you want to unassign this course from this instructor?')) return;
+    setAssignLoading(true);
+    try {
+      await adminService.unassignCourse(courseId);
+      toast.success('Course unassigned successfully!');
+      loadData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to unassign course.');
+    } finally {
+      setAssignLoading(false);
+    }
+  };
+
   const toggleExpand = (id) => setExpandedId(expandedId === id ? null : id);
 
   const getInstructorStats = (inst) => {
@@ -425,18 +439,27 @@ const AdminInstructors = () => {
                         ) : (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {inst.courses.map((course) => (
-                              <div key={course.id} className="p-3 border border-slate-50 rounded-xl bg-slate-50/20 flex justify-between items-center text-xs">
-                                <div>
-                                  <p className="font-bold text-slate-800">{course.title}</p>
+                              <div key={course.id} className="p-3 border border-slate-100 rounded-xl bg-slate-50/40 flex justify-between items-center text-xs">
+                                <div className="min-w-0 pr-2">
+                                  <p className="font-bold text-slate-800 truncate">{course.title}</p>
                                   <div className="flex gap-2 mt-1 text-[10px] text-slate-400">
                                     <span>Cat: {course.category?.name}</span>
                                     <span>·</span>
                                     <span className="uppercase">{course.status}</span>
                                   </div>
                                 </div>
-                                <span className="shrink-0 font-bold text-[10px] bg-primary-50 text-primary-750 px-2 py-0.5 rounded-full border border-primary-100">
-                                  {course._count?.enrollments || 0} Students
-                                </span>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <span className="font-bold text-[10px] bg-primary-50 text-primary-750 px-2 py-0.5 rounded-full border border-primary-100">
+                                    {course._count?.enrollments || 0} Students
+                                  </span>
+                                  <button
+                                    onClick={() => handleUnassignCourse(course.id)}
+                                    title="Unassign course"
+                                    className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                                  >
+                                    <IoCloseCircleOutline size={16} />
+                                  </button>
+                                </div>
                               </div>
                             ))}
                           </div>

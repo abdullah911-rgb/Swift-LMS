@@ -2,6 +2,76 @@ const prisma = require('../config/db');
 const asyncHandler = require('../utils/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/apiResponse');
 
+async function recalculateEnrollmentProgress(studentId, courseId) {
+  const enrollment = await prisma.enrollment.findUnique({
+    where: { studentId_courseId: { studentId, courseId } },
+  });
+  if (!enrollment) return null;
+
+  // 1. Lessons
+  const [totalLessons, completedLessons] = await Promise.all([
+    prisma.lesson.count({
+      where: { module: { courseId }, isPublished: true },
+    }),
+    prisma.lessonProgress.count({
+      where: { enrollmentId: enrollment.id, isCompleted: true },
+    }),
+  ]);
+
+  // 2. Assignments
+  const allAssignments = await prisma.assignment.findMany({
+    where: { courseId, isPublished: true },
+    select: { id: true },
+  });
+  const totalAssignments = allAssignments.length;
+  let completedAssignments = 0;
+  if (totalAssignments > 0) {
+    const assignmentIds = allAssignments.map((a) => a.id);
+    completedAssignments = await prisma.assignmentSubmission.count({
+      where: {
+        assignmentId: { in: assignmentIds },
+        studentId,
+        status: { in: ['SUBMITTED', 'GRADED'] },
+      },
+    });
+  }
+
+  // 3. Quiz
+  const quiz = await prisma.quiz.findUnique({
+    where: { courseId, isPublished: true },
+    select: { id: true },
+  });
+  const hasQuiz = Boolean(quiz);
+  let quizCompleted = 0;
+  if (hasQuiz) {
+    const passedAttempt = await prisma.quizAttempt.findFirst({
+      where: { quizId: quiz.id, userId: studentId, passed: true },
+    });
+    if (passedAttempt) quizCompleted = 1;
+  }
+
+  const totalItems = totalLessons + totalAssignments + (hasQuiz ? 1 : 0);
+  const completedItems = completedLessons + completedAssignments + quizCompleted;
+
+  let progressPercent = 0;
+  if (totalItems > 0) {
+    progressPercent = Math.round((completedItems / totalItems) * 100);
+  } else {
+    progressPercent = enrollment.progress || 0;
+  }
+
+  progressPercent = Math.min(100, Math.max(0, progressPercent));
+
+  return prisma.enrollment.update({
+    where: { id: enrollment.id },
+    data: {
+      progress: progressPercent,
+      status: progressPercent === 100 ? 'COMPLETED' : enrollment.status,
+      completedAt: progressPercent === 100 ? (enrollment.completedAt || new Date()) : enrollment.completedAt,
+    },
+  });
+}
+
 const enrollmentController = {
   // POST /api/enrollments/:courseId — Enroll in a course
   enroll: asyncHandler(async (req, res) => {
@@ -58,7 +128,7 @@ const enrollmentController = {
   getMyEnrollments: asyncHandler(async (req, res) => {
     const studentId = req.user.id;
 
-    const enrollments = await prisma.enrollment.findMany({
+    const rawEnrollments = await prisma.enrollment.findMany({
       where: { studentId },
       include: {
         course: {
@@ -77,6 +147,18 @@ const enrollmentController = {
       },
       orderBy: { enrolledAt: 'desc' },
     });
+
+    // Recalculate progress for each enrollment dynamically
+    const enrollments = await Promise.all(
+      rawEnrollments.map(async (e) => {
+        try {
+          const updated = await recalculateEnrollmentProgress(studentId, e.courseId);
+          return { ...e, progress: updated ? updated.progress : e.progress };
+        } catch {
+          return e;
+        }
+      })
+    );
 
     sendSuccess(res, 'Enrollments fetched.', { enrollments });
   }),
@@ -165,28 +247,9 @@ const enrollmentController = {
       },
     });
 
-    // Recalculate overall enrollment progress
-    const [totalLessons, completedLessons] = await Promise.all([
-      prisma.lesson.count({
-        where: { module: { courseId }, isPublished: true },
-      }),
-      prisma.lessonProgress.count({
-        where: { enrollmentId: enrollment.id, isCompleted: true },
-      }),
-    ]);
-
-    const progressPercent = totalLessons > 0
-      ? Math.round((completedLessons / totalLessons) * 100)
-      : 0;
-
-    const updatedEnrollment = await prisma.enrollment.update({
-      where: { id: enrollment.id },
-      data: {
-        progress: progressPercent,
-        status: progressPercent === 100 ? 'COMPLETED' : 'ACTIVE',
-        completedAt: progressPercent === 100 ? new Date() : null,
-      },
-    });
+    // Recalculate overall enrollment progress across lessons, assignments, and quizzes
+    const updatedEnrollment = await recalculateEnrollmentProgress(studentId, courseId);
+    const progressPercent = updatedEnrollment ? updatedEnrollment.progress : 0;
 
     // Notify student that they completed lessons and can take the final quiz
     if (progressPercent === 100) {
@@ -276,4 +339,7 @@ const enrollmentController = {
 
 };
 
-module.exports = enrollmentController;
+module.exports = {
+  ...enrollmentController,
+  recalculateEnrollmentProgress,
+};

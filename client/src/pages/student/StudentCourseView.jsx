@@ -576,7 +576,7 @@ const StudentCourseView = () => {
                                       isPastDue && !mySubmission ? 'text-red-500' : 'text-slate-400'
                                     }`}>
                                       <IoTimeOutline size={11} />
-                                      Due: {new Date(assignment.dueDate).toLocaleString()}
+                                      Due: {new Date(assignment.dueDate).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
                                     </span>
                                   )}
                                   <span className="text-[10px] text-slate-400">

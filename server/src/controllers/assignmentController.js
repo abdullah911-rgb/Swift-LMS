@@ -1,6 +1,7 @@
 const prisma = require('../config/db');
 const asyncHandler = require('../utils/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/apiResponse');
+const { recalculateEnrollmentProgress } = require('./enrollmentController');
 const path = require('path');
 
 const assignmentController = {
@@ -196,6 +197,9 @@ const assignmentController = {
       },
     });
 
+    // Recalculate student enrollment progress in this course
+    try { await recalculateEnrollmentProgress(studentId, assignment.courseId); } catch (_) {}
+
     // Notify the instructor
     await prisma.notification.create({
       data: {
@@ -264,17 +268,18 @@ const assignmentController = {
       },
     });
 
-    // Recalculate certificate eligibility if graded
-    if (grade) {
-      try {
+    // Recalculate certificate eligibility & enrollment progress if graded
+    try {
+      await recalculateEnrollmentProgress(submission.studentId, submission.assignment.courseId);
+      if (grade) {
         const { computeFinalScore, issueCertificateWithMarks } = require('../utils/evaluationUtils');
         const evaluation = await computeFinalScore(submission.studentId, submission.assignment.courseId);
         if (evaluation.eligible) {
           await issueCertificateWithMarks(submission.studentId, submission.assignment.courseId, evaluation.breakdown);
         }
-      } catch (err) {
-        console.error('[Assignment review] Evaluation check error:', err.message);
       }
+    } catch (err) {
+      console.error('[Assignment review] Evaluation check error:', err.message);
     }
 
     // Notify the student that their work has been reviewed

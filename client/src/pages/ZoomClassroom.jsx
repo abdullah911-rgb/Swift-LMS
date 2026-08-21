@@ -17,9 +17,28 @@ function getZoomEmbedded() {
 function getBackPath(role, courseId) {
   if (courseId) {
     if (role === 'STUDENT') return `/student/course/${courseId}`;
-    if (role === 'INSTRUCTOR' || role === 'ADMIN') return `/instructor/courses/${courseId}/edit`;
+    if (role === 'INSTRUCTOR') return `/instructor/courses/${courseId}/manage`;
+    if (role === 'ADMIN') return `/admin/courses/${courseId}/manage`;
   }
   return getRoleHomePath(role);
+}
+
+function stopMediaTracks() {
+  try {
+    const mediaEls = document.querySelectorAll('video, audio');
+    mediaEls.forEach(el => {
+      if (el.srcObject) {
+        const stream = el.srcObject;
+        if (stream && stream.getTracks) {
+          stream.getTracks().forEach(track => {
+            try { track.stop(); } catch (_) {}
+          });
+        }
+        el.srcObject = null;
+      }
+      try { el.pause(); } catch (_) {}
+    });
+  } catch (_) {}
 }
 
 export default function ZoomClassroom() {
@@ -43,6 +62,7 @@ export default function ZoomClassroom() {
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   const cleanupClient = useCallback(async () => {
+    stopMediaTracks();
     if (clientRef.current) {
       try { await clientRef.current.leave(); } catch (_) { /* ignore */ }
       clientRef.current = null;
@@ -50,6 +70,7 @@ export default function ZoomClassroom() {
   }, []);
 
   const goBack = useCallback(() => {
+    stopMediaTracks();
     if (user?.role) {
       navigate(getBackPath(user.role, courseId));
     } else {
@@ -86,6 +107,7 @@ export default function ZoomClassroom() {
         setStatus('loading');
         setErrorMsg('');
         hasJoinedRef.current = false;
+        isLeavingRef.current = false;
 
         // 1. Resolve SDK
         const ZoomMtgEmbedded = getZoomEmbedded();

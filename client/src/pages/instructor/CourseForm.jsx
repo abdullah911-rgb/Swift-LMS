@@ -1549,7 +1549,7 @@ const CourseForm = () => {
                         const fd = new FormData();
                         fd.append('title', assignTitle);
                         if (assignDesc) fd.append('description', assignDesc);
-                        if (assignDueDate) fd.append('dueDate', assignDueDate);
+                        if (assignDueDate) fd.append('dueDate', new Date(assignDueDate).toISOString());
                         if (assignFile) fd.append('file', assignFile);
 
                         const res = await assignmentService.createAssignment(courseId, fd);
@@ -1675,7 +1675,7 @@ const CourseForm = () => {
                             <div className="flex items-center gap-3 mt-2 flex-wrap">
                               {a.dueDate && (
                                 <span className="text-[10px] text-slate-400 flex items-center gap-1">
-                                  <IoTimeOutline size={11} /> Due: {new Date(a.dueDate).toLocaleDateString()}
+                                  <IoTimeOutline size={11} /> Due: {new Date(a.dueDate).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
                                 </span>
                               )}
                               {a.fileName && (
