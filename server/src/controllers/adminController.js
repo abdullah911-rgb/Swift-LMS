@@ -362,15 +362,18 @@ const adminController = {
     sendSuccess(res, 'Course reassigned to instructor successfully.', { course: updated });
   }),
 
-  // PATCH /api/admin/courses/:courseId/unassign — Unassign a course from an instructor
+  // PATCH /api/admin/courses/:courseId/unassign — Unassign a course from an instructor (assigns back to Admin)
   unassignCourse: asyncHandler(async (req, res) => {
     const { courseId } = req.params;
+    const adminId = req.user.id;
+
     const course = await prisma.course.findUnique({ where: { id: courseId } });
     if (!course) return sendError(res, 'Course not found.', 404);
 
     const updated = await prisma.course.update({
       where: { id: courseId },
-      data: { instructorId: null },
+      data: { instructorId: adminId },
+      include: { instructor: { select: { id: true, name: true, email: true, role: true } } },
     });
 
     sendSuccess(res, 'Course unassigned from instructor successfully.', { course: updated });
