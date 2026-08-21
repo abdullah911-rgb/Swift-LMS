@@ -2,11 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
-import { enrollmentService, assignmentService, certificateService } from '../../services/portalService';
+import { enrollmentService, assignmentService, certificateService, quizService } from '../../services/portalService';
 import api from '../../services/api';
 import { ROUTES } from '../../constants';
 import { 
   IoChevronBackOutline, 
+  IoChevronForwardOutline,
   IoPlayCircleOutline, 
   IoDocumentTextOutline, 
   IoFileTrayFullOutline, 
@@ -132,6 +133,30 @@ const StudentCourseView = () => {
         }
       };
       fetchEval();
+    }
+  }, [activeTab, courseId]);
+
+  // Quiz status state
+  const [quizStatus, setQuizStatus] = useState(null);
+  const [loadingQuizStatus, setLoadingQuizStatus] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'QUIZ') {
+      const fetchQuizStatus = async () => {
+        setLoadingQuizStatus(true);
+        try {
+          const res = await quizService.checkEligibility(courseId);
+          setQuizStatus(res.data?.data || null);
+        } catch (err) {
+          setQuizStatus({
+            eligible: false,
+            reason: err.response?.data?.message || 'No final quiz has been set for this course yet.',
+          });
+        } finally {
+          setLoadingQuizStatus(false);
+        }
+      };
+      fetchQuizStatus();
     }
   }, [activeTab, courseId]);
 
@@ -727,15 +752,38 @@ const StudentCourseView = () => {
                       Complete this course by taking the final quiz. To pass the course and lock in your completion certificate, you must satisfy attendance, assignments and quiz criteria.
                     </p>
                   </div>
-                  <div className="pt-2">
-                    <Link
-                      to={`/student/course/${courseId}/quiz`}
-                      className="inline-flex items-center gap-2 px-5 py-3 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold rounded-xl shadow-md shadow-primary-600/10 transition-all cursor-pointer"
-                    >
-                      <span>Go to Final Quiz Screen</span>
-                      <IoChevronForwardOutline size={14} />
-                    </Link>
-                  </div>
+
+                  {loadingQuizStatus ? (
+                    <div className="flex flex-col items-center justify-center py-4 space-y-2">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
+                      <p className="text-xs text-slate-400 font-semibold font-sans">Checking quiz availability...</p>
+                    </div>
+                  ) : quizStatus && !quizStatus.eligible && (
+                      quizStatus.reason?.toLowerCase().includes('no final quiz') ||
+                      quizStatus.reason?.toLowerCase().includes('not yet published') ||
+                      quizStatus.reason?.toLowerCase().includes('no questions') ||
+                      quizStatus.reason?.toLowerCase().includes('not set')
+                    ) ? (
+                    <div className="bg-amber-50 border border-amber-200/80 rounded-2xl p-6 max-w-md mx-auto text-amber-900 text-xs space-y-2">
+                      <div className="flex items-center justify-center gap-2 font-extrabold text-sm text-amber-800">
+                        <IoAlertCircleOutline size={20} className="text-amber-600" />
+                        <span>Quiz Not Uploaded Yet</span>
+                      </div>
+                      <p className="text-slate-600 m-0 leading-relaxed">
+                        The instructor has not uploaded or published the final quiz for this course yet. Please check back later or contact your instructor.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="pt-2">
+                      <Link
+                        to={`/student/course/${courseId}/quiz`}
+                        className="inline-flex items-center gap-2 px-5 py-3 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold rounded-xl shadow-md shadow-primary-600/10 transition-all cursor-pointer"
+                      >
+                        <span>Go to Final Quiz Screen</span>
+                        <IoChevronForwardOutline size={14} />
+                      </Link>
+                    </div>
+                  )}
                 </div>
               )}
 

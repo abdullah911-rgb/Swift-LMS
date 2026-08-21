@@ -61,28 +61,51 @@ export default class ErrorBoundary extends React.Component {
               {this.state.error.message}
             </p>
           )}
-          <button
-            onClick={this.handleReload}
-            style={{
-              background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
-              color: '#fff', border: 'none', borderRadius: 10,
-              padding: '10px 28px', fontWeight: 700, fontSize: 14,
-              cursor: 'pointer', width: '100%',
-            }}
-          >
-            🔄 Reload Page
-          </button>
-          <button
-            onClick={() => window.history.back()}
-            style={{
-              background: 'transparent', color: '#64748b',
-              border: '1.5px solid #e2e8f0', borderRadius: 10,
-              padding: '10px 28px', fontWeight: 600, fontSize: 14,
-              cursor: 'pointer', width: '100%', marginTop: 10,
-            }}
-          >
-            ← Go Back
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <button
+              onClick={this.handleReload}
+              style={{
+                background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+                color: '#fff', border: 'none', borderRadius: 10,
+                padding: '12px 28px', fontWeight: 700, fontSize: 14,
+                cursor: 'pointer', width: '100%',
+              }}
+            >
+              🔄 Reload Page
+            </button>
+            <button
+              onClick={() => {
+                this.setState({ hasError: false, error: null });
+                if (window.history.length > 1) {
+                  window.history.back();
+                } else {
+                  window.location.href = '/student/my-courses';
+                }
+              }}
+              style={{
+                background: 'transparent', color: '#475569',
+                border: '1.5px solid #cbd5e1', borderRadius: 10,
+                padding: '10px 28px', fontWeight: 600, fontSize: 14,
+                cursor: 'pointer', width: '100%',
+              }}
+            >
+              ← Go Back
+            </button>
+            <button
+              onClick={() => {
+                this.setState({ hasError: false, error: null });
+                window.location.href = '/student/my-courses';
+              }}
+              style={{
+                background: '#f1f5f9', color: '#64748b',
+                border: 'none', borderRadius: 10,
+                padding: '10px 28px', fontWeight: 600, fontSize: 13,
+                cursor: 'pointer', width: '100%',
+              }}
+            >
+              🏠 Return to My Courses
+            </button>
+          </div>
         </div>
       </div>
     );
