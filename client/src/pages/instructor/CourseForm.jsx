@@ -513,7 +513,7 @@ const CourseForm = () => {
           fetchMeetings(courseId);
         } else if (newMeeting.status === 'LIVE') {
           toast.success('Live class started! Entering classroom…');
-          navigate(`/zoom-classroom/${newMeeting.meetingId}?courseId=${courseId}`);
+          window.location.href = `/zoom-classroom/${newMeeting.meetingId}?courseId=${courseId}`;
         } else {
           toast.success('Live class scheduled successfully!');
           fetchMeetings(courseId);
@@ -1247,18 +1247,18 @@ const CourseForm = () => {
 
                       {currentStatus === 'LIVE' && targetMeetingNumber && (
                         <div className="flex gap-2 pt-1">
-                          <Link to={`/zoom-classroom/${targetMeetingNumber}?courseId=${courseId}`} className="flex-1">
+                          <a href={`/zoom-classroom/${targetMeetingNumber}?courseId=${courseId}`} className="flex-1">
                             <Button variant="outline" size="sm" className="w-full text-[10px] py-1 cursor-pointer">Enter Classroom</Button>
-                          </Link>
+                          </a>
                           <Button variant="secondary" size="sm" className="flex-1 text-[10px] py-1 text-red-600 hover:text-red-700 cursor-pointer" onClick={() => handleEndLiveClass(meeting.id)}>End</Button>
                         </div>
                       )}
 
                       {currentStatus === 'SCHEDULED' && targetMeetingNumber && (
                         <div className="flex gap-2 pt-1">
-                          <Link to={`/zoom-classroom/${targetMeetingNumber}?courseId=${courseId}`} className="flex-1">
+                          <a href={`/zoom-classroom/${targetMeetingNumber}?courseId=${courseId}`} className="flex-1">
                             <Button variant="primary" size="sm" className="w-full text-[10px] py-1 cursor-pointer">Start Class</Button>
-                          </Link>
+                          </a>
                         </div>
                       )}
                     </div>

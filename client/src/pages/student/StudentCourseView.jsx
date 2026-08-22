@@ -520,11 +520,11 @@ const StudentCourseView = () => {
                             {meeting.agenda && <p className="text-xs text-slate-400 mt-1">{meeting.agenda}</p>}
                           </div>
                           {mStatus === 'LIVE' && (meeting.meetingId || meeting.id) ? (
-                            <Link to={`/zoom-classroom/${meeting.meetingId || meeting.id}?courseId=${course.id}`}>
+                            <a href={`/zoom-classroom/${meeting.meetingId || meeting.id}?courseId=${course.id}`}>
                               <Button variant="primary" size="sm" className="flex items-center gap-2">
                                 <IoVideocamOutline size={16} /> Join Live Class
                               </Button>
-                            </Link>
+                            </a>
                           ) : (
                             <Button variant="secondary" size="sm" disabled className="flex items-center gap-2 opacity-50 cursor-not-allowed">
                               <IoVideocamOutline size={16} />

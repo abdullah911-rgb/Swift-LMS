@@ -252,13 +252,13 @@ export default function InstructorCalendar() {
                       </div>
 
                       {(isLive || isScheduled) && (meeting.meetingId || meeting.id) && (
-                        <Link to={`/zoom-classroom/${meeting.meetingId || meeting.id}?courseId=${meeting.course?.id}`}>
+                        <a href={`/zoom-classroom/${meeting.meetingId || meeting.id}?courseId=${meeting.course?.id}`}>
                           <button className={`w-full mt-1 py-2 rounded-xl text-white text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer ${
                             isLive ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700'
                           }`}>
                             <IoVideocamOutline size={14} /> {isLive ? 'Enter Classroom' : 'Start Class'}
                           </button>
-                        </Link>
+                        </a>
                       )}
                     </div>
                   );

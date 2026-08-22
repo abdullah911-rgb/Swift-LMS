@@ -112,15 +112,12 @@ export default function ZoomClassroom() {
 
   const isHost = user?.role === 'INSTRUCTOR' || user?.role === 'ADMIN';
 
-  // ── Go back to course/dashboard ────────────────────────────────────────────
+  // ── Go back to course/dashboard (full reload flushes Zoom Wasm/Sockets) ────
   const goBack = useCallback(() => {
     stopMediaTracks();
-    if (user?.role) {
-      navigate(getBackPath(user.role, courseId));
-    } else {
-      navigate(-1);
-    }
-  }, [user?.role, courseId, navigate]);
+    const dest = user?.role ? getBackPath(user.role, courseId) : '/';
+    window.location.href = dest;
+  }, [user?.role, courseId]);
 
   // ── Full teardown: destroy SDK client, reset all refs ─────────────────────
   const fullTeardown = useCallback(async () => {

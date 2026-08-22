@@ -264,11 +264,11 @@ export default function StudentCalendar() {
                       </div>
 
                       {isLive && (
-                        <Link to={`/zoom-classroom/${meeting.meetingId}?courseId=${meeting.course?.id}`}>
+                        <a href={`/zoom-classroom/${meeting.meetingId}?courseId=${meeting.course?.id}`}>
                           <button className="w-full mt-1 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer">
                             <IoVideocamOutline size={14} /> Join Live Class
                           </button>
-                        </Link>
+                        </a>
                       )}
                     </div>
                   );
