@@ -2,8 +2,9 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "linux-musl", "debian-openssl-3.0.x"]
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+  binaryTargets   = ["native", "linux-musl-openssl-3.0.x", "linux-musl", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -344,10 +345,11 @@ model Enrollment {
   id          String           @id @default(uuid())
   studentId   String
   courseId    String
-  rollNumber  String?          @unique // e.g. SST-2026-00000001, assigned at enrollment time
-  status      EnrollmentStatus @default(ACTIVE)
-  progress    Float            @default(0) // Percentage 0-100
-  enrolledAt  DateTime         @default(now())
+  rollNumber          String?          @unique // e.g. SST-2026-00000001, assigned at enrollment time
+  status              EnrollmentStatus @default(ACTIVE)
+  progress            Float            @default(0) // Percentage 0-100
+  certificateEligible Boolean?         // null = dynamic/automatic, true = admin granted, false = admin revoked
+  enrolledAt          DateTime         @default(now())
   completedAt DateTime?
   updatedAt   DateTime         @updatedAt
 

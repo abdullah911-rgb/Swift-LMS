@@ -830,8 +830,16 @@ async function _checkStudentEligibility(studentId, courseId) {
     return { eligible: false, reason: 'This course is not yet published.' };
   }
 
-  // 3. Course progress = 100%
-  if (enrollment.progress < 100) {
+  // 2.5 Admin explicit revocation check
+  if (enrollment.certificateEligible === false) {
+    return {
+      eligible: false,
+      reason: 'Your certificate eligibility has been placed on hold by the administrator.',
+    };
+  }
+
+  // 3. Course progress = 100% (bypassed if admin explicitly granted certificateEligible === true)
+  if (enrollment.certificateEligible !== true && enrollment.progress < 100) {
     return {
       eligible: false,
       reason: `Complete all course lessons first. Progress: ${Math.round(enrollment.progress)}%`,

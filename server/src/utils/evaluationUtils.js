@@ -113,6 +113,10 @@ async function getBestQuizAttempt(studentId, courseId) {
  * Returns a comprehensive breakdown object.
  */
 async function computeFinalScore(studentId, courseId) {
+  const enrollment = await prisma.enrollment.findUnique({
+    where: { studentId_courseId: { studentId, courseId } },
+  });
+
   const [attendanceData, assignmentData, quizData] = await Promise.all([
     calculateAttendanceMarks(studentId, courseId),
     calculateAssignmentMarks(studentId, courseId),
@@ -131,10 +135,20 @@ async function computeFinalScore(studentId, courseId) {
   const quizPassedOk = quizData === null || quizData.passed === true;
   const finalMarksOk = finalMarks >= 60;
 
-  const eligible = attendanceOk && assignmentSubmittedOk && assignmentGradedOk && quizPassedOk && finalMarksOk;
+  const dynamicEligible = attendanceOk && assignmentSubmittedOk && assignmentGradedOk && quizPassedOk && finalMarksOk;
 
+  let eligible = dynamicEligible;
   let reason = null;
-  if (!eligible) {
+
+  // Handle admin override
+  if (enrollment?.certificateEligible === true) {
+    // Admin explicitly granted certificate eligibility
+    eligible = true;
+  } else if (enrollment?.certificateEligible === false) {
+    // Admin explicitly revoked certificate eligibility
+    eligible = false;
+    reason = 'Certificate eligibility has been placed on hold by the administrator.';
+  } else if (!eligible) {
     if (!attendanceOk) {
       reason = `Attendance too low: ${attendanceData.percentage.toFixed(1)}% (minimum 80% required).`;
     } else if (!assignmentSubmittedOk) {

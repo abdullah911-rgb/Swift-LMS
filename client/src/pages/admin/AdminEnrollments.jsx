@@ -41,16 +41,29 @@ const AdminEnrollments = () => {
 
   useEffect(() => { fetchEnrollments(); }, []);
 
-  const handleToggleCertEligibility = (e, enrId, currentEligible) => {
+  const handleToggleCertEligibility = async (e, enrId) => {
     e.stopPropagation(); // Prevent row click opening modal
-    const newVal = !currentEligible;
-    setEnrollments((prev) =>
-      prev.map((en) => en.id === enrId ? { ...en, certificateEligible: newVal } : en)
-    );
-    if (selectedStudent?.id === enrId) {
-      setSelectedStudent((prev) => prev ? { ...prev, certificateEligible: newVal } : prev);
+    try {
+      const res = await adminService.updateCertEligibility(enrId, {});
+      const updated = res.data?.data?.enrollment;
+      if (updated) {
+        setEnrollments((prev) =>
+          prev.map((en) => (en.id === enrId ? { ...en, ...updated } : en))
+        );
+        if (selectedStudent?.id === enrId) {
+          setSelectedStudent((prev) => (prev ? { ...prev, ...updated } : prev));
+        }
+        if (updated.certificateEligible === true) {
+          toast.success('Certificate eligibility GRANTED by admin override.');
+        } else if (updated.certificateEligible === false) {
+          toast.error('Certificate eligibility REVOKED by admin override.');
+        } else {
+          toast.success('Certificate eligibility reset to automatic/dynamic.');
+        }
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update certificate eligibility.');
     }
-    toast.success(newVal ? 'Certificate eligibility marked as Eligible.' : 'Certificate eligibility marked as Ineligible.');
   };
 
   const handleEnrollmentClick = async (enr) => {
@@ -233,17 +246,35 @@ const AdminEnrollments = () => {
                     {/* Certificate Eligibility Toggle */}
                     <td className="px-5 py-4">
                       <button
-                        onClick={(e) => handleToggleCertEligibility(e, enr.id, enr.certificateEligible !== false)}
-                        title={enr.certificateEligible !== false ? 'Click to revoke eligibility' : 'Click to restore eligibility'}
+                        onClick={(e) => handleToggleCertEligibility(e, enr.id)}
+                        title={
+                          enr.certificateEligible === true
+                            ? 'Admin Override: GRANTED (Click to change to Revoked)'
+                            : enr.certificateEligible === false
+                            ? 'Admin Override: REVOKED (Click to change to Auto)'
+                            : enr.isEligible
+                            ? 'Status: ELIGIBLE (Click to set Manual Override)'
+                            : 'Status: INELIGIBLE (Click to set Manual Override)'
+                        }
                         className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all cursor-pointer ${
-                          enr.certificateEligible !== false
+                          enr.certificateEligible === true
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100'
+                            : enr.certificateEligible === false
+                            ? 'bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100'
+                            : enr.isEligible
                             ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                            : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
+                            : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
                         }`}
                       >
-                        {enr.certificateEligible !== false
-                          ? <><IoCheckmarkCircle size={12} /> Eligible</>
-                          : <><IoCloseCircle size={12} /> Ineligible</>}
+                        {enr.certificateEligible === true ? (
+                          <><IoCheckmarkCircle size={12} /> Eligible <span className="text-[8px] opacity-75 font-normal">(Granted)</span></>
+                        ) : enr.certificateEligible === false ? (
+                          <><IoCloseCircle size={12} /> Ineligible <span className="text-[8px] opacity-75 font-normal">(Revoked)</span></>
+                        ) : enr.isEligible ? (
+                          <><IoCheckmarkCircle size={12} /> Eligible</>
+                        ) : (
+                          <><IoCloseCircle size={12} /> Ineligible</>
+                        )}
                       </button>
                     </td>
 
@@ -413,15 +444,25 @@ const AdminEnrollments = () => {
             <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-3">
               {/* Cert eligibility toggle in modal */}
               <button
-                onClick={(e) => handleToggleCertEligibility(e, selectedStudent.id, selectedStudent.certificateEligible !== false)}
+                onClick={(e) => handleToggleCertEligibility(e, selectedStudent.id)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
-                  selectedStudent.certificateEligible !== false
-                    ? 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
-                    : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                  selectedStudent.certificateEligible === true
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100'
+                    : selectedStudent.certificateEligible === false
+                    ? 'bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100'
+                    : selectedStudent.isEligible
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                    : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
                 }`}
               >
                 <IoRibbonOutline size={13} />
-                {selectedStudent.certificateEligible !== false ? 'Revoke Certificate Eligibility' : 'Restore Certificate Eligibility'}
+                {selectedStudent.certificateEligible === true
+                  ? 'Override: Granted (Click to Revoke)'
+                  : selectedStudent.certificateEligible === false
+                  ? 'Override: Revoked (Click for Auto)'
+                  : selectedStudent.isEligible
+                  ? 'Eligible (Auto) — Click to Override'
+                  : 'Ineligible (Auto) — Click to Grant'}
               </button>
               <Button
                 variant="secondary"

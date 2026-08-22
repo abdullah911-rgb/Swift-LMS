@@ -1,0 +1,1 @@
+-- AlterTable`nALTER TABLE "enrollments" ADD COLUMN IF NOT EXISTS "certificateEligible" BOOLEAN;

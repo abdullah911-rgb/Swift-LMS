@@ -205,22 +205,121 @@ const adminController = {
       },
     });
 
-    // Enrich each enrollment with payment amount (rollNumber is already on the enrollment)
+    // Enrich each enrollment with payment amount, certificate status, and dynamic eligibility
     const enriched = await Promise.all(
       enrollments.map(async (enr) => {
         const payment = await prisma.paymentRequest.findUnique({
           where: { studentId_courseId: { studentId: enr.studentId, courseId: enr.courseId } },
           select: { amount: true, status: true },
         });
+
+        const certificate = await prisma.certificate.findUnique({
+          where: { studentId_courseId: { studentId: enr.studentId, courseId: enr.courseId } },
+          select: { id: true },
+        });
+
+        // Determine dynamic eligibility vs admin override:
+        // 1. Admin explicitly granted -> eligible (true)
+        // 2. Admin explicitly revoked -> ineligible (false)
+        // 3. Dynamic: Student completed or has certificate OR progress === 100
+        let isEligible = false;
+        let override = null; // 'GRANTED' | 'REVOKED' | null
+
+        if (certificate || enr.status === 'COMPLETED') {
+          isEligible = true;
+        } else if (enr.certificateEligible === true) {
+          isEligible = true;
+          override = 'GRANTED';
+        } else if (enr.certificateEligible === false) {
+          isEligible = false;
+          override = 'REVOKED';
+        } else {
+          // Dynamic calculation: eligible only if course progress is 100% and not dropped
+          isEligible = enr.progress >= 100 && enr.status !== 'DROPPED';
+        }
+
         return {
           ...enr,
           paymentAmount: payment?.amount ? Number(payment.amount) : null,
           paymentStatus: payment?.status || null,
+          hasCertificate: !!certificate,
+          isEligible,
+          override,
         };
       })
     );
 
     sendSuccess(res, 'Enrollments fetched.', { enrollments: enriched });
+  }),
+
+  // PATCH /api/admin/enrollments/:enrollmentId/eligibility — Toggle or set certificate eligibility
+  toggleCertEligibility: asyncHandler(async (req, res) => {
+    const { enrollmentId } = req.params;
+    const { certificateEligible } = req.body; // true | false | null (or omitted to cycle)
+
+    const enrollment = await prisma.enrollment.findUnique({
+      where: { id: enrollmentId },
+      include: {
+        student: { select: { id: true, name: true, email: true } },
+        course: { select: { id: true, title: true } },
+      },
+    });
+
+    if (!enrollment) return sendError(res, 'Enrollment not found.', 404);
+
+    // Determine next value
+    let nextValue;
+    if (typeof certificateEligible === 'boolean' || certificateEligible === null) {
+      nextValue = certificateEligible;
+    } else {
+      // Cycle: if null -> true, if true -> false, if false -> null
+      if (enrollment.certificateEligible === true) {
+        nextValue = false;
+      } else if (enrollment.certificateEligible === false) {
+        nextValue = null;
+      } else {
+        nextValue = true;
+      }
+    }
+
+    const updated = await prisma.enrollment.update({
+      where: { id: enrollmentId },
+      data: { certificateEligible: nextValue },
+    });
+
+    // Notify student if explicitly granted or revoked
+    if (nextValue === true) {
+      await prisma.notification.create({
+        data: {
+          userId: enrollment.studentId,
+          title: '🎓 Certificate Eligibility Granted',
+          message: `The administrator has granted you certificate eligibility for "${enrollment.course.title}". You can now proceed to the final assessment.`,
+          type: 'SUCCESS',
+          link: `/student/course/${enrollment.courseId}`,
+        },
+      }).catch(() => {});
+    } else if (nextValue === false) {
+      await prisma.notification.create({
+        data: {
+          userId: enrollment.studentId,
+          title: '⚠️ Certificate Eligibility Revoked',
+          message: `Your certificate eligibility for "${enrollment.course.title}" has been placed on hold by the administrator.`,
+          type: 'WARNING',
+          link: `/student/course/${enrollment.courseId}`,
+        },
+      }).catch(() => {});
+    }
+
+    const isEligible = nextValue === true ? true : nextValue === false ? false : updated.progress >= 100;
+    const override = nextValue === true ? 'GRANTED' : nextValue === false ? 'REVOKED' : null;
+
+    sendSuccess(res, 'Certificate eligibility updated successfully.', {
+      enrollment: {
+        ...updated,
+        isEligible,
+        override,
+      },
+    });
   }),
 
   // GET /api/admin/instructors/pending — List all pending instructors
