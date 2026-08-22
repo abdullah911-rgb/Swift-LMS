@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
+import Input from '../../components/ui/Input';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
+import { getImageUrl } from '../../constants';
 import { IoPersonOutline, IoKeyOutline, IoMailOutline, IoCallOutline, IoVideocamOutline } from 'react-icons/io5';
 
 const InstructorProfile = () => {
@@ -39,7 +41,7 @@ const InstructorProfile = () => {
           setPhone(profile.phone || '');
           setBio(profile.bio || '');
           if (profile.avatar) {
-            setAvatarPreview(profile.avatar.startsWith('/') ? `http://localhost:5000${profile.avatar}` : profile.avatar);
+            setAvatarPreview(getImageUrl(profile.avatar));
           }
         }
       } catch (err) {
@@ -99,8 +101,7 @@ const InstructorProfile = () => {
         toast.success('Instructor profile updated successfully!');
         setUser(res.data.data.user);
         if (res.data.data.user.avatar) {
-          const avatarUrl = res.data.data.user.avatar;
-          setAvatarPreview(avatarUrl.startsWith('/') ? `http://localhost:5000${avatarUrl}` : avatarUrl);
+          setAvatarPreview(getImageUrl(res.data.data.user.avatar));
         }
       }
     } catch (err) {

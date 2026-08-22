@@ -357,12 +357,20 @@ const zoomController = {
       return sendError(res, 'Not authorized for this meeting.', 403);
     }
 
-    const now = new Date();
-    const start = new Date(meeting.startTime);
-    const end = new Date(start.getTime() + (meeting.duration || 60) * 60 * 1000);
+    if (meeting.status === 'PENDING_APPROVAL') {
+      return sendError(res, 'This class has not been approved yet.', 403);
+    }
 
-    // Auto-update to LIVE if start time has arrived
-    if (meeting.status === 'SCHEDULED' && now >= start && now < end) {
+    if (meeting.status === 'REJECTED' || meeting.status === 'CANCELLED') {
+      return sendError(res, 'This class was cancelled or rejected.', 400);
+    }
+
+    // Students cannot join an ENDED class; instructors/admins can re-open it
+    if (meeting.status === 'ENDED') {
+      if (req.user.role === 'STUDENT') {
+        return sendError(res, 'This live class has already ended.', 400);
+      }
+      // Instructor/Admin re-opens the class
       await prisma.zoomMeeting.update({
         where: { id: meeting.id },
         data: { status: 'LIVE' },
@@ -370,21 +378,13 @@ const zoomController = {
       meeting.status = 'LIVE';
     }
 
-    // Auto-update to ENDED if end time has passed
-    if ((meeting.status === 'LIVE' || meeting.status === 'SCHEDULED') && now >= end) {
+    // When joining an approved SCHEDULED class, activate it as LIVE in DB
+    if (meeting.status === 'SCHEDULED' || meeting.status === 'APPROVED') {
       await prisma.zoomMeeting.update({
         where: { id: meeting.id },
-        data: { status: 'ENDED' },
+        data: { status: 'LIVE' },
       }).catch(() => {});
-      meeting.status = 'ENDED';
-    }
-
-    if (meeting.status === 'ENDED') {
-      return sendError(res, 'This live class has ended.', 400);
-    }
-
-    if (!APPROVED_STATUSES.includes(meeting.status)) {
-      return sendError(res, 'This class has not been approved yet.', 403);
+      meeting.status = 'LIVE';
     }
 
     const actualMeetingNumber = meeting.meetingId || meetingId;

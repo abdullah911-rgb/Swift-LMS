@@ -4,7 +4,7 @@ import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import { enrollmentService, assignmentService, certificateService, quizService } from '../../services/portalService';
 import api from '../../services/api';
-import { ROUTES } from '../../constants';
+import { ROUTES, getImageUrl } from '../../constants';
 import { 
   IoChevronBackOutline, 
   IoChevronForwardOutline,
@@ -591,7 +591,7 @@ const StudentCourseView = () => {
                               {/* Download assignment file */}
                               {assignment.fileUrl && (
                                 <a
-                                  href={`${import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000'}${assignment.fileUrl}`}
+                                  href={getImageUrl(assignment.fileUrl)}
                                   target="_blank"
                                   rel="noreferrer"
                                   className="flex items-center gap-1.5 px-3 py-2 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold rounded-xl transition-all shrink-0"
@@ -615,7 +615,7 @@ const StudentCourseView = () => {
                                     </p>
                                   </div>
                                   <a
-                                    href={`${import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000'}${mySubmission.fileUrl}`}
+                                    href={getImageUrl(mySubmission.fileUrl)}
                                     target="_blank"
                                     rel="noreferrer"
                                     className="text-[10px] font-bold text-primary-600 hover:underline flex items-center gap-0.5"

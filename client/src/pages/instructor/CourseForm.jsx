@@ -227,7 +227,7 @@ const CourseForm = () => {
               setInstructorId(match.instructorId);
             }
             if (match.thumbnail) {
-              setThumbnailPreview(match.thumbnail.startsWith('/') ? match.thumbnail.startsWith('http') ? match.thumbnail : `http://localhost:5000${match.thumbnail}` : match.thumbnail);
+              setThumbnailPreview(getImageUrl(match.thumbnail, match.slug));
             }
             
             // Now load modules
@@ -1427,7 +1427,7 @@ const CourseForm = () => {
                             <p className="text-[10px] text-slate-400">Submitted: {new Date(sub.submittedAt).toLocaleString()}</p>
                           </div>
                           <a
-                            href={`${import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000'}${sub.fileUrl}`}
+                            href={getImageUrl(sub.fileUrl)}
                             target="_blank"
                             rel="noreferrer"
                             className="flex items-center gap-1 px-3 py-1.5 bg-primary-50 hover:bg-primary-100 text-primary-700 text-[10px] font-bold rounded-lg transition-colors"
@@ -1692,7 +1692,7 @@ const CourseForm = () => {
                               )}
                               {a.fileName && (
                                 <a
-                                  href={`${import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000'}${a.fileUrl}`}
+                                  href={getImageUrl(a.fileUrl)}
                                   target="_blank"
                                   rel="noreferrer"
                                   className="text-[10px] text-primary-600 hover:text-primary-700 font-bold flex items-center gap-0.5 hover:underline"
