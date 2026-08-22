@@ -282,16 +282,24 @@ const zoomController = {
 
     // Validate enrollment / authorization
     if (req.user.role === 'STUDENT') {
-      const enrollment = await prisma.enrollment.findUnique({
+      let enrollment = await prisma.enrollment.findUnique({
         where: { studentId_courseId: { studentId: req.user.id, courseId: meeting.courseId } },
       });
       if (!enrollment) return sendError(res, 'You are not enrolled in this course.', 403);
-      if (enrollment.status === 'DROPPED') return sendError(res, 'Your enrollment is inactive.', 403);
+      
+      // Auto-heal any dropped status back to ACTIVE
+      if (enrollment.status === 'DROPPED') {
+        await prisma.enrollment.update({
+          where: { id: enrollment.id },
+          data: { status: 'ACTIVE' },
+        }).catch(() => {});
+        enrollment.status = 'ACTIVE';
+      }
 
       const certificate = await prisma.certificate.findUnique({
         where: { studentId_courseId: { studentId: req.user.id, courseId: meeting.courseId } },
       });
-      if (enrollment.status === 'COMPLETED' || certificate) {
+      if (certificate) {
         return sendError(res, 'You have completed this course and earned your certificate. Live classes are closed for completed courses.', 403);
       }
     } else if (req.user.role === 'INSTRUCTOR' && meeting.instructorId !== req.user.id) {
@@ -462,10 +470,24 @@ const zoomController = {
       });
       const completedCourseIds = new Set(completedCertificates.map((c) => c.courseId));
 
+      // Fetch all enrollments for this student
       const enrollments = await prisma.enrollment.findMany({
-        where: { studentId: req.user.id, status: 'ACTIVE' },
-        select: { courseId: true },
+        where: { studentId: req.user.id },
+        select: { id: true, courseId: true, status: true },
       });
+
+      // Auto-heal any enrollment that was DROPPED or falsely COMPLETED (no certificate) back to ACTIVE
+      const toHealIds = enrollments
+        .filter((e) => e.status === 'DROPPED' || (e.status === 'COMPLETED' && !completedCourseIds.has(e.courseId)))
+        .map((e) => e.id);
+
+      if (toHealIds.length > 0) {
+        await prisma.enrollment.updateMany({
+          where: { id: { in: toHealIds } },
+          data: { status: 'ACTIVE', completedAt: null },
+        }).catch((err) => console.error('[Auto-heal Enrollment]:', err.message));
+      }
+
       const activeCourseIds = enrollments
         .map((e) => e.courseId)
         .filter((id) => !completedCourseIds.has(id));

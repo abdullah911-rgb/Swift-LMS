@@ -66,8 +66,12 @@ async function recalculateEnrollmentProgress(studentId, courseId) {
     where: { id: enrollment.id },
     data: {
       progress: progressPercent,
-      status: progressPercent === 100 ? 'COMPLETED' : enrollment.status,
-      completedAt: progressPercent === 100 ? (enrollment.completedAt || new Date()) : enrollment.completedAt,
+      // NOTE: Do NOT auto-set status to 'COMPLETED' here.
+      // Enrollment status only becomes 'COMPLETED' when the student
+      // explicitly passes the final quiz and claims their certificate
+      // (via issueCertificateWithMarks in evaluationUtils.js).
+      // Auto-completing based on progress alone would silently drop students
+      // from the calendar and block them from live classes prematurely.
     },
   });
 }
