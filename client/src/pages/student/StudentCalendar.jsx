@@ -11,11 +11,16 @@ const STATUS_STYLES = {
   CANCELLED: { bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-200', dot: 'bg-orange-400', label: 'Cancelled'    },
 };
 
-// Re-evaluate meeting status client-side so scheduled classes transition to LIVE
-// and completed classes transition to ENDED automatically.
+// Re-evaluate meeting status client-side.
+// DB status (ENDED, LIVE, CANCELLED, REJECTED) always wins.
+// Only SCHEDULED/APPROVED fall back to time-based live detection.
 function computeCurrentStatus(meeting) {
   const status = meeting.status;
-  if (status === 'CANCELLED' || status === 'REJECTED') return status;
+  // Terminal / admin-set states — never override these
+  if (status === 'ENDED' || status === 'CANCELLED' || status === 'REJECTED' || status === 'PENDING_APPROVAL') return status;
+  // For LIVE: trust DB (instructor manually started/ended it)
+  if (status === 'LIVE') return 'LIVE';
+  // For SCHEDULED/APPROVED: transition to LIVE based on time
   const start = new Date(meeting.startTime);
   const end = new Date(start.getTime() + (meeting.duration || 60) * 60 * 1000);
   const now = new Date();

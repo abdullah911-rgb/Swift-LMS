@@ -12,9 +12,16 @@ const STATUS_STYLES = {
   CANCELLED:         { bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-200', dot: 'bg-orange-400', label: 'Cancelled' },
 };
 
+// Re-evaluate meeting status client-side.
+// DB status (ENDED, LIVE, CANCELLED, REJECTED) always wins.
+// Only SCHEDULED/APPROVED fall back to time-based live detection.
 function computeCurrentStatus(meeting) {
   const status = meeting.status;
-  if (status === 'CANCELLED' || status === 'REJECTED' || status === 'PENDING_APPROVAL') return status;
+  // Terminal / admin-set states — never override these
+  if (status === 'ENDED' || status === 'CANCELLED' || status === 'REJECTED' || status === 'PENDING_APPROVAL') return status;
+  // For LIVE: trust DB (instructor manually started/ended it)
+  if (status === 'LIVE') return 'LIVE';
+  // For SCHEDULED/APPROVED: transition to LIVE based on time
   const start = new Date(meeting.startTime);
   const end = new Date(start.getTime() + (meeting.duration || 60) * 60 * 1000);
   const now = new Date();
@@ -263,8 +270,8 @@ export default function InstructorCalendar() {
           {/* Stats */}
           <div className="grid grid-cols-3 gap-3">
             {[
-              { label: 'Live Now',  count: meetings.filter(m => m.status === 'LIVE').length,      color: 'text-red-600',     bg: 'bg-red-50',     border: 'border-red-100'     },
-              { label: 'Upcoming', count: meetings.filter(m => m.status === 'SCHEDULED').length,  color: 'text-blue-600',    bg: 'bg-blue-50',    border: 'border-blue-100'    },
+              { label: 'Live Now',  count: meetings.filter(m => computeCurrentStatus(m) === 'LIVE').length,      color: 'text-red-600',     bg: 'bg-red-50',     border: 'border-red-100'     },
+              { label: 'Upcoming', count: meetings.filter(m => computeCurrentStatus(m) === 'SCHEDULED').length,  color: 'text-blue-600',    bg: 'bg-blue-50',    border: 'border-blue-100'    },
               { label: 'Total',    count: meetings.length,                                         color: 'text-slate-600',   bg: 'bg-slate-50',   border: 'border-slate-100'   },
             ].map(({ label, count, color, bg, border }) => (
               <div key={label} className={`${bg} border ${border} rounded-xl p-3 text-center`}>

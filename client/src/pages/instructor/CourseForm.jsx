@@ -1197,12 +1197,17 @@ const CourseForm = () => {
               <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
                 {meetings.map((meeting) => {
                   const s = meeting.status;
-                  const start = new Date(meeting.startTime);
-                  const end = new Date(start.getTime() + (meeting.duration || 60) * 60 * 1000);
-                  const now = new Date();
                   let currentStatus = s;
-                  if (s === 'SCHEDULED' && now >= start && now < end) currentStatus = 'LIVE';
-                  if ((s === 'LIVE' || s === 'SCHEDULED') && now >= end) currentStatus = 'ENDED';
+                  // Terminal / admin-set states — never override with time
+                  if (s !== 'SCHEDULED' && s !== 'APPROVED') {
+                    currentStatus = s;
+                  } else {
+                    const start = new Date(meeting.startTime);
+                    const end = new Date(start.getTime() + (meeting.duration || 60) * 60 * 1000);
+                    const now = new Date();
+                    if (now >= end) currentStatus = 'ENDED';
+                    else if (now >= start) currentStatus = 'LIVE';
+                  }
 
                   const targetMeetingNumber = meeting.meetingId || meeting.id;
 
