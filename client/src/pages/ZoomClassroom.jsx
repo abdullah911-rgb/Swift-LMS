@@ -52,14 +52,22 @@ async function destroyZoomClient(clientRef, containerRef) {
   const client = clientRef.current;
   if (client) {
     clientRef.current = null;
-    try { await client.leave(); } catch (_) {}
-    // Brief wait so SDK WebSocket closes cleanly
-    await new Promise((r) => setTimeout(r, 400));
+    try {
+      if (typeof client.leaveMeeting === 'function') {
+        await client.leaveMeeting();
+      } else if (typeof client.leave === 'function') {
+        await client.leave();
+      }
+    } catch (e) {
+      console.warn('[Zoom] leave failed:', e);
+    }
+    // Brief wait so SDK WebSocket closes cleanly and server registers departure
+    await new Promise((r) => setTimeout(r, 600));
     try {
       if (typeof client.destroy === 'function') client.destroy();
     } catch (_) {}
     // Extra wait after destroy so SDK singleton internal state resets
-    await new Promise((r) => setTimeout(r, 300));
+    await new Promise((r) => setTimeout(r, 400));
   }
   if (containerRef.current) {
     containerRef.current.innerHTML = '';

@@ -93,73 +93,6 @@ async function notifyStudentsOfClass(meeting, courseId, isInstant) {
   });
 }
 
-/**
- * Check a student's attendance rate for a course.
- * If below 80%, deactivate their enrollment and send a notification.
- */
-async function checkAndDeactivateEnrollment(studentId, courseId) {
-  // Get all ended meetings for this course
-  const meetings = await prisma.zoomMeeting.findMany({
-    where: { courseId, status: { in: ['ENDED', 'LIVE'] } },
-    select: { id: true },
-  });
-
-  const totalMeetings = meetings.length;
-  if (totalMeetings < 1) return; // Not enough data yet
-
-  const meetingIds = meetings.map((m) => m.id);
-
-  const attendedCount = await prisma.attendance.count({
-    where: { studentId, meetingId: { in: meetingIds } },
-  });
-
-  const percentage = Math.round((attendedCount / totalMeetings) * 100);
-
-  if (percentage < 80) {
-    // Check if enrollment is currently active
-    const enrollment = await prisma.enrollment.findUnique({
-      where: { studentId_courseId: { studentId, courseId } },
-    });
-
-    if (enrollment && enrollment.status === 'ACTIVE') {
-      await prisma.enrollment.update({
-        where: { studentId_courseId: { studentId, courseId } },
-        data: { status: 'DROPPED' },
-      });
-
-      // Notify student
-      await prisma.notification.create({
-        data: {
-          userId: studentId,
-          title: 'Enrollment Deactivated — Low Attendance',
-          message: `Your attendance has fallen below 80% (${percentage}%). Your enrollment has been deactivated. Please contact the admin to reactivate.`,
-          type: 'ERROR',
-          link: '/student/my-courses',
-        },
-      });
-
-      // Notify admins
-      const admins = await prisma.user.findMany({
-        where: { role: 'ADMIN', isActive: true },
-        select: { id: true },
-      });
-      if (admins.length) {
-        const course = await prisma.course.findUnique({ where: { id: courseId }, select: { title: true } });
-        const student = await prisma.user.findUnique({ where: { id: studentId }, select: { name: true, email: true } });
-        await prisma.notification.createMany({
-          data: admins.map((admin) => ({
-            userId: admin.id,
-            title: 'Auto-Deactivation: Low Attendance',
-            message: `Student ${student?.name} (${student?.email}) was auto-deactivated from "${course?.title}" due to attendance below 80% (${percentage}%).`,
-            type: 'WARNING',
-            link: '/admin/enrollments',
-          })),
-        });
-      }
-    }
-  }
-}
-
 function adjustMeetingStatuses(meetings) {
   const now = new Date();
   return meetings.map(meeting => {
@@ -510,13 +443,6 @@ const zoomController = {
       where: { meetingId_studentId: { meetingId: meeting.id, studentId: userId } },
       data: { leftAt, duration: durationMins },
     });
-
-    // ── Auto-deactivate enrollment if attendance falls below 80% ──────────
-    try {
-      await checkAndDeactivateEnrollment(userId, meeting.courseId);
-    } catch (err) {
-      console.error('[Attendance Check Error]:', err.message);
-    }
 
     sendSuccess(res, 'Leave time recorded.', { attendance });
   }),
