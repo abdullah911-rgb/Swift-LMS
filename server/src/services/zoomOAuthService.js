@@ -250,7 +250,8 @@ const zoomOAuthService = {
       settings: {
         host_video: true,
         participant_video: true,
-        join_before_host: false,
+        join_before_host: true,
+        jbh_time: 0,
         mute_upon_entry: false,
         waiting_room: false,
         auto_recording: 'none',

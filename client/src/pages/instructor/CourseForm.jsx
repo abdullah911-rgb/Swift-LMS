@@ -1195,58 +1195,70 @@ const CourseForm = () => {
               <div className="text-center py-6 text-slate-400 text-xs">No class sessions started yet.</div>
             ) : (
               <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
-                {meetings.map((meeting) => (
-                  <div key={meeting.id} className="p-3.5 border border-slate-100 rounded-xl space-y-2.5 bg-slate-50/30 text-xs hover:border-primary-100 transition-colors">
-                    <div className="flex justify-between items-start gap-2">
-                      <div className="min-w-0">
-                        <p className="font-bold text-slate-800 line-clamp-1">{meeting.topic}</p>
-                        <p className="text-[10px] text-slate-400 mt-0.5">
-                          {meeting.meetingId ? `ID: ${meeting.meetingId}` : 'Pending admin approval'}
-                        </p>
-                        {meeting.rejectedNote && (
-                          <p className="text-[10px] text-red-500 mt-0.5">Rejected: {meeting.rejectedNote}</p>
-                        )}
+                {meetings.map((meeting) => {
+                  const s = meeting.status;
+                  const start = new Date(meeting.startTime);
+                  const end = new Date(start.getTime() + (meeting.duration || 60) * 60 * 1000);
+                  const now = new Date();
+                  let currentStatus = s;
+                  if (s === 'SCHEDULED' && now >= start && now < end) currentStatus = 'LIVE';
+                  if ((s === 'LIVE' || s === 'SCHEDULED') && now >= end) currentStatus = 'ENDED';
+
+                  const targetMeetingNumber = meeting.meetingId || meeting.id;
+
+                  return (
+                    <div key={meeting.id} className="p-3.5 border border-slate-100 rounded-xl space-y-2.5 bg-slate-50/30 text-xs hover:border-primary-100 transition-colors">
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="min-w-0">
+                          <p className="font-bold text-slate-800 line-clamp-1">{meeting.topic}</p>
+                          <p className="text-[10px] text-slate-400 mt-0.5">
+                            {meeting.meetingId ? `ID: ${meeting.meetingId}` : 'Pending admin approval'}
+                          </p>
+                          {meeting.rejectedNote && (
+                            <p className="text-[10px] text-red-500 mt-0.5">Rejected: {meeting.rejectedNote}</p>
+                          )}
+                        </div>
+                        <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] uppercase tracking-wider border shrink-0 ${
+                          currentStatus === 'LIVE'
+                            ? 'bg-red-50 text-red-700 border-red-100 animate-pulse font-extrabold'
+                            : currentStatus === 'PENDING_APPROVAL'
+                            ? 'bg-amber-50 text-amber-700 border-amber-100'
+                            : currentStatus === 'REJECTED'
+                            ? 'bg-red-50 text-red-600 border-red-100'
+                            : 'bg-slate-50 text-slate-400 border-slate-150'
+                        }`}>
+                          {currentStatus === 'PENDING_APPROVAL' ? 'Awaiting Approval' : currentStatus}
+                        </span>
                       </div>
-                      <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] uppercase tracking-wider border shrink-0 ${
-                        meeting.status === 'LIVE'
-                          ? 'bg-red-50 text-red-700 border-red-100 animate-pulse font-extrabold'
-                          : meeting.status === 'PENDING_APPROVAL'
-                          ? 'bg-amber-50 text-amber-700 border-amber-100'
-                          : meeting.status === 'REJECTED'
-                          ? 'bg-red-50 text-red-600 border-red-100'
-                          : 'bg-slate-50 text-slate-400 border-slate-150'
-                      }`}>
-                        {meeting.status === 'PENDING_APPROVAL' ? 'Awaiting Approval' : meeting.status}
-                      </span>
+
+                      <div className="text-[10px] text-slate-500 leading-tight space-y-0.5">
+                        <p>Start: {new Date(meeting.startTime).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</p>
+                        <p>Duration: {meeting.duration} Mins</p>
+                      </div>
+
+                      {currentStatus === 'PENDING_APPROVAL' && (
+                        <p className="text-[10px] text-amber-600 pt-1">Waiting for admin to approve this class request.</p>
+                      )}
+
+                      {currentStatus === 'LIVE' && targetMeetingNumber && (
+                        <div className="flex gap-2 pt-1">
+                          <Link to={`/zoom-classroom/${targetMeetingNumber}?courseId=${courseId}`} className="flex-1">
+                            <Button variant="outline" size="sm" className="w-full text-[10px] py-1 cursor-pointer">Enter Classroom</Button>
+                          </Link>
+                          <Button variant="secondary" size="sm" className="flex-1 text-[10px] py-1 text-red-600 hover:text-red-700 cursor-pointer" onClick={() => handleEndLiveClass(meeting.id)}>End</Button>
+                        </div>
+                      )}
+
+                      {currentStatus === 'SCHEDULED' && targetMeetingNumber && (
+                        <div className="flex gap-2 pt-1">
+                          <Link to={`/zoom-classroom/${targetMeetingNumber}?courseId=${courseId}`} className="flex-1">
+                            <Button variant="primary" size="sm" className="w-full text-[10px] py-1 cursor-pointer">Start Class</Button>
+                          </Link>
+                        </div>
+                      )}
                     </div>
-
-                    <div className="text-[10px] text-slate-500 leading-tight space-y-0.5">
-                      <p>Start: {new Date(meeting.startTime).toLocaleString()}</p>
-                      <p>Duration: {meeting.duration} Mins</p>
-                    </div>
-
-                    {meeting.status === 'PENDING_APPROVAL' && (
-                      <p className="text-[10px] text-amber-600 pt-1">Waiting for admin to approve this class request.</p>
-                    )}
-
-                    {meeting.status === 'LIVE' && meeting.meetingId && (
-                      <div className="flex gap-2 pt-1">
-                        <Link to={`/zoom-classroom/${meeting.meetingId}?courseId=${courseId}`} className="flex-1">
-                          <Button variant="outline" size="sm" className="w-full text-[10px] py-1 cursor-pointer">Enter Classroom</Button>
-                        </Link>
-                        <Button variant="secondary" size="sm" className="flex-1 text-[10px] py-1 text-red-600 hover:text-red-700 cursor-pointer" onClick={() => handleEndLiveClass(meeting.id)}>End</Button>
-                      </div>
-                    )}
-
-                    {meeting.status === 'SCHEDULED' && meeting.meetingId && (
-                      <div className="flex gap-2 pt-1">
-                        <Link to={`/zoom-classroom/${meeting.meetingId}?courseId=${courseId}`} className="flex-1">
-                          <Button variant="primary" size="sm" className="w-full text-[10px] py-1 cursor-pointer">Start Class</Button>
-                        </Link>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </Card>

@@ -6,6 +6,61 @@ import { zoomService } from '../services/portalService';
 import { API_URL } from '../constants';
 import { getRoleHomePath } from '../utils/authRedirect';
 
+// ── Global MediaStream Tracker: Intercepts all getUserMedia tracks so they can be 100% stopped ──
+if (typeof window !== 'undefined' && !window.__lmsMediaTracked) {
+  window.__lmsMediaTracked = true;
+  window.__lmsActiveTracks = new Set();
+  if (navigator?.mediaDevices?.getUserMedia) {
+    const origGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+    navigator.mediaDevices.getUserMedia = async (...args) => {
+      const stream = await origGetUserMedia(...args);
+      if (stream && stream.getTracks) {
+        stream.getTracks().forEach((track) => {
+          window.__lmsActiveTracks.add(track);
+          track.addEventListener('ended', () => {
+            window.__lmsActiveTracks.delete(track);
+          });
+        });
+      }
+      return stream;
+    };
+  }
+}
+
+// ── Stop 100% of camera/microphone hardware tracks in the window ──────────────
+function stopMediaTracks() {
+  try {
+    if (window.__lmsActiveTracks) {
+      window.__lmsActiveTracks.forEach((track) => {
+        try {
+          track.stop();
+          track.enabled = false;
+        } catch (_) {}
+      });
+      window.__lmsActiveTracks.clear();
+    }
+  } catch (_) {}
+
+  try {
+    const mediaEls = document.querySelectorAll('video, audio');
+    mediaEls.forEach((el) => {
+      if (el.srcObject) {
+        const stream = el.srcObject;
+        if (stream && stream.getTracks) {
+          stream.getTracks().forEach((track) => {
+            try {
+              track.stop();
+              track.enabled = false;
+            } catch (_) {}
+          });
+        }
+        el.srcObject = null;
+      }
+      try { el.pause(); } catch (_) {}
+    });
+  } catch (_) {}
+}
+
 // ── Resolve the embedded SDK (handles both CJS and ESM module shapes) ─────────
 function getZoomEmbedded() {
   const mod = ZoomMtgEmbeddedImport;
@@ -23,24 +78,6 @@ function getBackPath(role, courseId) {
   return getRoleHomePath(role);
 }
 
-function stopMediaTracks() {
-  try {
-    const mediaEls = document.querySelectorAll('video, audio');
-    mediaEls.forEach(el => {
-      if (el.srcObject) {
-        const stream = el.srcObject;
-        if (stream && stream.getTracks) {
-          stream.getTracks().forEach(track => {
-            try { track.stop(); } catch (_) {}
-          });
-        }
-        el.srcObject = null;
-      }
-      try { el.pause(); } catch (_) {}
-    });
-  } catch (_) {}
-}
-
 export default function ZoomClassroom() {
   const { meetingId } = useParams();
   const [searchParams] = useSearchParams();
@@ -53,6 +90,7 @@ export default function ZoomClassroom() {
   const attendanceRecorded = useRef(false);
   const hasJoinedRef = useRef(false);
   const isLeavingRef = useRef(false);
+  const [meetingDbId, setMeetingDbId] = useState(null);
 
   const [status, setStatus] = useState('loading');
   const [errorMsg, setErrorMsg] = useState('');
@@ -64,8 +102,16 @@ export default function ZoomClassroom() {
   const cleanupClient = useCallback(async () => {
     stopMediaTracks();
     if (clientRef.current) {
-      try { await clientRef.current.leave(); } catch (_) { /* ignore */ }
+      try { await clientRef.current.leave(); } catch (_) {}
+      try {
+        if (typeof clientRef.current.destroy === 'function') {
+          clientRef.current.destroy();
+        }
+      } catch (_) {}
       clientRef.current = null;
+    }
+    if (containerRef.current) {
+      containerRef.current.innerHTML = '';
     }
   }, []);
 
@@ -97,6 +143,25 @@ export default function ZoomClassroom() {
     goBack();
   }, [meetingId, cleanupClient, goBack]);
 
+  const handleEndClassForHost = useCallback(async () => {
+    if (!window.confirm('Are you sure you want to end this live class for all participants?')) return;
+    if (isLeavingRef.current) return;
+    isLeavingRef.current = true;
+
+    try {
+      await zoomService.endClass(meetingDbId || meetingId);
+    } catch (e) {
+      console.warn('End class error:', e);
+    }
+
+    if (attendanceRecorded.current) {
+      try { await zoomService.leaveAttendance(meetingId); } catch (_) {}
+    }
+
+    await cleanupClient();
+    goBack();
+  }, [meetingDbId, meetingId, cleanupClient, goBack]);
+
   // ── Main init effect ──────────────────────────────────────────────────────
   useEffect(() => {
     if (loading || !user) return;
@@ -109,11 +174,16 @@ export default function ZoomClassroom() {
         hasJoinedRef.current = false;
         isLeavingRef.current = false;
 
-        // 1. Resolve SDK
+        // 1. Clean container DOM
+        if (containerRef.current) {
+          containerRef.current.innerHTML = '';
+        }
+
+        // 2. Resolve SDK
         const ZoomMtgEmbedded = getZoomEmbedded();
         if (!isMounted) return;
 
-        // 2. Wait for container to have real dimensions (Zoom SDK needs this)
+        // 3. Wait for container to have real dimensions (Zoom SDK requires this)
         await new Promise((resolve) => {
           let tries = 0;
           const check = () => {
@@ -128,8 +198,7 @@ export default function ZoomClassroom() {
 
         setStatus('joining');
 
-        // 3. Fetch signature from backend
-        //    role: 1 = host (instructor/admin), 0 = attendee (student)
+        // 4. Fetch signature from backend (role: 1 = host, 0 = attendee)
         const sdkRole = isHost ? 1 : 0;
         const { data: sigResp } = await zoomService.getSignature(meetingId, sdkRole);
         const payload = sigResp?.data;
@@ -142,16 +211,17 @@ export default function ZoomClassroom() {
           );
         }
 
-        const { signature, sdkKey, meetingNumber, password, zak, joinUrl: meetingJoinUrl } = payload;
+        const { signature, sdkKey, meetingNumber, password, zak, joinUrl: meetingJoinUrl, meetingDbId: dbId } = payload;
         if (meetingJoinUrl) setJoinUrl(meetingJoinUrl);
+        if (dbId) setMeetingDbId(dbId);
 
         if (!isMounted) return;
 
-        // 4. Create client
+        // 5. Create client
         const client = ZoomMtgEmbedded.createClient();
         clientRef.current = client;
 
-        // 5. Init — wrap in try/catch to handle SDK-internal crashes
+        // 6. Init container
         const containerEl = containerRef.current;
         if (!containerEl) throw new Error('Meeting container element not found.');
 
@@ -163,7 +233,6 @@ export default function ZoomClassroom() {
         } catch (initErr) {
           const msg = initErr?.message || String(initErr);
           console.error('[Zoom] client.init() failed:', msg);
-          // SDK crashed internally — show fallback with joinUrl
           if (!isMounted) return;
           setStatus('error');
           setErrorMsg('Zoom SDK could not initialize in this browser.');
@@ -172,20 +241,20 @@ export default function ZoomClassroom() {
 
         if (!isMounted) return;
 
-        // Register connection listener AFTER client.init to avoid "includes" of undefined error
+        // Register connection listener
         client.on('connection-change', (ev) => {
           if (!isMounted) return;
           console.log('[Zoom] connection-change:', ev);
           if (ev?.state === 'Fail') {
             handleJoinFailure(
-              ev.reason || ev.errorMessage || 'Connection failed. Signature may be invalid.'
+              ev.reason || ev.errorMessage || 'Connection failed. Please try again.'
             );
           } else if (ev?.state === 'Closed' && hasJoinedRef.current) {
             handleLeave();
           }
         });
 
-        // 6. Join — do NOT pass `role`; it is already encoded in the signature
+        // 7. Join meeting
         const safeEmail = (user?.email && user.email.includes('@')) ? user.email : 'student@lms.com';
         try {
           await client.join({
@@ -200,7 +269,6 @@ export default function ZoomClassroom() {
         } catch (joinErr) {
           const msg = joinErr?.message || String(joinErr);
           console.error('[Zoom] client.join() failed:', msg);
-          // Join crashed — show fallback with joinUrl
           if (!isMounted) return;
           setStatus('error');
           setErrorMsg('Zoom embedded classroom could not connect. Use the button below to join via the Zoom app.');
@@ -211,7 +279,7 @@ export default function ZoomClassroom() {
         hasJoinedRef.current = true;
         setStatus('live');
 
-        // 7. Record attendance
+        // 8. Record attendance
         try {
           await zoomService.joinAttendance(meetingId);
           attendanceRecorded.current = true;
@@ -223,6 +291,7 @@ export default function ZoomClassroom() {
         if (!isMounted) return;
         console.error('[Zoom] init error:', err);
         const msg =
+          err?.response?.data?.message ||
           err?.reason ||
           err?.errorMessage ||
           err?.message ||
@@ -240,9 +309,10 @@ export default function ZoomClassroom() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [meetingId, user, loading]);
 
-  // ── Send leave beacon on page unload ────────────────────────────────────
+  // ── Send leave beacon on page unload / navigation ─────────────────────────
   useEffect(() => {
     const onUnload = () => {
+      stopMediaTracks();
       if (!attendanceRecorded.current) return;
       const token = sessionStorage.getItem('accessToken');
       fetch(`${API_URL}/zoom/${meetingId}/attendance/leave`, {
@@ -253,7 +323,12 @@ export default function ZoomClassroom() {
       }).catch(() => {});
     };
     window.addEventListener('beforeunload', onUnload);
-    return () => window.removeEventListener('beforeunload', onUnload);
+    window.addEventListener('pagehide', onUnload);
+    return () => {
+      window.removeEventListener('beforeunload', onUnload);
+      window.removeEventListener('pagehide', onUnload);
+      stopMediaTracks();
+    };
   }, [meetingId]);
 
   if (loading || !user) {
@@ -341,16 +416,31 @@ export default function ZoomClassroom() {
           </span>
         </div>
 
-        <button
-          onClick={status === 'error' ? goBack : handleLeave}
-          style={{
-            background: '#dc2626', color: '#fff', border: 'none',
-            borderRadius: 8, padding: '8px 18px', fontWeight: 600,
-            fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
-          }}
-        >
-          ✕ {status === 'error' ? 'Go Back' : 'Leave Class'}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {isHost && status === 'live' && (
+            <button
+              onClick={handleEndClassForHost}
+              style={{
+                background: '#991b1b', color: '#fff', border: '1px solid #dc2626',
+                borderRadius: 8, padding: '8px 16px', fontWeight: 600,
+                fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+              }}
+            >
+              ⏹ End Class (For All)
+            </button>
+          )}
+
+          <button
+            onClick={status === 'error' ? goBack : handleLeave}
+            style={{
+              background: '#dc2626', color: '#fff', border: 'none',
+              borderRadius: 8, padding: '8px 18px', fontWeight: 600,
+              fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+            }}
+          >
+            ✕ {status === 'error' ? 'Go Back' : 'Leave Class'}
+          </button>
+        </div>
       </div>
 
       {/* Loading / Joining spinner */}

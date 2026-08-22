@@ -440,10 +440,13 @@ const StudentCourseView = () => {
                   {course.zoomMeetings.map((meeting) => {
                         const mStatus = (() => {
                           const s = meeting.status;
-                          if (s !== 'LIVE' && s !== 'SCHEDULED') return s;
+                          if (s === 'CANCELLED' || s === 'REJECTED') return s;
                           const start = new Date(meeting.startTime);
                           const end = new Date(start.getTime() + (meeting.duration || 60) * 60 * 1000);
-                          return new Date() > end ? 'ENDED' : s;
+                          const now = new Date();
+                          if (now >= end) return 'ENDED';
+                          if (now >= start && now < end) return 'LIVE';
+                          return s;
                         })();
                         return (
                         <div key={meeting.id} className="p-4 border border-slate-100 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white hover:border-primary-100">
@@ -459,12 +462,12 @@ const StudentCourseView = () => {
                             </span>
                             <h4 className="text-sm font-bold text-slate-800">{meeting.topic}</h4>
                             <p className="text-[11px] text-slate-500">
-                              Date: {new Date(meeting.startTime).toLocaleString()} ({meeting.duration} Mins duration)
+                              Date: {new Date(meeting.startTime).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })} ({meeting.duration} Mins duration)
                             </p>
                             {meeting.agenda && <p className="text-xs text-slate-400 mt-1">{meeting.agenda}</p>}
                           </div>
-                          {mStatus === 'LIVE' ? (
-                            <Link to={`/zoom-classroom/${meeting.meetingId}?courseId=${course.id}`}>
+                          {mStatus === 'LIVE' && (meeting.meetingId || meeting.id) ? (
+                            <Link to={`/zoom-classroom/${meeting.meetingId || meeting.id}?courseId=${course.id}`}>
                               <Button variant="primary" size="sm" className="flex items-center gap-2">
                                 <IoVideocamOutline size={16} /> Join Live Class
                               </Button>

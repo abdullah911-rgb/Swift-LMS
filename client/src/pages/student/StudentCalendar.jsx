@@ -11,14 +11,16 @@ const STATUS_STYLES = {
   CANCELLED: { bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-200', dot: 'bg-orange-400', label: 'Cancelled'    },
 };
 
-// Re-evaluate meeting status client-side so stale LIVE/SCHEDULED classes
-// that have already passed show as ENDED without a page refresh.
+// Re-evaluate meeting status client-side so scheduled classes transition to LIVE
+// and completed classes transition to ENDED automatically.
 function computeCurrentStatus(meeting) {
   const status = meeting.status;
-  if (status !== 'LIVE' && status !== 'SCHEDULED') return status;
+  if (status === 'CANCELLED' || status === 'REJECTED') return status;
   const start = new Date(meeting.startTime);
   const end = new Date(start.getTime() + (meeting.duration || 60) * 60 * 1000);
-  if (new Date() > end) return 'ENDED';
+  const now = new Date();
+  if (now >= end) return 'ENDED';
+  if (now >= start && now < end) return 'LIVE';
   return status;
 }
 

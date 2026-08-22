@@ -189,12 +189,13 @@ const enrollmentController = {
               },
             },
             zoomMeetings: {
-              where: { status: { in: ['SCHEDULED', 'LIVE'] }, meetingId: { not: null } },
+              // Fetch SCHEDULED + LIVE; auto-end logic below handles edge cases
+              where: { meetingId: { not: null }, status: { in: ['SCHEDULED', 'LIVE', 'ENDED'] } },
               orderBy: { startTime: 'asc' },
-              take: 5,
+              take: 10,
               select: {
-                id: true, topic: true, startTime: true, duration: true,
-                joinUrl: true, status: true, agenda: true,
+                id: true, meetingId: true, topic: true, startTime: true,
+                duration: true, joinUrl: true, status: true, agenda: true,
               },
             },
             announcements: {
@@ -212,6 +213,35 @@ const enrollmentController = {
     });
 
     if (!enrollment) return sendError(res, 'You are not enrolled in this course.', 403);
+
+    // ── Auto-adjust meeting statuses server-side ────────────────────────────
+    const now = new Date();
+    const adjustedMeetings = await Promise.all(
+      (enrollment.course.zoomMeetings || []).map(async (m) => {
+        const start = new Date(m.startTime);
+        const end = new Date(start.getTime() + (m.duration || 60) * 60 * 1000);
+
+        // SCHEDULED → LIVE: start time has arrived but class isn't ended yet
+        if (m.status === 'SCHEDULED' && now >= start && now < end) {
+          try {
+            await prisma.zoomMeeting.update({ where: { id: m.id }, data: { status: 'LIVE' } });
+          } catch (_) {}
+          return { ...m, status: 'LIVE' };
+        }
+
+        // LIVE or SCHEDULED → ENDED: end time has passed
+        if ((m.status === 'LIVE' || m.status === 'SCHEDULED') && now >= end) {
+          try {
+            await prisma.zoomMeeting.update({ where: { id: m.id }, data: { status: 'ENDED' } });
+          } catch (_) {}
+          return { ...m, status: 'ENDED' };
+        }
+
+        return m;
+      })
+    );
+
+    enrollment.course.zoomMeetings = adjustedMeetings;
 
     sendSuccess(res, 'Course access granted.', { enrollment });
   }),

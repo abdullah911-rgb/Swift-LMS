@@ -12,6 +12,17 @@ const STATUS_STYLES = {
   CANCELLED:         { bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-200', dot: 'bg-orange-400', label: 'Cancelled' },
 };
 
+function computeCurrentStatus(meeting) {
+  const status = meeting.status;
+  if (status === 'CANCELLED' || status === 'REJECTED' || status === 'PENDING_APPROVAL') return status;
+  const start = new Date(meeting.startTime);
+  const end = new Date(start.getTime() + (meeting.duration || 60) * 60 * 1000);
+  const now = new Date();
+  if (now >= end) return 'ENDED';
+  if (now >= start && now < end) return 'LIVE';
+  return status;
+}
+
 const DAYS   = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
@@ -31,7 +42,7 @@ function CalendarGrid({ year, month, meetings, selectedDay, onSelectDay }) {
 
   const liveDays = useMemo(() => {
     const s = new Set();
-    meetings.filter(m => m.status === 'LIVE').forEach((m) => {
+    meetings.filter(m => computeCurrentStatus(m) === 'LIVE').forEach((m) => {
       const d = new Date(m.startTime);
       s.add(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
     });
@@ -99,7 +110,11 @@ export default function InstructorCalendar() {
     }
   };
 
-  useEffect(() => { fetchCalendar(); }, []);
+  useEffect(() => { 
+    fetchCalendar();
+    const interval = setInterval(fetchCalendar, 15000);
+    return () => clearInterval(interval);
+  }, []);
 
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
@@ -112,7 +127,10 @@ export default function InstructorCalendar() {
   const displayedMeetings = useMemo(() => {
     if (selectedDay === null) {
       return [...meetings]
-        .filter(m => m.status !== 'ENDED' && m.status !== 'CANCELLED')
+        .filter(m => {
+          const s = computeCurrentStatus(m);
+          return s !== 'ENDED' && s !== 'CANCELLED';
+        })
         .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
     }
     return monthMeetings
@@ -200,9 +218,11 @@ export default function InstructorCalendar() {
             ) : (
               <div className="space-y-3 max-h-[520px] overflow-y-auto pr-1">
                 {displayedMeetings.map((meeting) => {
-                  const style     = STATUS_STYLES[meeting.status] || STATUS_STYLES.ENDED;
-                  const startDate = new Date(meeting.startTime);
-                  const isLive    = meeting.status === 'LIVE';
+                  const currentStatus = computeCurrentStatus(meeting);
+                  const style         = STATUS_STYLES[currentStatus] || STATUS_STYLES.ENDED;
+                  const startDate     = new Date(meeting.startTime);
+                  const isLive        = currentStatus === 'LIVE';
+                  const isScheduled   = currentStatus === 'SCHEDULED';
 
                   return (
                     <div key={meeting.id} className={`p-4 rounded-xl border ${style.border} ${style.bg} space-y-2.5`}>
@@ -224,10 +244,12 @@ export default function InstructorCalendar() {
                         </div>
                       </div>
 
-                      {isLive && meeting.meetingId && (
-                        <Link to={`/zoom-classroom/${meeting.meetingId}?courseId=${meeting.course?.id}`}>
-                          <button className="w-full mt-1 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer">
-                            <IoVideocamOutline size={14} /> Enter Classroom
+                      {(isLive || isScheduled) && (meeting.meetingId || meeting.id) && (
+                        <Link to={`/zoom-classroom/${meeting.meetingId || meeting.id}?courseId=${meeting.course?.id}`}>
+                          <button className={`w-full mt-1 py-2 rounded-xl text-white text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer ${
+                            isLive ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700'
+                          }`}>
+                            <IoVideocamOutline size={14} /> {isLive ? 'Enter Classroom' : 'Start Class'}
                           </button>
                         </Link>
                       )}

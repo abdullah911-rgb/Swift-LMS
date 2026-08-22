@@ -165,7 +165,19 @@ function adjustMeetingStatuses(meetings) {
   return meetings.map(meeting => {
     const start = new Date(meeting.startTime);
     const end = new Date(start.getTime() + (meeting.duration || 60) * 60 * 1000);
-    if (now > end && (meeting.status === 'LIVE' || meeting.status === 'SCHEDULED')) {
+
+    // SCHEDULED -> LIVE: start time has arrived and class duration hasn't ended
+    if (meeting.status === 'SCHEDULED' && now >= start && now < end) {
+      const updatedMeeting = { ...meeting, status: 'LIVE' };
+      prisma.zoomMeeting.update({
+        where: { id: meeting.id },
+        data: { status: 'LIVE' }
+      }).catch(err => console.error('Error auto-starting meeting:', err));
+      return updatedMeeting;
+    }
+
+    // LIVE or SCHEDULED -> ENDED: duration has expired
+    if (now >= end && (meeting.status === 'LIVE' || meeting.status === 'SCHEDULED')) {
       const updatedMeeting = { ...meeting, status: 'ENDED' };
       prisma.zoomMeeting.update({
         where: { id: meeting.id },
@@ -325,15 +337,58 @@ const zoomController = {
     const { role = 0 } = req.body;
 
     const meeting = await prisma.zoomMeeting.findFirst({
-      where: { meetingId: String(meetingId) },
+      where: {
+        OR: [
+          { meetingId: String(meetingId) },
+          { id: String(meetingId) }
+        ]
+      },
+      include: { course: true },
     });
     if (!meeting) return sendError(res, 'Meeting not found.', 404);
+
+    // Validate enrollment / authorization
+    if (req.user.role === 'STUDENT') {
+      const enrollment = await prisma.enrollment.findUnique({
+        where: { studentId_courseId: { studentId: req.user.id, courseId: meeting.courseId } },
+      });
+      if (!enrollment) return sendError(res, 'You are not enrolled in this course.', 403);
+    } else if (req.user.role === 'INSTRUCTOR' && meeting.instructorId !== req.user.id) {
+      return sendError(res, 'Not authorized for this meeting.', 403);
+    }
+
+    const now = new Date();
+    const start = new Date(meeting.startTime);
+    const end = new Date(start.getTime() + (meeting.duration || 60) * 60 * 1000);
+
+    // Auto-update to LIVE if start time has arrived
+    if (meeting.status === 'SCHEDULED' && now >= start && now < end) {
+      await prisma.zoomMeeting.update({
+        where: { id: meeting.id },
+        data: { status: 'LIVE' },
+      }).catch(() => {});
+      meeting.status = 'LIVE';
+    }
+
+    // Auto-update to ENDED if end time has passed
+    if ((meeting.status === 'LIVE' || meeting.status === 'SCHEDULED') && now >= end) {
+      await prisma.zoomMeeting.update({
+        where: { id: meeting.id },
+        data: { status: 'ENDED' },
+      }).catch(() => {});
+      meeting.status = 'ENDED';
+    }
+
+    if (meeting.status === 'ENDED') {
+      return sendError(res, 'This live class has ended.', 400);
+    }
 
     if (!APPROVED_STATUSES.includes(meeting.status)) {
       return sendError(res, 'This class has not been approved yet.', 403);
     }
 
-    const cleanMeetingNumber = String(meetingId).replace(/\D/g, '');
+    const actualMeetingNumber = meeting.meetingId || meetingId;
+    const cleanMeetingNumber = String(actualMeetingNumber).replace(/\D/g, '');
     if (!cleanMeetingNumber) return sendError(res, 'Invalid meeting number.', 400);
 
     const sdkRole =
@@ -380,6 +435,8 @@ const zoomController = {
       zak: zakToken,
       password: meeting.password || '',
       joinUrl: meeting.joinUrl || null,
+      meetingDbId: meeting.id,
+      status: meeting.status,
     });
   }),
 
@@ -388,7 +445,12 @@ const zoomController = {
     const userId = req.user.id;
 
     const meeting = await prisma.zoomMeeting.findFirst({
-      where: { meetingId: String(meetingId) },
+      where: {
+        OR: [
+          { meetingId: String(meetingId) },
+          { id: String(meetingId) }
+        ]
+      },
     });
     if (!meeting) return sendError(res, 'Meeting not found.', 404);
 
@@ -406,7 +468,12 @@ const zoomController = {
     const userId = req.user.id;
 
     const meeting = await prisma.zoomMeeting.findFirst({
-      where: { meetingId: String(meetingId) },
+      where: {
+        OR: [
+          { meetingId: String(meetingId) },
+          { id: String(meetingId) }
+        ]
+      },
     });
     if (!meeting) return sendError(res, 'Meeting not found.', 404);
 
