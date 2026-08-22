@@ -493,13 +493,16 @@ const StudentCourseView = () => {
                   {course.zoomMeetings.map((meeting) => {
                         const mStatus = (() => {
                           const s = meeting.status;
-                          if (s === 'CANCELLED' || s === 'REJECTED') return s;
+                          // Terminal / admin-set states — never override with time
+                          if (s === 'ENDED' || s === 'CANCELLED' || s === 'REJECTED' || s === 'PENDING_APPROVAL') return s;
+                          if (s === 'LIVE') return 'LIVE';
+                          // For SCHEDULED: transition based on clock
                           const start = new Date(meeting.startTime);
                           const end = new Date(start.getTime() + (meeting.duration || 60) * 60 * 1000);
                           const now = new Date();
                           if (now >= end) return 'ENDED';
                           if (now >= start && now < end) return 'LIVE';
-                          return s;
+                          return s || 'SCHEDULED';
                         })();
                         return (
                         <div key={meeting.id} className="p-4 border border-slate-100 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white hover:border-primary-100">
