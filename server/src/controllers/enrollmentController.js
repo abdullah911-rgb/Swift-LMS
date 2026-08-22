@@ -214,36 +214,56 @@ const enrollmentController = {
 
     if (!enrollment) return sendError(res, 'You are not enrolled in this course.', 403);
 
-    // ── Auto-adjust meeting statuses server-side ────────────────────────────
-    const now = new Date();
-    const adjustedMeetings = await Promise.all(
-      (enrollment.course.zoomMeetings || []).map(async (m) => {
-        const start = new Date(m.startTime);
-        const end = new Date(start.getTime() + (m.duration || 60) * 60 * 1000);
+    // Check if certificate has been claimed / course completed
+    const certificate = await prisma.certificate.findUnique({
+      where: { studentId_courseId: { studentId, courseId } },
+      select: { id: true, certificateId: true, issuedAt: true },
+    });
 
-        // SCHEDULED → LIVE: start time has arrived but class isn't ended yet
-        if (m.status === 'SCHEDULED' && now >= start && now < end) {
-          try {
-            await prisma.zoomMeeting.update({ where: { id: m.id }, data: { status: 'LIVE' } });
-          } catch (_) {}
-          return { ...m, status: 'LIVE' };
-        }
+    const isCourseCompleted = enrollment.status === 'COMPLETED' || !!certificate;
 
-        // LIVE or SCHEDULED → ENDED: end time has passed
-        if ((m.status === 'LIVE' || m.status === 'SCHEDULED') && now >= end) {
-          try {
-            await prisma.zoomMeeting.update({ where: { id: m.id }, data: { status: 'ENDED' } });
-          } catch (_) {}
-          return { ...m, status: 'ENDED' };
-        }
+    if (isCourseCompleted) {
+      // Completed students cannot view or join live classes
+      enrollment.course.zoomMeetings = [];
+    } else {
+      // ── Auto-adjust meeting statuses server-side for active students ────────
+      const now = new Date();
+      const adjustedMeetings = await Promise.all(
+        (enrollment.course.zoomMeetings || []).map(async (m) => {
+          const start = new Date(m.startTime);
+          const end = new Date(start.getTime() + (m.duration || 60) * 60 * 1000);
 
-        return m;
-      })
-    );
+          // SCHEDULED → LIVE: start time has arrived but class isn't ended yet
+          if (m.status === 'SCHEDULED' && now >= start && now < end) {
+            try {
+              await prisma.zoomMeeting.update({ where: { id: m.id }, data: { status: 'LIVE' } });
+            } catch (_) {}
+            return { ...m, status: 'LIVE' };
+          }
 
-    enrollment.course.zoomMeetings = adjustedMeetings;
+          // LIVE or SCHEDULED → ENDED: end time has passed
+          if ((m.status === 'LIVE' || m.status === 'SCHEDULED') && now >= end) {
+            try {
+              await prisma.zoomMeeting.update({ where: { id: m.id }, data: { status: 'ENDED' } });
+            } catch (_) {}
+            return { ...m, status: 'ENDED' };
+          }
 
-    sendSuccess(res, 'Course access granted.', { enrollment });
+          return m;
+        })
+      );
+
+      enrollment.course.zoomMeetings = adjustedMeetings;
+    }
+
+    sendSuccess(res, 'Course access granted.', {
+      enrollment: {
+        ...enrollment,
+        isCompleted: isCourseCompleted,
+        certificateClaimed: !!certificate,
+        certificate: certificate || null,
+      },
+    });
   }),
 
   // POST /api/enrollments/:courseId/lessons/:lessonId/complete — Mark lesson complete

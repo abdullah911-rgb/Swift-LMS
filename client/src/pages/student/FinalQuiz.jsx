@@ -500,26 +500,46 @@ export default function FinalQuiz() {
         {/* Eligibility box */}
         {eligibility && (
           <div className={`p-4 rounded-xl border flex gap-3 ${
-            eligibility.eligible
+            eligibility.completed
+              ? 'bg-emerald-50/50 border-emerald-200 text-emerald-900'
+              : eligibility.eligible
               ? 'bg-emerald-50/50 border-emerald-100 text-emerald-800'
               : 'bg-amber-50/50 border-amber-100 text-amber-800'
           }`}>
             <div className="shrink-0 mt-0.5">
-              {eligibility.eligible ? (
+              {eligibility.completed ? (
+                <IoRibbonOutline size={20} className="text-emerald-600" />
+              ) : eligibility.eligible ? (
                 <IoCheckmarkCircleOutline size={20} className="text-emerald-600" />
               ) : (
                 <IoLockClosedOutline size={20} className="text-amber-600" />
               )}
             </div>
-            <div>
+            <div className="flex-1">
               <p className="text-xs font-bold m-0">
-                {eligibility.eligible ? 'Quiz Access Unlocked' : 'Quiz Access Locked'}
+                {eligibility.completed
+                  ? 'Course Completed & Certified'
+                  : eligibility.eligible
+                  ? 'Quiz Access Unlocked'
+                  : 'Quiz Access Locked'}
               </p>
               <p className="text-xs text-slate-600 mt-0.5 m-0 leading-relaxed">
-                {eligibility.eligible
+                {eligibility.completed
+                  ? 'You have already completed this course and claimed your certificate. The final assessment is closed.'
+                  : eligibility.eligible
                   ? `You are eligible to start the quiz. You have ${eligibility.remainingAttempts} attempt(s) remaining out of ${eligibility.maxAttempts}.`
                   : eligibility.reason}
               </p>
+              {eligibility.completed && (
+                <div className="mt-3">
+                  <Link
+                    to="/student/certificates"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm"
+                  >
+                    🎓 View Your Certificate
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -547,7 +567,7 @@ export default function FinalQuiz() {
         )}
 
         {/* Start button */}
-        {eligibility?.eligible && (
+        {eligibility?.eligible && !eligibility?.completed && (
           <div className="flex justify-end pt-2 border-t border-slate-50">
             <Button onClick={handleStartQuiz} className="cursor-pointer">
               🚀 Start Final Assessment

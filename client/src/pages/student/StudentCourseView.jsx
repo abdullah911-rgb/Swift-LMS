@@ -24,6 +24,7 @@ import {
   IoTimeOutline,
   IoAlertCircleOutline,
   IoStatsChartOutline,
+  IoRibbonOutline,
 } from 'react-icons/io5';
 import toast from 'react-hot-toast';
 
@@ -220,6 +221,7 @@ const StudentCourseView = () => {
   }
 
   const { course } = enrollment;
+  const isCompleted = Boolean(enrollment.isCompleted || enrollment.status === 'COMPLETED' || enrollment.certificateClaimed);
 
   return (
     <div className="space-y-6 font-sans">
@@ -230,23 +232,62 @@ const StudentCourseView = () => {
         </Link>
         <div>
           <h1 className="text-xl sm:text-2xl font-heading font-bold text-primary-900">{course.title}</h1>
-          <div className="flex items-center gap-4 mt-1 flex-wrap">
+          <div className="flex items-center gap-3 mt-1 flex-wrap">
             <p className="text-xs text-slate-400 font-semibold">Instructor: {course.instructor?.name}</p>
-            <span className="text-[10px] font-bold text-accent-700 bg-accent-50 px-2 py-0.5 rounded border border-accent-100 uppercase">
-              {enrollment.progress}% Complete
-            </span>
-            {enrollment.progress >= 80 && course.certificate && (
-              <button
-                onClick={handleClaimCertificate}
-                disabled={claimingCert}
-                className="flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 uppercase hover:bg-emerald-100 transition-colors disabled:opacity-60 cursor-pointer"
-              >
-                {claimingCert ? '⏳ Generating...' : '🎓 Claim Certificate'}
-              </button>
+            {isCompleted ? (
+              <>
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200 uppercase flex items-center gap-1">
+                  <IoCheckmarkCircleSharp size={13} /> Course Completed
+                </span>
+                <Link
+                  to="/student/certificates"
+                  className="flex items-center gap-1 text-[10px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-2.5 py-0.5 rounded uppercase transition-colors shadow-sm cursor-pointer"
+                >
+                  🎓 View Certificate
+                </Link>
+              </>
+            ) : (
+              <>
+                <span className="text-[10px] font-bold text-accent-700 bg-accent-50 px-2 py-0.5 rounded border border-accent-100 uppercase">
+                  {enrollment.progress}% Complete
+                </span>
+                {enrollment.progress >= 80 && course.certificate && (
+                  <button
+                    onClick={handleClaimCertificate}
+                    disabled={claimingCert}
+                    className="flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 uppercase hover:bg-emerald-100 transition-colors disabled:opacity-60 cursor-pointer"
+                  >
+                    {claimingCert ? '⏳ Generating...' : '🎓 Claim Certificate'}
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>
       </div>
+
+      {/* Completed Banner */}
+      {isCompleted && (
+        <div className="p-4 bg-emerald-50 border border-emerald-200/80 rounded-2xl flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-emerald-100 text-emerald-700 rounded-xl shrink-0">
+              <IoRibbonOutline size={22} />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-emerald-950">Course Completed & Certificate Earned</p>
+              <p className="text-[11px] text-emerald-800 mt-0.5">
+                You have graduated from this course. Your portal access is in view-only archive mode (live classes, quizzes, and new assignment submissions are closed).
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/student/certificates"
+            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm shrink-0"
+          >
+            🎓 Open Certificate
+          </Link>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
@@ -431,7 +472,19 @@ const StudentCourseView = () => {
                     <p className="text-xs text-slate-500 mt-1">Access scheduled sessions and connect with Swift trainers live.</p>
                   </div>
 
-                  {(!course.zoomMeetings || course.zoomMeetings.length === 0) ? (
+                  {isCompleted ? (
+                    <div className="p-8 border border-emerald-100 bg-emerald-50/40 rounded-2xl text-center space-y-3">
+                      <div className="h-14 w-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
+                        <IoRibbonOutline size={28} />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-800">Course Completed — Live Classes Closed</h3>
+                        <p className="text-xs text-slate-600 max-w-md mx-auto mt-1 leading-relaxed">
+                          You have completed this course and earned your certificate. Live Zoom sessions and attendance are only open for active course sessions.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (!course.zoomMeetings || course.zoomMeetings.length === 0) ? (
                     <div className="p-8 border border-dashed border-slate-200 rounded-2xl text-center text-slate-400 text-sm">
                       No active Zoom sessions scheduled for this course.
                     </div>
@@ -645,7 +698,12 @@ const StudentCourseView = () => {
                             )}
 
                             {/* Upload / Re-submit form */}
-                            {isSubmitting ? (
+                            {isCompleted ? (
+                              <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl text-center text-xs font-semibold text-slate-500 flex items-center justify-center gap-1.5">
+                                <IoCheckmarkCircleSharp size={15} className="text-emerald-600" />
+                                Course Completed — Assignment Submissions Closed
+                              </div>
+                            ) : isSubmitting ? (
                               <div className="space-y-3 pt-2 border-t border-slate-200/60">
                                 <p className="text-xs font-bold text-slate-600">
                                   {mySubmission ? 'Re-submit Your Work' : 'Submit Your Work'}
@@ -746,46 +804,71 @@ const StudentCourseView = () => {
 
               {activeTab === 'QUIZ' && (
                 <div className="space-y-6 text-center py-8">
-                  <div className="h-16 w-16 bg-primary-50 text-primary-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
-                    <IoClipboardOutline size={30} />
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="text-base font-extrabold text-slate-800">Final Assessment Quiz</h3>
-                    <p className="text-xs text-slate-500 max-w-md mx-auto">
-                      Complete this course by taking the final quiz. To pass the course and lock in your completion certificate, you must satisfy attendance, assignments and quiz criteria.
-                    </p>
-                  </div>
-
-                  {loadingQuizStatus ? (
-                    <div className="flex flex-col items-center justify-center py-4 space-y-2">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
-                      <p className="text-xs text-slate-400 font-semibold font-sans">Checking quiz availability...</p>
-                    </div>
-                  ) : quizStatus && !quizStatus.eligible && (
-                      quizStatus.reason?.toLowerCase().includes('no final quiz') ||
-                      quizStatus.reason?.toLowerCase().includes('not yet published') ||
-                      quizStatus.reason?.toLowerCase().includes('no questions') ||
-                      quizStatus.reason?.toLowerCase().includes('not set')
-                    ) ? (
-                    <div className="bg-amber-50 border border-amber-200/80 rounded-2xl p-6 max-w-md mx-auto text-amber-900 text-xs space-y-2">
-                      <div className="flex items-center justify-center gap-2 font-extrabold text-sm text-amber-800">
-                        <IoAlertCircleOutline size={20} className="text-amber-600" />
-                        <span>Quiz Not Uploaded Yet</span>
+                  {isCompleted ? (
+                    <>
+                      <div className="h-16 w-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
+                        <IoRibbonOutline size={30} />
                       </div>
-                      <p className="text-slate-600 m-0 leading-relaxed">
-                        The instructor has not uploaded or published the final quiz for this course yet. Please check back later or contact your instructor.
-                      </p>
-                    </div>
+                      <div className="space-y-2">
+                        <h3 className="text-base font-extrabold text-slate-800">Assessment Completed & Certified</h3>
+                        <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+                          You have completed all assessment requirements and claimed your verified certificate. The final assessment is closed.
+                        </p>
+                      </div>
+                      <div className="pt-2 flex justify-center gap-3">
+                        <Link
+                          to="/student/certificates"
+                          className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md transition-all cursor-pointer"
+                        >
+                          <span>🎓 View Your Certificate</span>
+                          <IoChevronForwardOutline size={14} />
+                        </Link>
+                      </div>
+                    </>
                   ) : (
-                    <div className="pt-2">
-                      <Link
-                        to={`/student/course/${courseId}/quiz`}
-                        className="inline-flex items-center gap-2 px-5 py-3 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold rounded-xl shadow-md shadow-primary-600/10 transition-all cursor-pointer"
-                      >
-                        <span>Go to Final Quiz Screen</span>
-                        <IoChevronForwardOutline size={14} />
-                      </Link>
-                    </div>
+                    <>
+                      <div className="h-16 w-16 bg-primary-50 text-primary-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
+                        <IoClipboardOutline size={30} />
+                      </div>
+                      <div className="space-y-2">
+                        <h3 className="text-base font-extrabold text-slate-800">Final Assessment Quiz</h3>
+                        <p className="text-xs text-slate-500 max-w-md mx-auto">
+                          Complete this course by taking the final quiz. To pass the course and lock in your completion certificate, you must satisfy attendance, assignments and quiz criteria.
+                        </p>
+                      </div>
+
+                      {loadingQuizStatus ? (
+                        <div className="flex flex-col items-center justify-center py-4 space-y-2">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
+                          <p className="text-xs text-slate-400 font-semibold font-sans">Checking quiz availability...</p>
+                        </div>
+                      ) : quizStatus && !quizStatus.eligible && (
+                          quizStatus.reason?.toLowerCase().includes('no final quiz') ||
+                          quizStatus.reason?.toLowerCase().includes('not yet published') ||
+                          quizStatus.reason?.toLowerCase().includes('no questions') ||
+                          quizStatus.reason?.toLowerCase().includes('not set')
+                        ) ? (
+                        <div className="bg-amber-50 border border-amber-200/80 rounded-2xl p-6 max-w-md mx-auto text-amber-900 text-xs space-y-2">
+                          <div className="flex items-center justify-center gap-2 font-extrabold text-sm text-amber-800">
+                            <IoAlertCircleOutline size={20} className="text-amber-600" />
+                            <span>Quiz Not Uploaded Yet</span>
+                          </div>
+                          <p className="text-slate-600 m-0 leading-relaxed">
+                            The instructor has not uploaded or published the final quiz for this course yet. Please check back later or contact your instructor.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="pt-2">
+                          <Link
+                            to={`/student/course/${courseId}/quiz`}
+                            className="inline-flex items-center gap-2 px-5 py-3 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold rounded-xl shadow-md shadow-primary-600/10 transition-all cursor-pointer"
+                          >
+                            <span>Go to Final Quiz Screen</span>
+                            <IoChevronForwardOutline size={14} />
+                          </Link>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               )}

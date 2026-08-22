@@ -210,11 +210,21 @@ async function issueCertificateWithMarks(studentId, courseId, breakdown) {
     if (!isNaN(num)) next = num + 1;
   }
 
-  const certificateId = `${prefix}${String(next).padStart(8, '0')}`;
-
-  return prisma.certificate.create({
+  const cert = await prisma.certificate.create({
     data: { studentId, courseId, certificateId, ...marksData },
   });
+
+  // Mark student enrollment as COMPLETED
+  await prisma.enrollment.updateMany({
+    where: { studentId, courseId },
+    data: {
+      status: 'COMPLETED',
+      completedAt: new Date(),
+      progress: 100,
+    },
+  }).catch(() => {});
+
+  return cert;
 }
 
 module.exports = {

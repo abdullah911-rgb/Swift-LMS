@@ -813,6 +813,18 @@ async function _checkStudentEligibility(studentId, courseId) {
     return { eligible: false, reason: 'Your enrollment is inactive. Please contact admin.' };
   }
 
+  // Check if student already claimed certificate or completed course
+  const certificate = await prisma.certificate.findUnique({
+    where: { studentId_courseId: { studentId, courseId } },
+  });
+  if (enrollment.status === 'COMPLETED' || certificate) {
+    return {
+      eligible: false,
+      reason: 'You have already completed this course and earned your certificate. The final assessment is closed.',
+      completed: true,
+    };
+  }
+
   // 2. Course published
   if (enrollment.course.status !== 'PUBLISHED') {
     return { eligible: false, reason: 'This course is not yet published.' };

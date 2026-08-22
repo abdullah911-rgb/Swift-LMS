@@ -166,6 +166,15 @@ const assignmentController = {
       where: { studentId_courseId: { studentId, courseId: assignment.courseId } },
     });
     if (!enrollment) return sendError(res, 'You are not enrolled in this course.', 403);
+    if (enrollment.status === 'DROPPED') return sendError(res, 'Your enrollment is inactive.', 403);
+
+    // Check if course is completed or certificate already claimed
+    const certificate = await prisma.certificate.findUnique({
+      where: { studentId_courseId: { studentId, courseId: assignment.courseId } },
+    });
+    if (enrollment.status === 'COMPLETED' || certificate) {
+      return sendError(res, 'You have already completed this course and earned your certificate. Assignment submissions are closed.', 403);
+    }
 
     const fileUrl = `/uploads/${req.file.filename}`;
     const fileType = path.extname(req.file.originalname).replace('.', '').toLowerCase();

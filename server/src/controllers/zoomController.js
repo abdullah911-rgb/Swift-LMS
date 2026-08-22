@@ -353,6 +353,14 @@ const zoomController = {
         where: { studentId_courseId: { studentId: req.user.id, courseId: meeting.courseId } },
       });
       if (!enrollment) return sendError(res, 'You are not enrolled in this course.', 403);
+      if (enrollment.status === 'DROPPED') return sendError(res, 'Your enrollment is inactive.', 403);
+
+      const certificate = await prisma.certificate.findUnique({
+        where: { studentId_courseId: { studentId: req.user.id, courseId: meeting.courseId } },
+      });
+      if (enrollment.status === 'COMPLETED' || certificate) {
+        return sendError(res, 'You have completed this course and earned your certificate. Live classes are closed for completed courses.', 403);
+      }
     } else if (req.user.role === 'INSTRUCTOR' && meeting.instructorId !== req.user.id) {
       return sendError(res, 'Not authorized for this meeting.', 403);
     }
@@ -454,6 +462,18 @@ const zoomController = {
     });
     if (!meeting) return sendError(res, 'Meeting not found.', 404);
 
+    if (req.user.role === 'STUDENT') {
+      const enrollment = await prisma.enrollment.findUnique({
+        where: { studentId_courseId: { studentId: userId, courseId: meeting.courseId } },
+      });
+      const certificate = await prisma.certificate.findUnique({
+        where: { studentId_courseId: { studentId: userId, courseId: meeting.courseId } },
+      });
+      if (enrollment?.status === 'COMPLETED' || certificate) {
+        return sendError(res, 'Course is completed. Attendance not recorded.', 403);
+      }
+    }
+
     const attendance = await prisma.attendance.upsert({
       where: { meetingId_studentId: { meetingId: meeting.id, studentId: userId } },
       update: { joinedAt: new Date(), leftAt: null, duration: null },
@@ -509,15 +529,28 @@ const zoomController = {
     };
 
     if (req.user.role === 'STUDENT') {
-      const enrollments = await prisma.enrollment.findMany({
+      // Exclude courses where student has completed the course or claimed a certificate
+      const completedCertificates = await prisma.certificate.findMany({
         where: { studentId: req.user.id },
         select: { courseId: true },
       });
-      const courseIds = enrollments.map((e) => e.courseId);
+      const completedCourseIds = new Set(completedCertificates.map((c) => c.courseId));
+
+      const enrollments = await prisma.enrollment.findMany({
+        where: { studentId: req.user.id, status: 'ACTIVE' },
+        select: { courseId: true },
+      });
+      const activeCourseIds = enrollments
+        .map((e) => e.courseId)
+        .filter((id) => !completedCourseIds.has(id));
+
+      if (activeCourseIds.length === 0) {
+        return sendSuccess(res, 'Calendar meetings fetched.', { meetings: [] });
+      }
 
       meetings = await prisma.zoomMeeting.findMany({
         where: {
-          courseId: { in: courseIds },
+          courseId: { in: activeCourseIds },
           status: { in: VISIBLE_TO_STUDENTS },
         },
         include,
