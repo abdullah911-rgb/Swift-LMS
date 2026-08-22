@@ -74,14 +74,29 @@ async function createZoomMeetingRecord({ courseId, instructorId, topic, agenda, 
 }
 
 async function notifyStudentsOfClass(meeting, courseId, isInstant) {
-  const enrollments = await prisma.enrollment.findMany({
+  // Exclude students who completed the course or claimed a certificate
+  const completedCerts = await prisma.certificate.findMany({
     where: { courseId },
     select: { studentId: true },
   });
-  if (!enrollments.length) return;
+  const completedStudentIds = new Set(completedCerts.map((c) => c.studentId));
+
+  const enrollments = await prisma.enrollment.findMany({
+    where: {
+      courseId,
+      status: { not: 'COMPLETED' },
+    },
+    select: { studentId: true },
+  });
+
+  const activeStudentEnrollments = enrollments.filter(
+    (e) => !completedStudentIds.has(e.studentId)
+  );
+
+  if (!activeStudentEnrollments.length) return;
 
   await prisma.notification.createMany({
-    data: enrollments.map((e) => ({
+    data: activeStudentEnrollments.map((e) => ({
       userId: e.studentId,
       title: isInstant ? '🔴 Live Class Started!' : '📅 Live Class Scheduled',
       message: isInstant
