@@ -66,6 +66,30 @@ if (config.env === 'development') {
 // Rate Limiter
 app.use('/api', generalLimiter);
 
+// Ensure database schema is synchronized on cold start (e.g. for newly added columns)
+const prisma = require('./config/db');
+let dbSynced = false;
+async function ensureDbSynced() {
+  if (dbSynced) return;
+  try {
+    await prisma.$executeRawUnsafe(`
+      ALTER TABLE "enrollments" ADD COLUMN IF NOT EXISTS "certificateEligible" BOOLEAN;
+    `);
+    dbSynced = true;
+    console.log('[DB Sync] Column certificateEligible verified/created successfully.');
+  } catch (err) {
+    dbSynced = true;
+    console.warn('[DB Sync warning]:', err.message);
+  }
+}
+
+app.use(async (req, res, next) => {
+  if (!dbSynced) {
+    await ensureDbSynced().catch(() => {});
+  }
+  next();
+});
+
 // Static uploads directory (use /tmp/uploads for serverless environments)
 const isServerless = process.env.VERCEL || process.env.LAMBDA_TASK_ROOT || process.env.AWS_EXECUTION_ENV;
 const uploadDir = isServerless 
