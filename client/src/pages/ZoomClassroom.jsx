@@ -125,6 +125,18 @@ function getBackPath(role, courseId) {
   return getRoleHomePath(role);
 }
 
+// Zoom Component View sizes the video canvas to viewSizes, then stacks the
+// mic/camera/share footer BELOW that canvas. If we pass the full container
+// height, the toolbar is pushed off-screen and clipped by overflow:hidden.
+const ZOOM_FOOTER_PX = 64;
+
+function measureZoomView(el) {
+  const width = Math.max(320, Math.floor(el?.offsetWidth || window.innerWidth));
+  const available = Math.floor(el?.offsetHeight || Math.max(window.innerHeight - 44, 240));
+  const height = Math.max(180, available - ZOOM_FOOTER_PX);
+  return { width, height };
+}
+
 export default function ZoomClassroom() {
   const { meetingId } = useParams();
   const [searchParams] = useSearchParams();
@@ -149,6 +161,17 @@ export default function ZoomClassroom() {
   const [activeSharerName, setActiveSharerName] = useState(null);
 
   const isHost = user?.role === 'INSTRUCTOR' || user?.role === 'ADMIN';
+
+  // Let Zoom's UI use the full viewport; global html/body/#root overflow-x:hidden
+  // otherwise clips the footer toolbar and blocks scrolling to it.
+  useEffect(() => {
+    document.body.classList.add('zoom-classroom-open');
+    document.documentElement.classList.add('zoom-classroom-open');
+    return () => {
+      document.body.classList.remove('zoom-classroom-open');
+      document.documentElement.classList.remove('zoom-classroom-open');
+    };
+  }, []);
 
   // ── Screen share tracking (instructor — own local share via getDisplayMedia) ──
   useEffect(() => {
@@ -195,20 +218,36 @@ export default function ZoomClassroom() {
     return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
   }, []);
 
-  // ── Force Zoom canvas to match container on any size change ──────────────
+  // ── Keep Zoom video + footer toolbar inside the visible container ────────
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     let resizeTimer;
+    const applySize = () => {
+      window.dispatchEvent(new Event('resize'));
+      const client = clientRef.current;
+      if (!client || typeof client.updateVideoOptions !== 'function') return;
+      const { width, height } = measureZoomView(el);
+      try {
+        client.updateVideoOptions({
+          viewSizes: {
+            default: { width, height },
+            ribbon: { width, height },
+          },
+        });
+      } catch (_) {}
+    };
     const ro = new ResizeObserver(() => {
-      // Throttle resize dispatches to avoid flooding during animations
       clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => {
-        window.dispatchEvent(new Event('resize'));
-      }, 100);
+      resizeTimer = setTimeout(applySize, 100);
     });
     ro.observe(el);
-    return () => { ro.disconnect(); clearTimeout(resizeTimer); };
+    window.addEventListener('resize', applySize);
+    return () => {
+      ro.disconnect();
+      clearTimeout(resizeTimer);
+      window.removeEventListener('resize', applySize);
+    };
   }, []);
 
 
@@ -330,7 +369,7 @@ export default function ZoomClassroom() {
           let tries = 0;
           const check = () => {
             const el = containerRef.current;
-            if (el && el.offsetWidth > 0) return resolve();
+            if (el && el.offsetWidth > 0 && el.offsetHeight > 120) return resolve();
             if (++tries > 60) return resolve(); // give up after 3s
             setTimeout(check, 50);
           };
@@ -364,26 +403,26 @@ export default function ZoomClassroom() {
         const containerEl = containerRef.current;
         if (!containerEl) throw new Error('Meeting container element not found.');
 
-        // ── Step 6: Init SDK with exact container pixel dimensions ──────────
-        // Wait one frame so container has real painted dimensions
+        // ── Step 6: Init SDK; leave room below the canvas for Zoom's footer ─
         await new Promise((r) => requestAnimationFrame(r));
-        const vw = Math.floor(containerEl.offsetWidth || window.innerWidth);
-        const vh = Math.floor(containerEl.offsetHeight || (window.innerHeight - 44));
+        const { width: vw, height: vh } = measureZoomView(containerEl);
 
         try {
           await client.init({
             zoomAppRoot: containerEl,
             language: 'en-US',
+            patchJsMedia: true,
+            leaveOnPageUnload: true,
             customize: {
               video: {
-                isResizable: true,
+                isResizable: false,
                 viewSizes: {
                   default: { width: vw, height: vh },
                   ribbon: { width: vw, height: vh },
                 },
               },
               sharing: {
-                isResizable: true,
+                isResizable: false,
                 viewSizes: {
                   default: { width: vw, height: vh },
                 },
@@ -543,13 +582,14 @@ export default function ZoomClassroom() {
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div style={{
-      height: '100vh',
+      height: '100dvh',
       width: '100%',
       background: '#0f172a',
       display: 'flex',
       flexDirection: 'column',
       fontFamily: "'Inter', 'Segoe UI', sans-serif",
       overflow: 'hidden',
+      position: 'relative',
     }}>
       {/* ── Top bar ── */}
       <div style={{
@@ -628,11 +668,15 @@ export default function ZoomClassroom() {
         </div>
       </div>
 
-      {/* ── Spinner: loading / joining ── */}
+      {/* Overlay spinner/error so the Zoom mount always keeps full remaining height.
+          Previously these were flex siblings and stole ~50% of the height during join,
+          so Zoom sized itself too tall for the later full-size container. */}
       {(status === 'loading' || status === 'joining') && (
         <div style={{
-          flex: 1, display: 'flex', flexDirection: 'column',
+          position: 'absolute', inset: 44, zIndex: 30,
+          display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center', gap: 16, color: '#94a3b8',
+          background: '#0f172a',
         }}>
           <div style={{
             width: 48, height: 48,
@@ -648,11 +692,12 @@ export default function ZoomClassroom() {
         </div>
       )}
 
-      {/* ── Error state ── */}
       {status === 'error' && (
         <div style={{
-          flex: 1, display: 'flex', flexDirection: 'column',
+          position: 'absolute', inset: 44, zIndex: 30,
+          display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24,
+          background: '#0f172a',
         }}>
           <div style={{ fontSize: 40 }}>⚠️</div>
           <h2 style={{ color: '#f87171', margin: 0, fontSize: 20 }}>Could Not Connect</h2>
@@ -685,9 +730,8 @@ export default function ZoomClassroom() {
         </div>
       )}
 
-      {/* ── Zoom SDK mount point ── */}
-      {/* This wrapper fills all remaining height. NO overflow:hidden so Zoom's toolbar stays visible */}
-      <div style={{ flex: 1, position: 'relative', minHeight: 0, width: '100%' }}>
+      {/* Zoom SDK mount — always occupies remaining height so init measurements are correct */}
+      <div style={{ flex: 1, position: 'relative', minHeight: 0, width: '100%', overflow: 'auto' }}>
         {/* Instructor: floating "you are sharing" pill */}
         {isSharingMyScreen && (
           <div style={{
@@ -737,6 +781,7 @@ export default function ZoomClassroom() {
           id="meetingSDKElement"
           style={{
             width: '100%',
+            minHeight: '100%',
             height: '100%',
             background: '#000',
             display: status === 'error' ? 'none' : 'block',
@@ -750,32 +795,34 @@ export default function ZoomClassroom() {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.3; }
         }
-        /* Zoom container fills its parent exactly */
         #meetingSDKElement {
           width: 100% !important;
           height: 100% !important;
+          min-height: 100% !important;
           box-sizing: border-box !important;
         }
-        /* Zoom's own root and app shells fill 100% */
+        /* Do NOT force height:100% on Zoom's root — that clips the footer toolbar. */
         #meetingSDKElement #zmmtg-root,
         #meetingSDKElement .meeting-app {
           width: 100% !important;
-          height: 100% !important;
+          height: auto !important;
+          min-height: 100% !important;
           margin: 0 !important;
           padding: 0 !important;
         }
-        /* Fix right-side gap: outer wrappers must not have margins */
         #meetingSDKElement > div {
           width: 100% !important;
           margin: 0 !important;
         }
-        /* Share canvas fills container */
         #meetingSDKElement .share-container,
         #meetingSDKElement .share-container canvas {
           width: 100% !important;
-          max-width: 100% !important;
         }
-        /* Videos: contain aspect ratio */
+        #meetingSDKElement video,
+        #meetingSDKElement canvas {
+          max-width: none !important;
+          max-height: none !important;
+        }
         #meetingSDKElement video {
           object-fit: contain !important;
         }

@@ -84,6 +84,22 @@ img, video, canvas, svg {
   max-width: 100%;
 }
 
+/* Zoom Embedded SDK: global max-width on canvas/video clips the toolbar */
+.zoom-classroom-open,
+.zoom-classroom-open #root {
+  height: 100%;
+  max-width: none;
+  overflow: hidden;
+}
+
+.zoom-classroom-open #meetingSDKElement img,
+.zoom-classroom-open #meetingSDKElement video,
+.zoom-classroom-open #meetingSDKElement canvas,
+.zoom-classroom-open #meetingSDKElement svg {
+  max-width: none;
+  max-height: none;
+}
+
 /* Glassmorphism utility */
 .glass {
   background: rgba(255, 255, 255, 0.75);
