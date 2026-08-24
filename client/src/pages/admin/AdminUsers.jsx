@@ -133,21 +133,21 @@ const AdminUsers = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[650px]">
+            <table className="w-full text-sm min-w-[700px]">
               <thead>
-                <tr className="border-b border-slate-50 bg-slate-50/80">
-                  <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">User</th>
-                  <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Role</th>
-                  <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Activity</th>
-                  <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                  <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Joined</th>
-                  <th className="text-right px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+                <tr className="border-b border-slate-100 bg-slate-50/80 text-[11px]">
+                  <th className="text-left px-5 py-3.5 font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">User</th>
+                  <th className="text-left px-5 py-3.5 font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Role</th>
+                  <th className="text-left px-5 py-3.5 font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Activity</th>
+                  <th className="text-left px-5 py-3.5 font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Status</th>
+                  <th className="text-left px-5 py-3.5 font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Joined</th>
+                  <th className="text-right px-5 py-3.5 font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
+              <tbody className="divide-y divide-slate-100">
                 {users.map((user) => (
                   <tr key={user.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="px-5 py-4">
+                    <td className="px-5 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
                         <div className="h-9 w-9 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-heading font-bold text-sm shrink-0">
                           {user.avatar ? (
@@ -157,31 +157,33 @@ const AdminUsers = () => {
                           )}
                         </div>
                         <div>
-                          <p className="font-semibold text-slate-900 text-sm">{user.name}</p>
-                          <p className="text-xs text-slate-400">{user.email}</p>
+                          <p className="font-semibold text-slate-900 text-sm whitespace-nowrap">{user.name}</p>
+                          <p className="text-xs text-slate-400 whitespace-nowrap">{user.email}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-5 py-4">
-                      <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${roleBadge[user.role] || ''}`}>
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      <span className={`inline-block px-2.5 py-1 rounded-lg text-xs font-bold border whitespace-nowrap ${roleBadge[user.role] || ''}`}>
                         {user.role === 'STUDENT' ? 'Student' : user.role === 'INSTRUCTOR' ? 'Instructor' : 'Admin'}
                       </span>
                     </td>
-                    <td className="px-5 py-4">
-                      <div className="flex gap-3 text-xs text-slate-500">
-                        <span className="flex items-center gap-1">
-                          <IoSchoolOutline size={12} /> {user._count?.enrollments || 0} courses
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-3 text-xs text-slate-500 whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                          <IoSchoolOutline size={13} className="shrink-0" />
+                          <span>{user._count?.enrollments || 0} courses</span>
                         </span>
                         {user.role === 'INSTRUCTOR' && (
-                          <span className="flex items-center gap-1">
-                            <IoPersonOutline size={12} /> {user._count?.courses || 0} created
+                          <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                            <IoPersonOutline size={13} className="shrink-0" />
+                            <span>{user._count?.courses || 0} created</span>
                           </span>
                         )}
                       </div>
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="px-5 py-4 whitespace-nowrap">
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap ${
                           user.isActive
                             ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
                             : 'bg-red-50 text-red-600 border-red-100'
@@ -190,10 +192,10 @@ const AdminUsers = () => {
                         {user.isActive ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td className="px-5 py-4 text-xs text-slate-500">
+                    <td className="px-5 py-4 text-xs text-slate-500 whitespace-nowrap">
                       {new Date(user.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="px-5 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2 justify-end">
                         <button
                           onClick={() => handleToggleActive(user.id)}

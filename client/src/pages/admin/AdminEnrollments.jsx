@@ -134,15 +134,15 @@ const AdminEnrollments = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-sm min-w-[750px]">
               <thead>
-                <tr className="border-b border-slate-50 bg-slate-50/80">
-                  <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Student</th>
-                  <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Course</th>
-                  <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Instructor</th>
-                  <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Roll #</th>
-                  <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Paid (PKR)</th>
-                  <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Progress</th>
-                  <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Enrolled</th>
-                  <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Certificate</th>
+                <tr className="border-b border-slate-100 bg-slate-50/80 text-[11px]">
+                  <th className="text-left px-5 py-3.5 font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Student</th>
+                  <th className="text-left px-5 py-3.5 font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Course</th>
+                  <th className="text-left px-5 py-3.5 font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Instructor</th>
+                  <th className="text-left px-5 py-3.5 font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Roll #</th>
+                  <th className="text-left px-5 py-3.5 font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Paid (PKR)</th>
+                  <th className="text-left px-5 py-3.5 font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Progress</th>
+                  <th className="text-left px-5 py-3.5 font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Enrolled</th>
+                  <th className="text-left px-5 py-3.5 font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Certificate</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -154,7 +154,7 @@ const AdminEnrollments = () => {
                   >
 
                     {/* Student */}
-                    <td className="px-5 py-4">
+                    <td className="px-5 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
                         <div className="h-8 w-8 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-xs shrink-0">
                           {enr.student?.avatar ? (
@@ -168,8 +168,8 @@ const AdminEnrollments = () => {
                           )}
                         </div>
                         <div>
-                          <p className="font-semibold text-slate-900 text-xs">{enr.student?.name}</p>
-                          <p className="text-[10px] text-slate-400">{enr.student?.email}</p>
+                          <p className="font-semibold text-slate-900 text-xs whitespace-nowrap">{enr.student?.name}</p>
+                          <p className="text-[10px] text-slate-400 whitespace-nowrap">{enr.student?.email}</p>
                         </div>
                       </div>
                     </td>
@@ -182,19 +182,19 @@ const AdminEnrollments = () => {
                     </td>
 
                     {/* Instructor */}
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                        <IoPersonOutline size={12} />
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-1.5 text-xs text-slate-500 whitespace-nowrap">
+                        <IoPersonOutline size={12} className="shrink-0" />
                         <span>{enr.course?.instructor?.name || '—'}</span>
                       </div>
                     </td>
 
                     {/* Roll # */}
-                    <td className="px-5 py-4">
+                    <td className="px-5 py-4 whitespace-nowrap">
                       {enr.rollNumber ? (
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 whitespace-nowrap">
                           <IoCardOutline size={12} className="text-primary-500 shrink-0" />
-                          <span className="text-[11px] font-mono font-semibold text-primary-700 bg-primary-50 px-2 py-0.5 rounded-lg">
+                          <span className="text-[11px] font-mono font-semibold text-primary-700 bg-primary-50 px-2 py-0.5 rounded-lg whitespace-nowrap">
                             {enr.rollNumber}
                           </span>
                         </div>
@@ -204,12 +204,12 @@ const AdminEnrollments = () => {
                     </td>
 
                     {/* Paid (PKR) */}
-                    <td className="px-5 py-4">
+                    <td className="px-5 py-4 whitespace-nowrap tabular-nums">
                       <div className="flex flex-col gap-1">
                         {enr.paymentAmount != null ? (
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1.5 whitespace-nowrap">
                             <IoCashOutline size={12} className="text-emerald-500 shrink-0" />
-                            <span className="text-xs font-bold text-emerald-700">
+                            <span className="text-xs font-bold text-emerald-700 whitespace-nowrap">
                               PKR {enr.paymentAmount.toLocaleString()}
                             </span>
                           </div>
@@ -221,30 +221,30 @@ const AdminEnrollments = () => {
                     </td>
 
                     {/* Progress */}
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2 whitespace-nowrap">
+                        <div className="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden shrink-0">
                           <div
                             className="h-full bg-primary-500 rounded-full transition-all"
                             style={{ width: `${enr.progress || 0}%` }}
                           />
                         </div>
-                        <span className="text-[10px] font-semibold text-slate-600">
+                        <span className="text-[10px] font-semibold text-slate-600 tabular-nums">
                           {enr.progress || 0}%
                         </span>
                       </div>
                     </td>
 
                     {/* Enrolled Date */}
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                        <IoCalendarOutline size={12} />
-                        {new Date(enr.enrolledAt).toLocaleDateString()}
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-1.5 text-xs text-slate-500 whitespace-nowrap">
+                        <IoCalendarOutline size={12} className="shrink-0" />
+                        <span>{new Date(enr.enrolledAt).toLocaleDateString()}</span>
                       </div>
                     </td>
 
                     {/* Certificate Eligibility Toggle */}
-                    <td className="px-5 py-4">
+                    <td className="px-5 py-4 whitespace-nowrap">
                       <button
                         onClick={(e) => handleToggleCertEligibility(e, enr.id)}
                         title={
