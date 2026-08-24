@@ -26,7 +26,8 @@ router.get('/course/:courseId', requireAuth, zoomController.getByCourse);
 router.post('/course/:courseId', requireAuth, instructorOrAdmin, zoomController.create);
 router.delete('/:id', requireAuth, instructorOrAdmin, zoomController.endClass);
 
-// ── Meeting SDK Signature (all authenticated users) ───────────────────────────
+// ── Meeting SDK Signature & Status (all authenticated users) ───────────────────
+router.get('/:meetingId/status', requireAuth, zoomController.getStatus);
 router.post('/:meetingId/signature', requireAuth, zoomController.getSignature);
 
 // ── Attendance Tracking ───────────────────────────────────────────────────────

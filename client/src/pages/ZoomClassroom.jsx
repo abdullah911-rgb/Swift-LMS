@@ -109,8 +109,28 @@ export default function ZoomClassroom() {
   const [status, setStatus] = useState('loading');
   const [errorMsg, setErrorMsg] = useState('');
   const [joinUrl, setJoinUrl] = useState(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const isHost = user?.role === 'INSTRUCTOR' || user?.role === 'ADMIN';
+
+  // ── Fullscreen toggle ──────────────────────────────────────────────────────
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.().catch(() => {});
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen?.().catch(() => {});
+      setIsFullscreen(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+  }, []);
 
   // ── Go back to course/dashboard (full reload flushes Zoom Wasm/Sockets) ────
   const goBack = useCallback(() => {
@@ -161,6 +181,41 @@ export default function ZoomClassroom() {
     await fullTeardown();
     goBack();
   }, [meetingDbId, meetingId, fullTeardown, goBack]);
+
+  // ── Heartbeat polling: Auto-leave students when teacher ends class ─────────
+  useEffect(() => {
+    if (status !== 'live' || isHost) return;
+    let isCancelled = false;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await zoomService.getStatus(meetingId);
+        const meetingStatus = res.data?.data?.status;
+        const dbStatus = res.data?.data?.dbStatus;
+
+        if (meetingStatus === 'ENDED' || dbStatus === 'ENDED' || meetingStatus === 'CANCELLED' || dbStatus === 'CANCELLED') {
+          if (!isCancelled && !isLeavingRef.current) {
+            console.log('[Zoom Heartbeat] Live class was ended by instructor. Auto-leaving...');
+            isLeavingRef.current = true;
+            clearInterval(interval);
+            alert('The instructor has ended this live class.');
+            if (attendanceRecorded.current) {
+              try { await zoomService.leaveAttendance(meetingId); } catch (_) {}
+            }
+            await fullTeardown();
+            goBack();
+          }
+        }
+      } catch (err) {
+        console.warn('[Zoom Heartbeat] Status check warning:', err.message);
+      }
+    }, 3000);
+
+    return () => {
+      isCancelled = true;
+      clearInterval(interval);
+    };
+  }, [status, isHost, meetingId, fullTeardown, goBack]);
 
   // ── Main init / re-init effect ─────────────────────────────────────────────
   useEffect(() => {
@@ -244,7 +299,7 @@ export default function ZoomClassroom() {
 
         if (!isMounted) return;
 
-        // ── Step 7: Register connection event listener ─────────────────────
+        // ── Step 7: Register connection & meeting event listeners ────────
         client.on('connection-change', (ev) => {
           if (!isMounted) return;
           console.log('[Zoom] connection-change:', ev);
@@ -252,6 +307,14 @@ export default function ZoomClassroom() {
             handleJoinFailure(ev.reason || ev.errorMessage || 'Connection failed. Please try again.');
           } else if (ev?.state === 'Closed' && hasJoinedRef.current && !isLeavingRef.current) {
             // SDK closed the connection (host ended the meeting, network issue, etc.)
+            handleLeave();
+          }
+        });
+
+        client.on('meeting-status', (data) => {
+          if (!isMounted) return;
+          console.log('[Zoom] meeting-status:', data);
+          if (data?.status === 'ended' || data?.status === 'closed' || data?.meetingStatus === 3) {
             handleLeave();
           }
         });
@@ -395,6 +458,19 @@ export default function ZoomClassroom() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {status === 'live' && (
+            <button
+              onClick={toggleFullscreen}
+              style={{
+                background: '#334155', color: '#f8fafc', border: '1px solid #475569',
+                borderRadius: 8, padding: '8px 14px', fontWeight: 600,
+                fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+              }}
+              title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+            >
+              {isFullscreen ? '↙ Exit Fullscreen' : '⛶ Fullscreen'}
+            </button>
+          )}
           {isHost && status === 'live' && (
             <button
               onClick={handleEndClassForHost}
@@ -404,7 +480,7 @@ export default function ZoomClassroom() {
                 fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
               }}
             >
-              ⏹ End Class (For All)
+              ⏹ Leave Class for All
             </button>
           )}
           <button
@@ -489,7 +565,11 @@ export default function ZoomClassroom() {
           flex: 1,
           display: status === 'error' ? 'none' : 'block',
           width: '100%',
-          minHeight: 0,
+          height: isFullscreen ? 'calc(100vh - 58px)' : 'calc(100vh - 65px)',
+          minHeight: '400px',
+          background: '#000',
+          position: 'relative',
+          overflow: 'hidden',
         }}
       />
 
@@ -498,6 +578,22 @@ export default function ZoomClassroom() {
         @keyframes pulse {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.3; }
+        }
+        #meetingSDKElement,
+        #meetingSDKElement iframe,
+        #meetingSDKElement > div,
+        #meetingSDKElement .meeting-client,
+        #meetingSDKElement .meeting-app,
+        #meetingSDKElement .meeting-client-inner,
+        #meetingSDKElement .share-container,
+        #meetingSDKElement .share-container canvas,
+        #meetingSDKElement canvas,
+        #meetingSDKElement video {
+          width: 100% !important;
+          height: 100% !important;
+          max-width: 100% !important;
+          max-height: 100% !important;
+          box-sizing: border-box !important;
         }
       `}</style>
     </div>

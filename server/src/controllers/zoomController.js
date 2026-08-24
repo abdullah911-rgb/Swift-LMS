@@ -279,6 +279,33 @@ const zoomController = {
     sendSuccess(res, 'Class ended successfully.', { meeting: updated });
   }),
 
+  // ── GET /api/zoom/:meetingId/status ────────────────────────────────────────
+  getStatus: asyncHandler(async (req, res) => {
+    const { meetingId } = req.params;
+    const meeting = await prisma.zoomMeeting.findFirst({
+      where: {
+        OR: [
+          { meetingId: String(meetingId) },
+          { id: String(meetingId) }
+        ]
+      },
+      select: { id: true, meetingId: true, status: true, startTime: true, duration: true }
+    });
+    if (!meeting) return sendError(res, 'Meeting not found.', 404);
+
+    const now = new Date();
+    const start = new Date(meeting.startTime);
+    const end = new Date(start.getTime() + (meeting.duration || 60) * 60 * 1000);
+
+    let currentStatus = meeting.status;
+    if (meeting.status !== 'ENDED' && meeting.status !== 'CANCELLED' && meeting.status !== 'REJECTED') {
+      if (now >= end) currentStatus = 'ENDED';
+      else if (now >= start && now < end) currentStatus = 'LIVE';
+    }
+
+    sendSuccess(res, 'Meeting status fetched.', { status: currentStatus, dbStatus: meeting.status });
+  }),
+
   // ── POST /api/zoom/:meetingId/signature ────────────────────────────────────
   getSignature: asyncHandler(async (req, res) => {
     const { meetingId } = req.params;

@@ -93,6 +93,8 @@ export const zoomService = {
   create: (courseId, data) => api.post(`/zoom/course/${courseId}`, data),
   // End a live class (instructor/admin)
   endClass: (meetingId) => api.delete(`/zoom/${meetingId}`),
+  // Get live meeting status
+  getStatus: (meetingId) => api.get(`/zoom/${meetingId}/status`),
   // Get SDK signature for in-browser classroom (role: 0=attendee, 1=host)
   getSignature: (meetingId, role = 0) => api.post(`/zoom/${meetingId}/signature`, { role }),
   // Attendance tracking

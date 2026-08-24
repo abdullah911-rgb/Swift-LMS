@@ -193,10 +193,9 @@ const enrollmentController = {
               },
             },
             zoomMeetings: {
-              // Fetch SCHEDULED + LIVE; auto-end logic below handles edge cases
-              where: { meetingId: { not: null }, status: { in: ['SCHEDULED', 'LIVE', 'ENDED'] } },
-              orderBy: { startTime: 'asc' },
-              take: 10,
+              // Fetch SCHEDULED, LIVE, and ENDED meetings (newest first)
+              where: { status: { in: ['SCHEDULED', 'LIVE', 'ENDED'] } },
+              orderBy: { startTime: 'desc' },
               select: {
                 id: true, meetingId: true, topic: true, startTime: true,
                 duration: true, joinUrl: true, status: true, agenda: true,

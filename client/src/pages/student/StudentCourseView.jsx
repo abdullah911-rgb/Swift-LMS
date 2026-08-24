@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
-import { enrollmentService, assignmentService, certificateService, quizService } from '../../services/portalService';
+import { enrollmentService, assignmentService, certificateService, quizService, zoomService } from '../../services/portalService';
 import api from '../../services/api';
 import { ROUTES, getImageUrl } from '../../constants';
 import { 
@@ -25,6 +25,7 @@ import {
   IoAlertCircleOutline,
   IoStatsChartOutline,
   IoRibbonOutline,
+  IoRefreshOutline,
 } from 'react-icons/io5';
 import toast from 'react-hot-toast';
 
@@ -96,6 +97,39 @@ const StudentCourseView = () => {
   useEffect(() => {
     fetchCourseAccess(true);
   }, [courseId]);
+
+  // Live meetings state
+  const [loadingMeetings, setLoadingMeetings] = useState(false);
+
+  const fetchLiveMeetings = async () => {
+    if (isCompleted) return;
+    setLoadingMeetings(true);
+    try {
+      const res = await zoomService.getByCourse(courseId);
+      if (res.data?.data?.meetings) {
+        setEnrollment((prev) => {
+          if (!prev?.course) return prev;
+          return {
+            ...prev,
+            course: {
+              ...prev.course,
+              zoomMeetings: res.data.data.meetings,
+            },
+          };
+        });
+      }
+    } catch (err) {
+      console.warn('Error refreshing live meetings:', err);
+    } finally {
+      setLoadingMeetings(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'MEETINGS') {
+      fetchLiveMeetings();
+    }
+  }, [activeTab, courseId]);
 
   const fetchAssignments = async () => {
     setLoadingAssignments(true);
@@ -467,9 +501,22 @@ const StudentCourseView = () => {
 
               {activeTab === 'MEETINGS' && (
                 <div className="space-y-4">
-                  <div>
-                    <h2 className="text-base font-bold text-primary-900">Virtual Classrooms & Zoom Portal</h2>
-                    <p className="text-xs text-slate-500 mt-1">Access scheduled sessions and connect with Swift trainers live.</p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-base font-bold text-primary-900">Virtual Classrooms & Zoom Portal</h2>
+                      <p className="text-xs text-slate-500 mt-1">Access scheduled sessions and connect with Swift trainers live.</p>
+                    </div>
+                    {!isCompleted && (
+                      <button
+                        onClick={fetchLiveMeetings}
+                        disabled={loadingMeetings}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-600 transition-all cursor-pointer shrink-0 disabled:opacity-50"
+                        title="Refresh Live Classes"
+                      >
+                        <IoRefreshOutline size={14} className={loadingMeetings ? 'animate-spin text-primary-600' : ''} />
+                        <span>{loadingMeetings ? 'Refreshing…' : 'Refresh'}</span>
+                      </button>
+                    )}
                   </div>
 
                   {isCompleted ? (
