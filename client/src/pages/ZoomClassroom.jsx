@@ -10,6 +10,9 @@ import { getRoleHomePath } from '../utils/authRedirect';
 if (typeof window !== 'undefined' && !window.__lmsMediaTracked) {
   window.__lmsMediaTracked = true;
   window.__lmsActiveTracks = new Set();
+  window.__lmsScreenTracks = new Set();
+  window.__lmsScreenShareListeners = new Set();
+
   if (navigator?.mediaDevices?.getUserMedia) {
     const origGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
     navigator.mediaDevices.getUserMedia = async (...args) => {
@@ -23,10 +26,41 @@ if (typeof window !== 'undefined' && !window.__lmsMediaTracked) {
       return stream;
     };
   }
+
+  if (navigator?.mediaDevices?.getDisplayMedia) {
+    const origGetDisplayMedia = navigator.mediaDevices.getDisplayMedia.bind(navigator.mediaDevices);
+    navigator.mediaDevices.getDisplayMedia = async (...args) => {
+      const stream = await origGetDisplayMedia(...args);
+      if (stream?.getTracks) {
+        stream.getTracks().forEach((track) => {
+          window.__lmsScreenTracks.add(track);
+          window.__lmsActiveTracks.add(track);
+          window.__lmsScreenShareListeners.forEach((fn) => fn(true, stream));
+
+          track.addEventListener('ended', () => {
+            window.__lmsScreenTracks.delete(track);
+            window.__lmsActiveTracks.delete(track);
+            if (window.__lmsScreenTracks.size === 0) {
+              window.__lmsScreenShareListeners.forEach((fn) => fn(false, null));
+            }
+          });
+        });
+      }
+      return stream;
+    };
+  }
 }
 
 // ── Stop all camera/mic hardware tracks ───────────────────────────────────────
 function stopMediaTracks() {
+  try {
+    if (window.__lmsScreenTracks) {
+      window.__lmsScreenTracks.forEach((track) => {
+        try { track.stop(); track.enabled = false; } catch (_) {}
+      });
+      window.__lmsScreenTracks.clear();
+    }
+  } catch (_) {}
   try {
     if (window.__lmsActiveTracks) {
       window.__lmsActiveTracks.forEach((track) => {
@@ -109,9 +143,32 @@ export default function ZoomClassroom() {
   const [status, setStatus] = useState('loading');
   const [errorMsg, setErrorMsg] = useState('');
   const [joinUrl, setJoinUrl] = useState(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isSharingMyScreen, setIsSharingMyScreen] = useState(false);
 
   const isHost = user?.role === 'INSTRUCTOR' || user?.role === 'ADMIN';
+
+  // ── Screen share tracking ──────────────────────────────────────────────────
+  useEffect(() => {
+    const onScreenShareChange = (isSharing) => {
+      setIsSharingMyScreen(isSharing);
+    };
+    window.__lmsScreenShareListeners?.add(onScreenShareChange);
+    return () => {
+      window.__lmsScreenShareListeners?.delete(onScreenShareChange);
+    };
+  }, []);
+
+  const stopMyScreenShare = useCallback(() => {
+    try {
+      if (window.__lmsScreenTracks) {
+        window.__lmsScreenTracks.forEach((t) => {
+          try { t.stop(); } catch (_) {}
+        });
+        window.__lmsScreenTracks.clear();
+      }
+    } catch (_) {}
+    setIsSharingMyScreen(false);
+  }, []);
 
   // ── Fullscreen toggle ──────────────────────────────────────────────────────
   const toggleFullscreen = useCallback(() => {
@@ -589,22 +646,102 @@ export default function ZoomClassroom() {
         </div>
       )}
 
-      {/* ── Zoom SDK mount point ── */}
-      <div
-        ref={containerRef}
-        id="meetingSDKElement"
-        style={{
-          flex: 1,
-          display: status === 'error' ? 'none' : 'flex',
-          flexDirection: 'column',
-          width: '100%',
-          height: '100%',
-          minHeight: 0,
-          background: '#000',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      />
+      {/* ── Zoom SDK mount point & Presenter Overlay ── */}
+      <div style={{ flex: 1, position: 'relative', overflow: 'hidden', width: '100%', height: '100%' }}>
+        {/* Presenter Screen Share Active Overlay (Prevents Infinity Mirror loop) */}
+        {isSharingMyScreen && (
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 30,
+            background: 'radial-gradient(ellipse at center, #1e293b 0%, #0f172a 100%)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 32,
+            textAlign: 'center',
+            color: '#fff',
+          }}>
+            <div style={{
+              width: 76,
+              height: 76,
+              borderRadius: '50%',
+              background: 'rgba(37, 99, 235, 0.15)',
+              border: '2px solid #3b82f6',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 34,
+              marginBottom: 18,
+              boxShadow: '0 0 30px rgba(59, 130, 246, 0.3)',
+            }}>
+              🖥️
+            </div>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              background: 'rgba(34, 197, 94, 0.15)',
+              border: '1px solid #22c55e',
+              color: '#4ade80',
+              fontSize: 12,
+              fontWeight: 700,
+              padding: '4px 14px',
+              borderRadius: 20,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              marginBottom: 14,
+            }}>
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', animation: 'pulse 1.5s infinite' }} />
+              You are sharing your screen
+            </div>
+            <h2 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 10px 0', color: '#f8fafc' }}>
+              Your screen is visible to all students
+            </h2>
+            <p style={{ fontSize: 13, color: '#94a3b8', maxWidth: 460, margin: '0 0 24px 0', lineHeight: 1.6 }}>
+              Students can view your presentation in crisp full screen. You can switch to your presentation slides, PDF document, or browser window to present.
+            </p>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+              <button
+                onClick={stopMyScreenShare}
+                style={{
+                  background: '#dc2626',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 10,
+                  padding: '10px 22px',
+                  fontWeight: 600,
+                  fontSize: 14,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  boxShadow: '0 4px 14px rgba(220, 38, 38, 0.35)',
+                }}
+              >
+                ⏹ Stop Screen Sharing
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div
+          ref={containerRef}
+          id="meetingSDKElement"
+          style={{
+            flex: 1,
+            display: status === 'error' ? 'none' : 'flex',
+            flexDirection: 'column',
+            width: '100%',
+            height: '100%',
+            minHeight: 0,
+            background: '#000',
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        />
+      </div>
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
