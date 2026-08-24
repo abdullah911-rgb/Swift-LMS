@@ -12,37 +12,37 @@ import {
 
 const Footer = () => {
   return (
-    <footer className="bg-primary-900 text-slate-400 font-sans border-t border-primary-800">
+    <footer className="w-full bg-primary-900 text-slate-400 font-sans border-t border-primary-800 overflow-hidden">
       
       {/* Top Footer Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 grid grid-cols-1 md:grid-cols-4 gap-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12 w-full">
         
         {/* Brand Information */}
-          <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <div className="flex items-center gap-3">
             <img
               src="/Logo1.jpeg"
               alt="Swift LMS"
-              className="h-12 w-12 object-contain rounded-lg bg-white/5 p-0.5"
+              className="h-10 w-10 sm:h-12 sm:w-12 object-contain rounded-lg bg-white/5 p-0.5"
             />
             <span className="font-extrabold text-xl tracking-tight text-white" style={{ fontFamily: "'Times New Roman', Times, serif" }}>
               Swift
             </span>
           </div>
-          <p className="text-sm leading-relaxed text-slate-400">
+          <p className="text-xs sm:text-sm leading-relaxed text-slate-400">
             Swift Empowering Professionals with Industry Certified Safety and Technology Education.
           </p>
           
           {/* Social Links */}
-          <div className="flex items-center gap-3 pt-2">
-            <a href="#" className="h-9 w-9 rounded-xl bg-primary-800 hover:bg-accent-500 hover:text-primary-900 text-slate-400 flex items-center justify-center transition-all duration-300">
-              <IoLogoTwitter size={18} />
+          <div className="flex items-center gap-2.5 pt-1 sm:pt-2">
+            <a href="#" className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-primary-800 hover:bg-accent-500 hover:text-primary-900 text-slate-400 flex items-center justify-center transition-all duration-300">
+              <IoLogoTwitter size={16} />
             </a>
-            <a href="#" className="h-9 w-9 rounded-xl bg-primary-800 hover:bg-accent-500 hover:text-primary-900 text-slate-400 flex items-center justify-center transition-all duration-300">
-              <IoLogoFacebook size={18} />
+            <a href="#" className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-primary-800 hover:bg-accent-500 hover:text-primary-900 text-slate-400 flex items-center justify-center transition-all duration-300">
+              <IoLogoFacebook size={16} />
             </a>
-            <a href="#" className="h-9 w-9 rounded-xl bg-primary-800 hover:bg-accent-500 hover:text-primary-900 text-slate-400 flex items-center justify-center transition-all duration-300">
-              <IoLogoLinkedin size={18} />
+            <a href="#" className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-primary-800 hover:bg-accent-500 hover:text-primary-900 text-slate-400 flex items-center justify-center transition-all duration-300">
+              <IoLogoLinkedin size={16} />
             </a>
           </div>
         </div>

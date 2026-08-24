@@ -218,61 +218,61 @@ export default function CheckoutPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-primary-50/30 to-slate-100 py-12 px-4 font-sans">
-      <div className="max-w-5xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-primary-50/30 to-slate-100 py-6 sm:py-12 px-3 sm:px-6 lg:px-8 font-sans w-full max-w-full overflow-x-hidden">
+      <div className="max-w-5xl mx-auto w-full">
 
         {/* Back Link */}
         <button
           onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-primary-700 font-semibold mb-8 transition-colors group"
+          className="inline-flex items-center gap-2 text-xs sm:text-sm text-slate-500 hover:text-primary-700 font-semibold mb-6 sm:mb-8 transition-colors group cursor-pointer"
         >
-          <IoArrowBackOutline className="group-hover:-translate-x-1 transition-transform" size={18} />
-          Back to Course
+          <IoArrowBackOutline className="group-hover:-translate-x-1 transition-transform" size={16} />
+          <span>Back to Course</span>
         </button>
 
         {/* Progress Breadcrumb */}
-        <div className="flex items-center gap-2 mb-10">
-          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary-600 text-white text-xs font-bold">
-            <span className="h-5 w-5 rounded-full bg-white text-primary-700 flex items-center justify-center font-extrabold text-[10px]">1</span>
-            Student Info
+        <div className="flex items-center justify-between sm:justify-start gap-1 sm:gap-3 mb-6 sm:mb-10 w-full overflow-hidden">
+          <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-primary-600 text-white text-[11px] sm:text-xs font-bold shrink-0">
+            <span className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-white text-primary-700 flex items-center justify-center font-extrabold text-[9px] sm:text-[10px]">1</span>
+            <span className="hidden xs:inline sm:inline">Student</span> Info
           </div>
-          <div className="h-0.5 w-8 bg-slate-200 rounded-full" />
-          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-100 text-slate-400 text-xs font-bold">
-            <span className="h-5 w-5 rounded-full bg-slate-300 text-white flex items-center justify-center font-extrabold text-[10px]">2</span>
+          <div className="h-0.5 w-3 sm:w-8 bg-slate-200 rounded-full shrink-0" />
+          <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-slate-100 text-slate-400 text-[11px] sm:text-xs font-bold shrink-0">
+            <span className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-slate-300 text-white flex items-center justify-center font-extrabold text-[9px] sm:text-[10px]">2</span>
             Payment
           </div>
-          <div className="h-0.5 w-8 bg-slate-200 rounded-full" />
-          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-100 text-slate-400 text-xs font-bold">
-            <span className="h-5 w-5 rounded-full bg-slate-300 text-white flex items-center justify-center font-extrabold text-[10px]">3</span>
-            Confirmation
+          <div className="h-0.5 w-3 sm:w-8 bg-slate-200 rounded-full shrink-0" />
+          <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-slate-100 text-slate-400 text-[11px] sm:text-xs font-bold shrink-0">
+            <span className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-slate-300 text-white flex items-center justify-center font-extrabold text-[9px] sm:text-[10px]">3</span>
+            <span className="hidden xs:inline sm:inline">Confirmation</span><span className="xs:hidden sm:hidden">Done</span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start w-full">
 
           {/* LEFT — Student Info Form */}
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-            className="lg:col-span-7"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="lg:col-span-7 w-full"
           >
-            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm overflow-hidden w-full">
               {/* Form Header */}
-              <div className="bg-gradient-to-r from-primary-700 to-primary-800 px-8 py-6 text-white">
+              <div className="bg-gradient-to-r from-primary-700 to-primary-800 px-5 sm:px-8 py-5 sm:py-6 text-white">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-2xl bg-white/15 flex items-center justify-center">
-                    <IoSchoolOutline size={22} />
+                  <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl sm:rounded-2xl bg-white/15 flex items-center justify-center shrink-0">
+                    <IoSchoolOutline size={20} />
                   </div>
                   <div>
-                    <h1 className="text-lg font-heading font-extrabold leading-tight">Student Information</h1>
-                    <p className="text-primary-200 text-xs mt-0.5">Fill in your details to proceed to payment</p>
+                    <h1 className="text-base sm:text-lg font-heading font-extrabold leading-tight">Student Information</h1>
+                    <p className="text-primary-200 text-[11px] sm:text-xs mt-0.5">Fill in your details to proceed to payment</p>
                   </div>
                 </div>
               </div>
 
               {/* CNIC Field (separate due to custom formatting) */}
-              <form onSubmit={handleProceed} className="p-8 space-y-5">
+              <form onSubmit={handleProceed} className="p-4 sm:p-8 space-y-4 sm:space-y-5">
                 {fields.map((field, i) => (
                   <motion.div
                     key={field.id}
