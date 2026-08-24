@@ -343,10 +343,7 @@ export default function ZoomClassroom() {
         const containerEl = containerRef.current;
         if (!containerEl) throw new Error('Meeting container element not found.');
 
-        // ── Step 6: Init SDK in the container with dynamic responsive dimensions ──
-        const containerWidth = containerEl.offsetWidth || window.innerWidth;
-        const containerHeight = containerEl.offsetHeight || (window.innerHeight - 60);
-
+        // ── Step 6: Init SDK in the container with dynamic responsive settings ──
         try {
           await client.init({
             zoomAppRoot: containerEl,
@@ -354,16 +351,6 @@ export default function ZoomClassroom() {
             customize: {
               video: {
                 isResizable: true,
-                viewSizes: {
-                  default: {
-                    width: containerWidth,
-                    height: containerHeight,
-                  },
-                  ribbon: {
-                    width: 300,
-                    height: containerHeight,
-                  },
-                },
               },
               sharing: {
                 isResizable: true,
@@ -647,83 +634,49 @@ export default function ZoomClassroom() {
         </div>
       )}
 
-      {/* ── Zoom SDK mount point & Presenter Overlay ── */}
+      {/* ── Zoom SDK mount point ── */}
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden', width: '100%', height: '100%' }}>
-        {/* Presenter Screen Share Active Overlay (Prevents Infinity Mirror loop) */}
+        {/* Floating Screen Share Indicator (Non-intrusive) */}
         {isSharingMyScreen && (
           <div style={{
             position: 'absolute',
-            inset: 0,
-            zIndex: 30,
-            background: 'radial-gradient(ellipse at center, #1e293b 0%, #0f172a 100%)',
+            top: 10,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 40,
+            background: 'rgba(15, 23, 42, 0.92)',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(59, 130, 246, 0.5)',
+            borderRadius: 30,
+            padding: '5px 16px',
             display: 'flex',
-            flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'center',
-            padding: 32,
-            textAlign: 'center',
+            gap: 10,
+            boxShadow: '0 4px 18px rgba(0, 0, 0, 0.5)',
             color: '#fff',
+            fontSize: 12,
+            fontWeight: 600,
+            pointerEvents: 'auto',
           }}>
-            <div style={{
-              width: 76,
-              height: 76,
-              borderRadius: '50%',
-              background: 'rgba(37, 99, 235, 0.15)',
-              border: '2px solid #3b82f6',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 34,
-              marginBottom: 18,
-              boxShadow: '0 0 30px rgba(59, 130, 246, 0.3)',
-            }}>
-              🖥️
-            </div>
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              background: 'rgba(34, 197, 94, 0.15)',
-              border: '1px solid #22c55e',
-              color: '#4ade80',
-              fontSize: 12,
-              fontWeight: 700,
-              padding: '4px 14px',
-              borderRadius: 20,
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              marginBottom: 14,
-            }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#4ade80' }}>
               <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', animation: 'pulse 1.5s infinite' }} />
-              You are sharing your screen
-            </div>
-            <h2 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 10px 0', color: '#f8fafc' }}>
-              Your screen is visible to all students
-            </h2>
-            <p style={{ fontSize: 13, color: '#94a3b8', maxWidth: 460, margin: '0 0 24px 0', lineHeight: 1.6 }}>
-              Students can view your presentation in crisp full screen. You can switch to your presentation slides, PDF document, or browser window to present.
-            </p>
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <button
-                onClick={stopMyScreenShare}
-                style={{
-                  background: '#dc2626',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: 10,
-                  padding: '10px 22px',
-                  fontWeight: 600,
-                  fontSize: 14,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  boxShadow: '0 4px 14px rgba(220, 38, 38, 0.35)',
-                }}
-              >
-                ⏹ Stop Screen Sharing
-              </button>
-            </div>
+              Sharing Your Screen
+            </span>
+            <button
+              onClick={stopMyScreenShare}
+              style={{
+                background: '#dc2626',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 14,
+                padding: '3px 10px',
+                fontSize: 11,
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              Stop
+            </button>
           </div>
         )}
 
@@ -750,29 +703,41 @@ export default function ZoomClassroom() {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.3; }
         }
-        #meetingSDKElement,
+        #meetingSDKElement {
+          width: 100% !important;
+          height: 100% !important;
+          max-width: 100% !important;
+          max-height: 100% !important;
+          position: relative;
+          background: #000;
+          overflow: hidden;
+        }
         #meetingSDKElement #zmmtg-root,
         #meetingSDKElement .meeting-app,
         #meetingSDKElement .meeting-client,
-        #meetingSDKElement .meeting-client-inner,
-        #meetingSDKElement .main-layout,
-        #meetingSDKElement .sharing-layout,
-        #meetingSDKElement .view-container,
-        #meetingSDKElement .main-container,
-        #meetingSDKElement .speaker-active-container,
-        #meetingSDKElement .gallery-video-container,
-        #meetingSDKElement div[class*="meeting"],
-        #meetingSDKElement div[class*="sharing"],
-        #meetingSDKElement div[class*="layout"] {
+        #meetingSDKElement .meeting-client-inner {
           width: 100% !important;
           height: 100% !important;
-          max-width: 100vw !important;
+          max-width: 100% !important;
           max-height: 100% !important;
-          margin: 0 !important;
-          padding: 0 !important;
-          box-sizing: border-box !important;
+          display: flex !important;
+          flex-direction: column !important;
         }
-        #meetingSDKElement .share-container,
+        #meetingSDKElement .sharing-layout,
+        #meetingSDKElement .main-layout,
+        #meetingSDKElement .speaker-active-container,
+        #meetingSDKElement .gallery-video-container {
+          width: 100% !important;
+          height: 100% !important;
+          max-width: 100% !important;
+          max-height: 100% !important;
+          flex: 1 1 auto !important;
+        }
+        #meetingSDKElement .share-container {
+          flex: 1 1 auto !important;
+          width: 100% !important;
+          height: 100% !important;
+        }
         #meetingSDKElement .share-container canvas,
         #meetingSDKElement canvas,
         #meetingSDKElement video {
