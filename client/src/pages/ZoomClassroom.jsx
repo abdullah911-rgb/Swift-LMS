@@ -543,17 +543,13 @@ export default function ZoomClassroom() {
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div style={{
-      height: '100dvh',
-      maxHeight: '100dvh',
-      width: '100vw',
-      maxWidth: '100vw',
+      height: '100vh',
+      width: '100%',
       background: '#0f172a',
       display: 'flex',
       flexDirection: 'column',
       fontFamily: "'Inter', 'Segoe UI', sans-serif",
       overflow: 'hidden',
-      position: 'fixed',
-      inset: 0,
     }}>
       {/* ── Top bar ── */}
       <div style={{
@@ -566,11 +562,10 @@ export default function ZoomClassroom() {
         flexShrink: 0,
         zIndex: 10,
         gap: 8,
-        minHeight: 44,
-        maxHeight: 44,
+        height: 44,
       }}>
         {/* Left: LIVE badge + title */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, overflow: 'hidden' }}>
           {status === 'live' && (
             <span style={{
               display: 'inline-flex', alignItems: 'center', gap: 5,
@@ -598,15 +593,9 @@ export default function ZoomClassroom() {
               title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
               style={{
                 background: isFullscreen ? '#2563eb' : '#334155',
-                color: '#f8fafc',
-                border: '1px solid #475569',
-                borderRadius: 7,
-                padding: '5px 10px',
-                fontWeight: 600,
-                fontSize: 11,
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                lineHeight: 1,
+                color: '#f8fafc', border: '1px solid #475569',
+                borderRadius: 7, padding: '5px 10px', fontWeight: 600,
+                fontSize: 11, cursor: 'pointer', whiteSpace: 'nowrap', lineHeight: 1,
               }}
             >
               {isFullscreen ? '↙ Exit' : '⛶ Fullscreen'}
@@ -617,16 +606,9 @@ export default function ZoomClassroom() {
               onClick={handleEndClassForHost}
               title="Leave Class for All"
               style={{
-                background: '#991b1b',
-                color: '#fff',
-                border: '1px solid #dc2626',
-                borderRadius: 7,
-                padding: '5px 10px',
-                fontWeight: 600,
-                fontSize: 11,
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                lineHeight: 1,
+                background: '#991b1b', color: '#fff', border: '1px solid #dc2626',
+                borderRadius: 7, padding: '5px 10px', fontWeight: 600,
+                fontSize: 11, cursor: 'pointer', whiteSpace: 'nowrap', lineHeight: 1,
               }}
             >
               ⏹ End for All
@@ -636,16 +618,9 @@ export default function ZoomClassroom() {
             onClick={status === 'error' ? goBack : handleLeave}
             title={status === 'error' ? 'Go Back' : 'Leave Class'}
             style={{
-              background: '#dc2626',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 7,
-              padding: '5px 10px',
-              fontWeight: 600,
-              fontSize: 11,
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              lineHeight: 1,
+              background: '#dc2626', color: '#fff', border: 'none',
+              borderRadius: 7, padding: '5px 10px', fontWeight: 600,
+              fontSize: 11, cursor: 'pointer', whiteSpace: 'nowrap', lineHeight: 1,
             }}
           >
             ✕ {status === 'error' ? 'Go Back' : 'Leave'}
@@ -687,13 +662,10 @@ export default function ZoomClassroom() {
           <div style={{ display: 'flex', gap: 12, marginTop: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
             {joinUrl && (
               <a
-                href={joinUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+                href={joinUrl} target="_blank" rel="noopener noreferrer"
                 style={{
-                  background: '#2563eb', color: '#fff',
-                  border: 'none', borderRadius: 8, padding: '10px 24px',
-                  fontWeight: 600, cursor: 'pointer', fontSize: 14,
+                  background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8,
+                  padding: '10px 24px', fontWeight: 600, cursor: 'pointer', fontSize: 14,
                   textDecoration: 'none', display: 'inline-block',
                 }}
               >
@@ -703,9 +675,8 @@ export default function ZoomClassroom() {
             <button
               onClick={goBack}
               style={{
-                background: '#334155', color: '#e2e8f0',
-                border: 'none', borderRadius: 8, padding: '10px 24px',
-                fontWeight: 600, cursor: 'pointer', fontSize: 14,
+                background: '#334155', color: '#e2e8f0', border: 'none', borderRadius: 8,
+                padding: '10px 24px', fontWeight: 600, cursor: 'pointer', fontSize: 14,
               }}
             >
               Go Back
@@ -715,28 +686,17 @@ export default function ZoomClassroom() {
       )}
 
       {/* ── Zoom SDK mount point ── */}
-      <div style={{ flex: 1, position: 'relative', overflow: 'hidden', width: '100%', minHeight: 0 }}>
+      {/* This wrapper fills all remaining height. NO overflow:hidden so Zoom's toolbar stays visible */}
+      <div style={{ flex: 1, position: 'relative', minHeight: 0, width: '100%' }}>
         {/* Instructor: floating "you are sharing" pill */}
         {isSharingMyScreen && (
           <div style={{
-            position: 'absolute',
-            top: 10,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 40,
-            background: 'rgba(15, 23, 42, 0.92)',
-            backdropFilter: 'blur(8px)',
-            border: '1px solid rgba(59, 130, 246, 0.5)',
-            borderRadius: 30,
-            padding: '5px 16px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            boxShadow: '0 4px 18px rgba(0, 0, 0, 0.5)',
-            color: '#fff',
-            fontSize: 12,
-            fontWeight: 600,
-            pointerEvents: 'auto',
+            position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)',
+            zIndex: 40, background: 'rgba(15, 23, 42, 0.92)', backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(59, 130, 246, 0.5)', borderRadius: 30, padding: '5px 16px',
+            display: 'flex', alignItems: 'center', gap: 10,
+            boxShadow: '0 4px 18px rgba(0, 0, 0, 0.5)', color: '#fff',
+            fontSize: 12, fontWeight: 600, pointerEvents: 'auto',
           }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#4ade80' }}>
               <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', animation: 'pulse 1.5s infinite' }} />
@@ -745,14 +705,8 @@ export default function ZoomClassroom() {
             <button
               onClick={stopMyScreenShare}
               style={{
-                background: '#dc2626',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 14,
-                padding: '3px 10px',
-                fontSize: 11,
-                fontWeight: 700,
-                cursor: 'pointer',
+                background: '#dc2626', color: '#fff', border: 'none',
+                borderRadius: 14, padding: '3px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer',
               }}
             >
               Stop
@@ -760,33 +714,20 @@ export default function ZoomClassroom() {
           </div>
         )}
 
-        {/* Student: screen-share active tip banner — explains the recursive view */}
+        {/* Student: screen-share active tip banner */}
         {!isHost && activeSharerName && (
           <div style={{
-            position: 'absolute',
-            bottom: 12,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 40,
-            background: 'rgba(15, 23, 42, 0.9)',
-            backdropFilter: 'blur(8px)',
-            border: '1px solid #f59e0b',
-            borderRadius: 10,
-            padding: '8px 18px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
-            color: '#fef3c7',
-            fontSize: 12,
-            fontWeight: 500,
-            maxWidth: '90%',
-            whiteSpace: 'nowrap',
+            position: 'absolute', bottom: 70, left: '50%', transform: 'translateX(-50%)',
+            zIndex: 40, background: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(8px)',
+            border: '1px solid #f59e0b', borderRadius: 10, padding: '8px 18px',
+            display: 'flex', alignItems: 'center', gap: 10,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.5)', color: '#fef3c7',
+            fontSize: 12, fontWeight: 500, maxWidth: '90%', whiteSpace: 'nowrap',
           }}>
             <span style={{ fontSize: 16 }}>🖥️</span>
             <span>
               <strong style={{ color: '#fbbf24' }}>{activeSharerName}</strong> is sharing their screen.
-              {' '}If you see a recursive view, the instructor may be sharing the wrong window.
+              {' '}If you see a looping view, share a specific Window or Tab instead.
             </span>
           </div>
         )}
@@ -795,11 +736,10 @@ export default function ZoomClassroom() {
           ref={containerRef}
           id="meetingSDKElement"
           style={{
-            position: 'absolute',
-            inset: 0,
-            display: status === 'error' ? 'none' : 'block',
+            width: '100%',
+            height: '100%',
             background: '#000',
-            overflow: 'hidden',
+            display: status === 'error' ? 'none' : 'block',
           }}
         />
       </div>
@@ -810,43 +750,34 @@ export default function ZoomClassroom() {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.3; }
         }
+        /* Zoom container fills its parent exactly */
         #meetingSDKElement {
           width: 100% !important;
           height: 100% !important;
-        }
-        #meetingSDKElement #zmmtg-root,
-        #meetingSDKElement .meeting-app,
-        #meetingSDKElement .meeting-client,
-        #meetingSDKElement .meeting-client-inner,
-        #meetingSDKElement [class*="meeting"],
-        #meetingSDKElement [class*="sharing"],
-        #meetingSDKElement [class*="layout"],
-        #meetingSDKElement [class*="container"] {
-          width: 100% !important;
-          height: 100% !important;
-          max-width: 100% !important;
-          max-height: 100% !important;
-          flex: 1 1 auto !important;
-          margin: 0 !important;
-          padding: 0 !important;
           box-sizing: border-box !important;
         }
-        #meetingSDKElement canvas,
-        #meetingSDKElement video {
-          width: 100% !important;
-          height: 100% !important;
-          max-width: 100% !important;
-          max-height: 100% !important;
-          object-fit: contain !important;
-          display: block !important;
-        }
-        /* Right-side gap fix: no margins on Zoom's outer wrappers */
-        #meetingSDKElement > div,
-        #meetingSDKElement > div > div {
+        /* Zoom's own root and app shells fill 100% */
+        #meetingSDKElement #zmmtg-root,
+        #meetingSDKElement .meeting-app {
           width: 100% !important;
           height: 100% !important;
           margin: 0 !important;
           padding: 0 !important;
+        }
+        /* Fix right-side gap: outer wrappers must not have margins */
+        #meetingSDKElement > div {
+          width: 100% !important;
+          margin: 0 !important;
+        }
+        /* Share canvas fills container */
+        #meetingSDKElement .share-container,
+        #meetingSDKElement .share-container canvas {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+        /* Videos: contain aspect ratio */
+        #meetingSDKElement video {
+          object-fit: contain !important;
         }
       `}</style>
     </div>
