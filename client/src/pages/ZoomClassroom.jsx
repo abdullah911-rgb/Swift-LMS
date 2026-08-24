@@ -145,10 +145,12 @@ export default function ZoomClassroom() {
   const [joinUrl, setJoinUrl] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isSharingMyScreen, setIsSharingMyScreen] = useState(false);
+  // Tracks whether someone in the meeting is actively sharing their screen (student view)
+  const [activeSharerName, setActiveSharerName] = useState(null);
 
   const isHost = user?.role === 'INSTRUCTOR' || user?.role === 'ADMIN';
 
-  // ── Screen share tracking ──────────────────────────────────────────────────
+  // ── Screen share tracking (instructor — own local share via getDisplayMedia) ──
   useEffect(() => {
     const onScreenShareChange = (isSharing) => {
       setIsSharingMyScreen(isSharing);
@@ -185,6 +187,9 @@ export default function ZoomClassroom() {
   useEffect(() => {
     const onFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
+      // Give Zoom time to reflow, then fire resize so it re-renders to new dims
+      setTimeout(() => window.dispatchEvent(new Event('resize')), 150);
+      setTimeout(() => window.dispatchEvent(new Event('resize')), 500);
     };
     document.addEventListener('fullscreenchange', onFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
@@ -194,12 +199,16 @@ export default function ZoomClassroom() {
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+    let resizeTimer;
     const ro = new ResizeObserver(() => {
-      // Dispatch a resize event so Zoom SDK re-evaluates its canvas dimensions
-      window.dispatchEvent(new Event('resize'));
+      // Throttle resize dispatches to avoid flooding during animations
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+      }, 100);
     });
     ro.observe(el);
-    return () => ro.disconnect();
+    return () => { ro.disconnect(); clearTimeout(resizeTimer); };
   }, []);
 
 
@@ -355,7 +364,12 @@ export default function ZoomClassroom() {
         const containerEl = containerRef.current;
         if (!containerEl) throw new Error('Meeting container element not found.');
 
-        // ── Step 6: Init SDK in the container with dynamic responsive settings ──
+        // ── Step 6: Init SDK with exact container pixel dimensions ──────────
+        // Wait one frame so container has real painted dimensions
+        await new Promise((r) => requestAnimationFrame(r));
+        const vw = Math.floor(containerEl.offsetWidth || window.innerWidth);
+        const vh = Math.floor(containerEl.offsetHeight || (window.innerHeight - 44));
+
         try {
           await client.init({
             zoomAppRoot: containerEl,
@@ -363,12 +377,17 @@ export default function ZoomClassroom() {
             customize: {
               video: {
                 isResizable: true,
+                viewSizes: {
+                  default: { width: vw, height: vh },
+                  ribbon: { width: vw, height: vh },
+                },
               },
               sharing: {
                 isResizable: true,
-                popper: {
-                  disableDraggable: true,
+                viewSizes: {
+                  default: { width: vw, height: vh },
                 },
+                popper: { disableDraggable: true },
               },
             },
           });
@@ -397,6 +416,25 @@ export default function ZoomClassroom() {
           console.log('[Zoom] meeting-status:', data);
           if (data?.status === 'ended' || data?.status === 'closed' || data?.meetingStatus === 3) {
             handleLeave();
+          }
+        });
+
+        // ── Track active screen share (for student-side infinity-mirror warning) ──
+        client.on('active-share-change', (ev) => {
+          if (!isMounted) return;
+          if (ev?.state === 'Active') {
+            setActiveSharerName(ev?.displayName || 'the instructor');
+          } else {
+            setActiveSharerName(null);
+          }
+        });
+        // Also handle when someone starts/stops sharing
+        client.on('peer-share-state-change', (ev) => {
+          if (!isMounted) return;
+          if (ev?.action === 'Start') {
+            setActiveSharerName(ev?.userName || ev?.displayName || 'the instructor');
+          } else if (ev?.action === 'Stop') {
+            setActiveSharerName(null);
           }
         });
 
@@ -678,7 +716,7 @@ export default function ZoomClassroom() {
 
       {/* ── Zoom SDK mount point ── */}
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden', width: '100%', minHeight: 0 }}>
-        {/* Floating Screen Share Indicator (Non-intrusive) */}
+        {/* Instructor: floating "you are sharing" pill */}
         {isSharingMyScreen && (
           <div style={{
             position: 'absolute',
@@ -719,6 +757,37 @@ export default function ZoomClassroom() {
             >
               Stop
             </button>
+          </div>
+        )}
+
+        {/* Student: screen-share active tip banner — explains the recursive view */}
+        {!isHost && activeSharerName && (
+          <div style={{
+            position: 'absolute',
+            bottom: 12,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 40,
+            background: 'rgba(15, 23, 42, 0.9)',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid #f59e0b',
+            borderRadius: 10,
+            padding: '8px 18px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+            color: '#fef3c7',
+            fontSize: 12,
+            fontWeight: 500,
+            maxWidth: '90%',
+            whiteSpace: 'nowrap',
+          }}>
+            <span style={{ fontSize: 16 }}>🖥️</span>
+            <span>
+              <strong style={{ color: '#fbbf24' }}>{activeSharerName}</strong> is sharing their screen.
+              {' '}If you see a recursive view, the instructor may be sharing the wrong window.
+            </span>
           </div>
         )}
 
