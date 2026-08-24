@@ -190,7 +190,19 @@ export default function ZoomClassroom() {
     return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
   }, []);
 
-  // ── Go back to course/dashboard (full reload flushes Zoom Wasm/Sockets) ────
+  // ── Force Zoom canvas to match container on any size change ──────────────
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      // Dispatch a resize event so Zoom SDK re-evaluates its canvas dimensions
+      window.dispatchEvent(new Event('resize'));
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+
   const goBack = useCallback(() => {
     stopMediaTracks();
     const dest = user?.role ? getBackPath(user.role, courseId) : '/';
@@ -493,8 +505,8 @@ export default function ZoomClassroom() {
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div style={{
-      height: '100vh',
-      maxHeight: '100vh',
+      height: '100dvh',
+      maxHeight: '100dvh',
       width: '100vw',
       maxWidth: '100vw',
       background: '#0f172a',
@@ -502,73 +514,103 @@ export default function ZoomClassroom() {
       flexDirection: 'column',
       fontFamily: "'Inter', 'Segoe UI', sans-serif",
       overflow: 'hidden',
+      position: 'fixed',
+      inset: 0,
     }}>
       {/* ── Top bar ── */}
       <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: isFullscreen ? '8px 16px' : '12px 20px', background: '#1e293b',
-        borderBottom: '1px solid #334155', flexShrink: 0, zIndex: 10,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '6px 12px',
+        background: '#1e293b',
+        borderBottom: '1px solid #334155',
+        flexShrink: 0,
+        zIndex: 10,
+        gap: 8,
+        minHeight: 44,
+        maxHeight: 44,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        {/* Left: LIVE badge + title */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, overflow: 'hidden' }}>
           {status === 'live' && (
             <span style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              background: '#dc2626', color: '#fff', fontSize: 11,
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              background: '#dc2626', color: '#fff', fontSize: 10,
               fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
-              borderRadius: 6, padding: '3px 10px',
+              borderRadius: 5, padding: '2px 7px', flexShrink: 0, whiteSpace: 'nowrap',
             }}>
-              <span style={{
-                width: 7, height: 7, borderRadius: '50%',
-                background: '#fff', animation: 'pulse 1.5s infinite',
-              }} />
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff', animation: 'pulse 1.5s infinite' }} />
               LIVE
             </span>
           )}
-          <span style={{ color: '#f1f5f9', fontWeight: 600, fontSize: 14 }}>
-            {status === 'loading' && 'Preparing Classroom…'}
-            {status === 'joining' && 'Connecting to Live Class…'}
+          <span style={{ color: '#f1f5f9', fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {status === 'loading' && 'Preparing…'}
+            {status === 'joining' && 'Connecting…'}
             {status === 'live' && 'Virtual Classroom'}
             {status === 'error' && 'Connection Error'}
           </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {/* Right: action buttons — always on ONE line */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
           {status === 'live' && (
             <button
               onClick={toggleFullscreen}
+              title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
               style={{
                 background: isFullscreen ? '#2563eb' : '#334155',
                 color: '#f8fafc',
                 border: '1px solid #475569',
-                borderRadius: 8, padding: '6px 12px', fontWeight: 600,
-                fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
+                borderRadius: 7,
+                padding: '5px 10px',
+                fontWeight: 600,
+                fontSize: 11,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                lineHeight: 1,
               }}
-              title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen Mode'}
             >
-              {isFullscreen ? '↙ Exit Fullscreen' : '⛶ Fullscreen'}
+              {isFullscreen ? '↙ Exit' : '⛶ Fullscreen'}
             </button>
           )}
           {isHost && status === 'live' && (
             <button
               onClick={handleEndClassForHost}
+              title="Leave Class for All"
               style={{
-                background: '#991b1b', color: '#fff', border: '1px solid #dc2626',
-                borderRadius: 8, padding: '6px 14px', fontWeight: 600,
-                fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
+                background: '#991b1b',
+                color: '#fff',
+                border: '1px solid #dc2626',
+                borderRadius: 7,
+                padding: '5px 10px',
+                fontWeight: 600,
+                fontSize: 11,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                lineHeight: 1,
               }}
             >
-              ⏹ Leave Class for All
+              ⏹ End for All
             </button>
           )}
           <button
             onClick={status === 'error' ? goBack : handleLeave}
+            title={status === 'error' ? 'Go Back' : 'Leave Class'}
             style={{
-              background: '#dc2626', color: '#fff', border: 'none',
-              borderRadius: 8, padding: '6px 16px', fontWeight: 600,
-              fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
+              background: '#dc2626',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 7,
+              padding: '5px 10px',
+              fontWeight: 600,
+              fontSize: 11,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              lineHeight: 1,
             }}
           >
-            ✕ {status === 'error' ? 'Go Back' : 'Leave Class'}
+            ✕ {status === 'error' ? 'Go Back' : 'Leave'}
           </button>
         </div>
       </div>
@@ -635,7 +677,7 @@ export default function ZoomClassroom() {
       )}
 
       {/* ── Zoom SDK mount point ── */}
-      <div style={{ flex: 1, position: 'relative', overflow: 'hidden', width: '100%', height: '100%' }}>
+      <div style={{ flex: 1, position: 'relative', overflow: 'hidden', width: '100%', minHeight: 0 }}>
         {/* Floating Screen Share Indicator (Non-intrusive) */}
         {isSharingMyScreen && (
           <div style={{
@@ -684,14 +726,10 @@ export default function ZoomClassroom() {
           ref={containerRef}
           id="meetingSDKElement"
           style={{
-            flex: 1,
-            display: status === 'error' ? 'none' : 'flex',
-            flexDirection: 'column',
-            width: '100%',
-            height: '100%',
-            minHeight: 0,
+            position: 'absolute',
+            inset: 0,
+            display: status === 'error' ? 'none' : 'block',
             background: '#000',
-            position: 'relative',
             overflow: 'hidden',
           }}
         />
@@ -706,39 +744,24 @@ export default function ZoomClassroom() {
         #meetingSDKElement {
           width: 100% !important;
           height: 100% !important;
-          max-width: 100% !important;
-          max-height: 100% !important;
-          position: relative;
-          background: #000;
-          overflow: hidden;
         }
         #meetingSDKElement #zmmtg-root,
         #meetingSDKElement .meeting-app,
         #meetingSDKElement .meeting-client,
-        #meetingSDKElement .meeting-client-inner {
-          width: 100% !important;
-          height: 100% !important;
-          max-width: 100% !important;
-          max-height: 100% !important;
-          display: flex !important;
-          flex-direction: column !important;
-        }
-        #meetingSDKElement .sharing-layout,
-        #meetingSDKElement .main-layout,
-        #meetingSDKElement .speaker-active-container,
-        #meetingSDKElement .gallery-video-container {
+        #meetingSDKElement .meeting-client-inner,
+        #meetingSDKElement [class*="meeting"],
+        #meetingSDKElement [class*="sharing"],
+        #meetingSDKElement [class*="layout"],
+        #meetingSDKElement [class*="container"] {
           width: 100% !important;
           height: 100% !important;
           max-width: 100% !important;
           max-height: 100% !important;
           flex: 1 1 auto !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          box-sizing: border-box !important;
         }
-        #meetingSDKElement .share-container {
-          flex: 1 1 auto !important;
-          width: 100% !important;
-          height: 100% !important;
-        }
-        #meetingSDKElement .share-container canvas,
         #meetingSDKElement canvas,
         #meetingSDKElement video {
           width: 100% !important;
@@ -746,6 +769,15 @@ export default function ZoomClassroom() {
           max-width: 100% !important;
           max-height: 100% !important;
           object-fit: contain !important;
+          display: block !important;
+        }
+        /* Right-side gap fix: no margins on Zoom's outer wrappers */
+        #meetingSDKElement > div,
+        #meetingSDKElement > div > div {
+          width: 100% !important;
+          height: 100% !important;
+          margin: 0 !important;
+          padding: 0 !important;
         }
       `}</style>
     </div>
