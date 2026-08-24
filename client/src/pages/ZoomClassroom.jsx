@@ -285,11 +285,35 @@ export default function ZoomClassroom() {
         const containerEl = containerRef.current;
         if (!containerEl) throw new Error('Meeting container element not found.');
 
-        // ── Step 6: Init SDK in the container ─────────────────────────────
+        // ── Step 6: Init SDK in the container with dynamic responsive dimensions ──
+        const containerWidth = containerEl.offsetWidth || window.innerWidth;
+        const containerHeight = containerEl.offsetHeight || (window.innerHeight - 60);
+
         try {
           await client.init({
             zoomAppRoot: containerEl,
             language: 'en-US',
+            customize: {
+              video: {
+                isResizable: true,
+                viewSizes: {
+                  default: {
+                    width: containerWidth,
+                    height: containerHeight,
+                  },
+                  ribbon: {
+                    width: 300,
+                    height: containerHeight,
+                  },
+                },
+              },
+              sharing: {
+                isResizable: true,
+                popper: {
+                  disableDraggable: true,
+                },
+              },
+            },
           });
         } catch (initErr) {
           console.error('[Zoom] client.init() failed:', initErr?.message || initErr);
@@ -424,15 +448,21 @@ export default function ZoomClassroom() {
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div style={{
-      minHeight: '100vh', background: '#0f172a',
-      display: 'flex', flexDirection: 'column',
+      height: '100vh',
+      maxHeight: '100vh',
+      width: '100vw',
+      maxWidth: '100vw',
+      background: '#0f172a',
+      display: 'flex',
+      flexDirection: 'column',
       fontFamily: "'Inter', 'Segoe UI', sans-serif",
+      overflow: 'hidden',
     }}>
       {/* ── Top bar ── */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '14px 24px', background: '#1e293b',
-        borderBottom: '1px solid #334155', flexShrink: 0,
+        padding: isFullscreen ? '8px 16px' : '12px 20px', background: '#1e293b',
+        borderBottom: '1px solid #334155', flexShrink: 0, zIndex: 10,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           {status === 'live' && (
@@ -449,7 +479,7 @@ export default function ZoomClassroom() {
               LIVE
             </span>
           )}
-          <span style={{ color: '#f1f5f9', fontWeight: 600, fontSize: 15 }}>
+          <span style={{ color: '#f1f5f9', fontWeight: 600, fontSize: 14 }}>
             {status === 'loading' && 'Preparing Classroom…'}
             {status === 'joining' && 'Connecting to Live Class…'}
             {status === 'live' && 'Virtual Classroom'}
@@ -457,16 +487,18 @@ export default function ZoomClassroom() {
           </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {status === 'live' && (
             <button
               onClick={toggleFullscreen}
               style={{
-                background: '#334155', color: '#f8fafc', border: '1px solid #475569',
-                borderRadius: 8, padding: '8px 14px', fontWeight: 600,
-                fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                background: isFullscreen ? '#2563eb' : '#334155',
+                color: '#f8fafc',
+                border: '1px solid #475569',
+                borderRadius: 8, padding: '6px 12px', fontWeight: 600,
+                fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
               }}
-              title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+              title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen Mode'}
             >
               {isFullscreen ? '↙ Exit Fullscreen' : '⛶ Fullscreen'}
             </button>
@@ -476,8 +508,8 @@ export default function ZoomClassroom() {
               onClick={handleEndClassForHost}
               style={{
                 background: '#991b1b', color: '#fff', border: '1px solid #dc2626',
-                borderRadius: 8, padding: '8px 16px', fontWeight: 600,
-                fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                borderRadius: 8, padding: '6px 14px', fontWeight: 600,
+                fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
               }}
             >
               ⏹ Leave Class for All
@@ -487,8 +519,8 @@ export default function ZoomClassroom() {
             onClick={status === 'error' ? goBack : handleLeave}
             style={{
               background: '#dc2626', color: '#fff', border: 'none',
-              borderRadius: 8, padding: '8px 18px', fontWeight: 600,
-              fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+              borderRadius: 8, padding: '6px 16px', fontWeight: 600,
+              fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
             }}
           >
             ✕ {status === 'error' ? 'Go Back' : 'Leave Class'}
@@ -563,10 +595,11 @@ export default function ZoomClassroom() {
         id="meetingSDKElement"
         style={{
           flex: 1,
-          display: status === 'error' ? 'none' : 'block',
+          display: status === 'error' ? 'none' : 'flex',
+          flexDirection: 'column',
           width: '100%',
-          height: isFullscreen ? 'calc(100vh - 58px)' : 'calc(100vh - 65px)',
-          minHeight: '400px',
+          height: '100%',
+          minHeight: 0,
           background: '#000',
           position: 'relative',
           overflow: 'hidden',
@@ -580,11 +613,27 @@ export default function ZoomClassroom() {
           50% { opacity: 0.3; }
         }
         #meetingSDKElement,
-        #meetingSDKElement iframe,
-        #meetingSDKElement > div,
-        #meetingSDKElement .meeting-client,
+        #meetingSDKElement #zmmtg-root,
         #meetingSDKElement .meeting-app,
+        #meetingSDKElement .meeting-client,
         #meetingSDKElement .meeting-client-inner,
+        #meetingSDKElement .main-layout,
+        #meetingSDKElement .sharing-layout,
+        #meetingSDKElement .view-container,
+        #meetingSDKElement .main-container,
+        #meetingSDKElement .speaker-active-container,
+        #meetingSDKElement .gallery-video-container,
+        #meetingSDKElement div[class*="meeting"],
+        #meetingSDKElement div[class*="sharing"],
+        #meetingSDKElement div[class*="layout"] {
+          width: 100% !important;
+          height: 100% !important;
+          max-width: 100vw !important;
+          max-height: 100% !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          box-sizing: border-box !important;
+        }
         #meetingSDKElement .share-container,
         #meetingSDKElement .share-container canvas,
         #meetingSDKElement canvas,
@@ -593,7 +642,7 @@ export default function ZoomClassroom() {
           height: 100% !important;
           max-width: 100% !important;
           max-height: 100% !important;
-          box-sizing: border-box !important;
+          object-fit: contain !important;
         }
       `}</style>
     </div>
