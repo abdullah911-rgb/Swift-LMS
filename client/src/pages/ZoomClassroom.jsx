@@ -143,6 +143,7 @@ export default function ZoomClassroom() {
   const [status, setStatus] = useState('loading');
   const [errorMsg, setErrorMsg] = useState('');
   const [joinUrl, setJoinUrl] = useState(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [isSharingMyScreen, setIsSharingMyScreen] = useState(false);
 
   const isHost = user?.role === 'INSTRUCTOR' || user?.role === 'ADMIN';
