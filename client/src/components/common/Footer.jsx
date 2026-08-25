@@ -108,12 +108,14 @@ const Footer = () => {
 
       {/* Bottom Footer Section */}
       <div className="border-t border-primary-800/80 bg-primary-950/40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col items-center gap-3 text-xs">
-          <div className="flex gap-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col items-center gap-3 text-xs text-center">
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
             <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
             <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
           </div>
-          <p>© {new Date().getFullYear()} Swift Institute of Safety & Technology – Building Safer Workplaces Through Knowledge & Training</p>
+          <p className="text-center max-w-xl leading-relaxed px-2">
+            © {new Date().getFullYear()} Swift Institute of Safety & Technology – Building Safer Workplaces Through Knowledge & Training
+          </p>
         </div>
       </div>
 

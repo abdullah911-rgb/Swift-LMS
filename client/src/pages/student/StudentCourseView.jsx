@@ -623,10 +623,26 @@ const StudentCourseView = () => {
                 <div className="space-y-4">
                   <div>
                     <h2 className="text-base font-bold text-primary-900">Course Assignments</h2>
-                    <p className="text-xs text-slate-500 mt-1">Download assignments from your instructor, complete them, and upload your work here.</p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {isCompleted
+                        ? 'Assignment submissions are closed for this completed course.'
+                        : 'Download assignments from your instructor, complete them, and upload your work here.'}
+                    </p>
                   </div>
 
-                  {loadingAssignments ? (
+                  {isCompleted ? (
+                    <div className="p-8 border border-emerald-100 bg-emerald-50/40 rounded-2xl text-center space-y-3">
+                      <div className="h-14 w-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
+                        <IoRibbonOutline size={28} />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-800">Course Completed — Assignments Closed</h3>
+                        <p className="text-xs text-slate-600 max-w-md mx-auto mt-1 leading-relaxed">
+                          You have completed this course and earned your certificate. Assignment downloads, submissions, and resubmissions are closed in archive mode.
+                        </p>
+                      </div>
+                    </div>
+                  ) : loadingAssignments ? (
                     <div className="text-center py-10 text-slate-400 text-sm animate-pulse">Loading assignments...</div>
                   ) : assignments.length === 0 ? (
                     <div className="p-8 border border-dashed border-slate-200 rounded-2xl text-center space-y-2">
@@ -640,6 +656,8 @@ const StudentCourseView = () => {
                         const mySubmission = assignment.submissions?.[0];
                         const isSubmitting = submittingAssignId === assignment.id;
                         const isPastDue = assignment.dueDate && new Date(assignment.dueDate) < new Date();
+                        const isResubmission = (mySubmission?.resubmissionCount || 0) > 0;
+                        const wasGraded = mySubmission && (mySubmission.status === 'GRADED' || mySubmission.status === 'REVIEWED');
 
                         return (
                           <div
@@ -658,13 +676,20 @@ const StudentCourseView = () => {
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <h3 className="text-sm font-bold text-slate-800">{assignment.title}</h3>
                                   {mySubmission ? (
-                                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                                      mySubmission.status === 'GRADED' ? 'bg-emerald-100 text-emerald-700' :
-                                      mySubmission.status === 'REVIEWED' ? 'bg-blue-100 text-blue-700' :
-                                      'bg-green-100 text-green-700'
-                                    }`}>
-                                      ✓ {mySubmission.status}
-                                    </span>
+                                    <>
+                                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                                        mySubmission.status === 'GRADED' ? 'bg-emerald-100 text-emerald-700' :
+                                        mySubmission.status === 'REVIEWED' ? 'bg-blue-100 text-blue-700' :
+                                        'bg-green-100 text-green-700'
+                                      }`}>
+                                        ✓ {mySubmission.status}
+                                      </span>
+                                      {isResubmission && (
+                                        <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider bg-violet-100 text-violet-700">
+                                          🔄 Resubmitted
+                                        </span>
+                                      )}
+                                    </>
                                   ) : (
                                     <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
                                       isPastDue ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
@@ -714,7 +739,10 @@ const StudentCourseView = () => {
                                       {mySubmission.fileName || 'Your submission'}
                                     </p>
                                     <p className="text-[10px] text-slate-400">
-                                      Submitted: {new Date(mySubmission.submittedAt).toLocaleString()}
+                                      {isResubmission ? 'Last submitted' : 'Submitted'}: {new Date(mySubmission.submittedAt).toLocaleString()}
+                                      {isResubmission && mySubmission.firstSubmittedAt && (
+                                        <> · First: {new Date(mySubmission.firstSubmittedAt).toLocaleString()}</>
+                                      )}
                                     </p>
                                   </div>
                                   <a
@@ -740,24 +768,32 @@ const StudentCourseView = () => {
                                   </div>
                                 )}
 
-                                {/* Re-submit option */}
                                 {mySubmission.status === 'SUBMITTED' && (
-                                  <p className="text-[10px] text-slate-400 italic">Awaiting instructor review. You can re-submit below if needed.</p>
+                                  <p className="text-[10px] text-slate-400 italic">
+                                    {isResubmission
+                                      ? 'Resubmission awaiting instructor review.'
+                                      : 'Awaiting instructor review. You can re-submit below if needed.'}
+                                  </p>
+                                )}
+                                {wasGraded && (
+                                  <p className="text-[10px] text-amber-600 italic">
+                                    Resubmitting will clear your current grade and require your instructor to review again.
+                                  </p>
                                 )}
                               </div>
                             )}
 
                             {/* Upload / Re-submit form */}
-                            {isCompleted ? (
-                              <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl text-center text-xs font-semibold text-slate-500 flex items-center justify-center gap-1.5">
-                                <IoCheckmarkCircleSharp size={15} className="text-emerald-600" />
-                                Course Completed — Assignment Submissions Closed
-                              </div>
-                            ) : isSubmitting ? (
+                            {isSubmitting ? (
                               <div className="space-y-3 pt-2 border-t border-slate-200/60">
                                 <p className="text-xs font-bold text-slate-600">
                                   {mySubmission ? 'Re-submit Your Work' : 'Submit Your Work'}
                                 </p>
+                                {wasGraded && (
+                                  <p className="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                                    Your previous grade and feedback will be cleared. The instructor will need to grade this assignment again.
+                                  </p>
+                                )}
 
                                 <div>
                                   <input
@@ -802,8 +838,9 @@ const StudentCourseView = () => {
                                         const fd = new FormData();
                                         fd.append('file', submitFile);
                                         if (submitNote) fd.append('note', submitNote);
-                                        await assignmentService.submitAssignment(assignment.id, fd);
-                                        toast.success('Assignment submitted successfully!');
+                                        const res = await assignmentService.submitAssignment(assignment.id, fd);
+                                        const msg = res.data?.message || (mySubmission ? 'Assignment resubmitted successfully!' : 'Assignment submitted successfully!');
+                                        toast.success(msg);
                                         setSubmittingAssignId(null);
                                         setSubmitFile(null);
                                         setSubmitFileName('');

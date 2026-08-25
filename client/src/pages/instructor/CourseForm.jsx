@@ -1399,37 +1399,91 @@ const CourseForm = () => {
                       <p className="text-xs text-slate-300">Students will appear here once they submit their work.</p>
                     </div>
                   ) : (
-                    submissions.map((sub) => (
-                      <div key={sub.id} className="border border-slate-100 rounded-2xl p-4 space-y-3 bg-slate-50/40 hover:border-primary-100 transition-colors">
+                    submissions.map((sub) => {
+                      const isResubmission = sub.isResubmission || (sub.resubmissionCount || 0) > 0;
+                      const isLate = Boolean(
+                        sub.isLate ||
+                        (viewingSubmissionsFor?.dueDate &&
+                          new Date(sub.submittedAt) > new Date(viewingSubmissionsFor.dueDate))
+                      );
+                      const needsReReview = isResubmission && sub.status === 'SUBMITTED';
+
+                      return (
+                      <div
+                        key={sub.id}
+                        className={`border rounded-2xl p-4 space-y-3 transition-colors ${
+                          needsReReview
+                            ? 'border-violet-200 bg-violet-50/40 hover:border-violet-300'
+                            : isLate
+                            ? 'border-rose-100 bg-rose-50/30 hover:border-rose-200'
+                            : 'border-slate-100 bg-slate-50/40 hover:border-primary-100'
+                        }`}
+                      >
                         {/* Student info row */}
                         <div className="flex items-center justify-between gap-3">
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
                             <div className="h-9 w-9 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-sm shrink-0">
                               {sub.student.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                             </div>
-                            <div>
-                              <p className="text-xs font-bold text-slate-800">{sub.student.name}</p>
-                              <p className="text-[10px] text-slate-400">{sub.student.email}</p>
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold text-slate-800 truncate">{sub.student.name}</p>
+                              <p className="text-[10px] text-slate-400 truncate">{sub.student.email}</p>
                             </div>
                           </div>
-                          <div className="text-right shrink-0">
-                            <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                              sub.status === 'GRADED' ? 'bg-emerald-100 text-emerald-700' :
-                              sub.status === 'REVIEWED' ? 'bg-blue-100 text-blue-700' :
-                              'bg-amber-100 text-amber-700'
-                            }`}>
-                              {sub.status}
-                            </span>
-                            {sub.grade && <p className="text-xs font-bold text-emerald-700 mt-1">Grade: {sub.grade}</p>}
+                          <div className="text-right shrink-0 space-y-1">
+                            <div className="flex flex-wrap justify-end gap-1">
+                              <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                                sub.status === 'GRADED' ? 'bg-emerald-100 text-emerald-700' :
+                                sub.status === 'REVIEWED' ? 'bg-blue-100 text-blue-700' :
+                                'bg-amber-100 text-amber-700'
+                              }`}>
+                                {sub.status}
+                              </span>
+                              {isResubmission && (
+                                <span className="inline-block text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider bg-violet-100 text-violet-700">
+                                  🔄 Resubmitted{sub.resubmissionCount > 1 ? ` ×${sub.resubmissionCount}` : ''}
+                                </span>
+                              )}
+                              {isLate && (
+                                <span className="inline-block text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider bg-rose-100 text-rose-700">
+                                  ⚠ Late
+                                </span>
+                              )}
+                            </div>
+                            {sub.grade && <p className="text-xs font-bold text-emerald-700">Grade: {sub.grade}</p>}
                           </div>
                         </div>
+
+                        {needsReReview && (
+                          <div className="px-3 py-2 bg-violet-100/70 border border-violet-200 rounded-xl text-[10px] font-semibold text-violet-800">
+                            Student resubmitted after a previous review — please review and grade this updated work again.
+                          </div>
+                        )}
+
+                        {isLate && viewingSubmissionsFor?.dueDate && (
+                          <div className="px-3 py-2 bg-rose-50 border border-rose-100 rounded-xl text-[10px] font-semibold text-rose-700 flex items-start gap-1.5">
+                            <IoTimeOutline size={12} className="mt-0.5 shrink-0" />
+                            <span>
+                              Submitted after the due date
+                              ({new Date(viewingSubmissionsFor.dueDate).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}).
+                            </span>
+                          </div>
+                        )}
 
                         {/* Submission details */}
                         <div className="flex items-center gap-2 p-2.5 bg-white border border-slate-100 rounded-xl">
                           <IoDocumentOutline size={16} className="text-primary-600 shrink-0" />
                           <div className="min-w-0 flex-1">
                             <p className="text-xs font-bold text-slate-700 truncate">{sub.fileName || 'Submitted file'}</p>
-                            <p className="text-[10px] text-slate-400">Submitted: {new Date(sub.submittedAt).toLocaleString()}</p>
+                            <p className="text-[10px] text-slate-400">
+                              {isResubmission ? 'Last submitted' : 'Submitted'}: {new Date(sub.submittedAt).toLocaleString()}
+                              {isLate && <span className="text-rose-600 font-semibold"> (after due date)</span>}
+                            </p>
+                            {isResubmission && sub.firstSubmittedAt && (
+                              <p className="text-[10px] text-violet-600">
+                                First submission: {new Date(sub.firstSubmittedAt).toLocaleString()}
+                              </p>
+                            )}
                           </div>
                           <a
                             href={getImageUrl(sub.fileUrl)}
@@ -1524,14 +1578,23 @@ const CourseForm = () => {
                               setGradeInput(sub.grade || '');
                               setFeedbackInput(sub.feedback || '');
                             }}
-                            className="w-full py-2 border border-slate-200 hover:border-primary-300 hover:bg-primary-50 text-slate-600 hover:text-primary-700 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                            className={`w-full py-2 border text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                              needsReReview
+                                ? 'border-violet-300 bg-violet-50 hover:bg-violet-100 text-violet-800'
+                                : 'border-slate-200 hover:border-primary-300 hover:bg-primary-50 text-slate-600 hover:text-primary-700'
+                            }`}
                           >
                             <IoStarOutline size={13} />
-                            {sub.status === 'SUBMITTED' ? 'Review & Grade' : 'Edit Review'}
+                            {needsReReview
+                              ? 'Re-Review Resubmission'
+                              : sub.status === 'SUBMITTED'
+                              ? 'Review & Grade'
+                              : 'Edit Review'}
                           </button>
                         )}
                       </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               </div>

@@ -121,7 +121,9 @@ const assignmentController = {
             grade: true,
             feedback: true,
             submittedAt: true,
+            firstSubmittedAt: true,
             reviewedAt: true,
+            resubmissionCount: true,
           },
         },
       },
@@ -179,8 +181,16 @@ const assignmentController = {
     const fileUrl = `/uploads/${req.file.filename}`;
     const fileType = path.extname(req.file.originalname).replace('.', '').toLowerCase();
     const fileName = req.file.originalname;
+    const now = new Date();
 
-    // Upsert so the student can re-submit (replaces previous submission)
+    // Detect existing submission (resubmit vs first submit)
+    const existing = await prisma.assignmentSubmission.findUnique({
+      where: { assignmentId_studentId: { assignmentId, studentId } },
+      select: { id: true, status: true, resubmissionCount: true, firstSubmittedAt: true },
+    });
+    const isResubmission = Boolean(existing);
+
+    // Upsert: first submit creates; later submits replace file, clear grade, flag as resubmission
     const submission = await prisma.assignmentSubmission.upsert({
       where: { assignmentId_studentId: { assignmentId, studentId } },
       create: {
@@ -191,7 +201,9 @@ const assignmentController = {
         fileName,
         note: note || null,
         status: 'SUBMITTED',
-        submittedAt: new Date(),
+        submittedAt: now,
+        firstSubmittedAt: now,
+        resubmissionCount: 0,
       },
       update: {
         fileUrl,
@@ -201,26 +213,35 @@ const assignmentController = {
         status: 'SUBMITTED',
         grade: null,
         feedback: null,
-        submittedAt: new Date(),
+        submittedAt: now,
         reviewedAt: null,
+        resubmissionCount: { increment: 1 },
       },
     });
 
     // Recalculate student enrollment progress in this course
     try { await recalculateEnrollmentProgress(studentId, assignment.courseId); } catch (_) {}
 
-    // Notify the instructor
+    // Notify the instructor — call out resubmissions so they re-review
+    const wasPreviouslyReviewed = existing && (existing.status === 'GRADED' || existing.status === 'REVIEWED');
     await prisma.notification.create({
       data: {
         userId: assignment.instructorId,
-        title: '📬 Assignment Submitted',
-        message: `A student has submitted their work for "${assignment.title}" in "${assignment.course.title}".`,
+        title: isResubmission ? '🔄 Assignment Resubmitted' : '📬 Assignment Submitted',
+        message: isResubmission
+          ? `A student has resubmitted "${assignment.title}" in "${assignment.course.title}".${wasPreviouslyReviewed ? ' Previous grade was cleared — please review and grade again.' : ' Please review the updated work.'}`
+          : `A student has submitted their work for "${assignment.title}" in "${assignment.course.title}".`,
         type: 'SUCCESS',
         link: `/instructor/courses/${assignment.courseId}/edit`,
       },
     });
 
-    sendSuccess(res, 'Assignment submitted successfully.', { submission }, 201);
+    sendSuccess(
+      res,
+      isResubmission ? 'Assignment resubmitted successfully. Your instructor will need to review it again.' : 'Assignment submitted successfully.',
+      { submission, isResubmission },
+      201
+    );
   }),
 
   // ── Instructor: GET /api/assignments/:assignmentId/submissions ──────────────
@@ -245,7 +266,21 @@ const assignmentController = {
       orderBy: { submittedAt: 'desc' },
     });
 
-    sendSuccess(res, 'Submissions fetched.', { submissions });
+    // Enrich with late / resubmission flags for instructor UI
+    const dueDate = assignment.dueDate ? new Date(assignment.dueDate) : null;
+    const enriched = submissions.map((sub) => {
+      const submittedAt = new Date(sub.submittedAt);
+      const isLate = Boolean(dueDate && submittedAt > dueDate);
+      const isResubmission = (sub.resubmissionCount || 0) > 0;
+      return {
+        ...sub,
+        isLate,
+        isResubmission,
+        dueDate: assignment.dueDate,
+      };
+    });
+
+    sendSuccess(res, 'Submissions fetched.', { submissions: enriched, dueDate: assignment.dueDate });
   }),
 
   // ── Instructor: PATCH /api/assignments/submissions/:submissionId/review ──────

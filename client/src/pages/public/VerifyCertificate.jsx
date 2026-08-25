@@ -4,11 +4,9 @@ import { certificateService } from '../../services/portalService';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import toast from 'react-hot-toast';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
-  IoCheckmarkCircleOutline,
   IoAlertCircleOutline,
-  IoRibbonOutline,
   IoCalendarOutline,
   IoPersonOutline,
   IoSchoolOutline,
@@ -17,10 +15,8 @@ import {
   IoCameraOutline,
   IoCloudUploadOutline,
   IoCloseOutline,
-  IoDocumentTextOutline,
   IoShieldCheckmarkOutline,
   IoArrowBackOutline,
-  IoTimeOutline
 } from 'react-icons/io5';
 
 // Dynamic load helper for jsQR
@@ -227,8 +223,8 @@ export default function VerifyCertificate() {
   };
 
   return (
-    <div className="min-h-[85vh] bg-slate-50/50 py-12 px-4 sm:px-6 font-sans">
-      <div className="max-w-xl mx-auto space-y-6">
+    <div className="min-h-[85vh] bg-slate-50/50 py-6 sm:py-12 px-3 sm:px-6 font-sans overflow-x-hidden">
+      <div className="max-w-xl mx-auto w-full space-y-4 sm:space-y-6">
         
         {/* Verification View Panel */}
         {code ? (
@@ -236,35 +232,36 @@ export default function VerifyCertificate() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
+            className="w-full"
           >
-            <Card hover={false} className="bg-white border border-slate-100 p-6 sm:p-8 rounded-3xl shadow-xl space-y-6 relative overflow-hidden">
+            <Card hover={false} className="bg-white border border-slate-100 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl shadow-xl space-y-5 sm:space-y-6 relative overflow-hidden">
               
               {/* Back to main Verification portal button */}
-              <div className="flex justify-between items-center pb-4 border-b border-slate-100">
+              <div className="flex justify-between items-center gap-2 pb-3 sm:pb-4 border-b border-slate-100">
                 <Link
                   to="/verify-certificate"
-                  className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-primary-700 transition-colors"
+                  className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-primary-700 transition-colors min-w-0"
                 >
-                  <IoArrowBackOutline size={16} />
-                  <span>Verification Registry</span>
+                  <IoArrowBackOutline size={16} className="shrink-0" />
+                  <span className="truncate">Verification Registry</span>
                 </Link>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 shrink-0">
                   <img
                     src="/Logo1.jpeg"
                     alt="Swift logo"
-                    className="h-8 object-contain bg-white rounded p-0.5"
+                    className="h-7 sm:h-8 object-contain bg-white rounded p-0.5"
                   />
                   <span className="text-[10px] font-extrabold text-primary-900 tracking-wider">Swift</span>
                 </div>
               </div>
 
               {loading ? (
-                <div className="flex flex-col items-center justify-center py-16 space-y-4">
+                <div className="flex flex-col items-center justify-center py-12 sm:py-16 space-y-4">
                   <div className="animate-spin rounded-full h-9 w-9 border-b-2 border-primary-600"></div>
-                  <p className="text-xs text-slate-400 font-semibold tracking-wider">Querying credentials registry...</p>
+                  <p className="text-xs text-slate-400 font-semibold tracking-wider text-center px-2">Querying credentials registry...</p>
                 </div>
               ) : error ? (
-                <div className="text-center py-10 space-y-6">
+                <div className="text-center py-8 sm:py-10 space-y-5 sm:space-y-6 px-1">
                   <div className="h-14 w-14 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
                     <IoAlertCircleOutline size={32} />
                   </div>
@@ -281,39 +278,39 @@ export default function VerifyCertificate() {
                   </div>
                 </div>
               ) : cert ? (
-                <div className="space-y-6">
+                <div className="space-y-5 sm:space-y-6">
                   {/* Verified Success Badge */}
-                  <div className="bg-emerald-50/70 border border-emerald-100/80 rounded-2xl p-5 flex gap-4 text-emerald-950 items-start shadow-xs">
-                    <div className="shrink-0 mt-0.5 p-2 bg-emerald-100 text-emerald-600 rounded-xl">
+                  <div className="bg-emerald-50/70 border border-emerald-100/80 rounded-xl sm:rounded-2xl p-3.5 sm:p-5 flex gap-3 sm:gap-4 text-emerald-950 items-start shadow-xs">
+                    <div className="shrink-0 mt-0.5 p-1.5 sm:p-2 bg-emerald-100 text-emerald-600 rounded-lg sm:rounded-xl">
                       <IoShieldCheckmarkOutline size={22} />
                     </div>
-                    <div>
-                      <p className="text-xs font-black tracking-wide uppercase text-emerald-800">Verified Authentic</p>
-                      <p className="text-[11px] text-slate-600 mt-1 leading-relaxed m-0 font-medium">
-                        This completion certificate is officially issued by **Swift Institute of Safety & Technology**. The registry matches a validated graduate database record.
+                    <div className="min-w-0">
+                      <p className="text-[11px] sm:text-xs font-black tracking-wide uppercase text-emerald-800">Verified Authentic</p>
+                      <p className="text-[11px] text-slate-600 mt-1 leading-relaxed m-0 font-medium break-words">
+                        This completion certificate is officially issued by Swift Institute of Safety & Technology. The registry matches a validated graduate database record.
                       </p>
                     </div>
                   </div>
 
                   {/* Registry Details */}
-                  <div className="space-y-4">
-                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest pb-1 border-b border-slate-50 m-0">
+                  <div className="space-y-3 sm:space-y-4">
+                    <h4 className="text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-widest pb-1 border-b border-slate-50 m-0">
                       Graduate Credential Details
                     </h4>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-y-2 sm:gap-y-4 text-xs font-semibold">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-y-3 sm:gap-y-4 text-xs font-semibold">
                       <div className="sm:col-span-1 text-slate-400 flex items-center gap-1.5">
                         <IoPersonOutline size={14} />
                         <span>Student:</span>
                       </div>
-                      <div className="sm:col-span-2 text-slate-800 font-extrabold">
+                      <div className="sm:col-span-2 text-slate-800 font-extrabold break-words">
                         {cert.studentName}
                       </div>
 
                       {cert.fatherName && (
                         <>
-                          <div className="col-span-1 text-slate-400">Father's Name:</div>
-                          <div className="col-span-2 text-slate-800 font-extrabold">
+                          <div className="text-slate-400">Father's Name:</div>
+                          <div className="sm:col-span-2 text-slate-800 font-extrabold break-words">
                             {cert.fatherName}
                           </div>
                         </>
@@ -321,43 +318,42 @@ export default function VerifyCertificate() {
 
                       {cert.cnic && (
                         <>
-                          <div className="col-span-1 text-slate-400">CNIC:</div>
-                          <div className="col-span-2 text-slate-800 font-mono font-bold">
+                          <div className="text-slate-400">CNIC:</div>
+                          <div className="sm:col-span-2 text-slate-800 font-mono font-bold break-all">
                             {cert.cnic}
                           </div>
                         </>
                       )}
 
-                      <div className="col-span-1 text-slate-400 flex items-center gap-1.5">
+                      <div className="text-slate-400 flex items-center gap-1.5">
                         <IoSchoolOutline size={14} />
                         <span>Course:</span>
                       </div>
-                      <div className="col-span-2 text-slate-800 font-extrabold">
+                      <div className="sm:col-span-2 text-slate-800 font-extrabold break-words">
                         {cert.courseTitle}
                       </div>
 
-                      <div className="col-span-1 text-slate-400">Instructor:</div>
-                      <div className="col-span-2 text-slate-800 font-extrabold">
+                      <div className="text-slate-400">Instructor:</div>
+                      <div className="sm:col-span-2 text-slate-800 font-extrabold break-words">
                         {cert.instructorName}
                       </div>
 
-                      <div className="col-span-1 text-slate-400">Validity:</div>
-                      <div className="col-span-2 text-slate-800 font-extrabold flex items-center gap-1.5">
-                        <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span className="text-emerald-700 uppercase tracking-wide">Valid / Authentic</span>
+                      <div className="text-slate-400">Validity:</div>
+                      <div className="sm:col-span-2 text-slate-800 font-extrabold flex items-center gap-1.5">
+                        <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+                        <span className="text-emerald-700 uppercase tracking-wide text-[11px] sm:text-xs">Valid / Authentic</span>
                       </div>
 
-                      <div className="col-span-1 text-slate-400">Certificate ID:</div>
-                      <div className="col-span-2 text-slate-900 font-mono font-bold tracking-wider text-sm select-all">
+                      <div className="text-slate-400">Certificate ID:</div>
+                      <div className="sm:col-span-2 text-slate-900 font-mono font-bold tracking-wider text-xs sm:text-sm select-all break-all">
                         {cert.certificateId}
                       </div>
 
-
-                      <div className="col-span-1 text-slate-400 flex items-center gap-1.5">
+                      <div className="text-slate-400 flex items-center gap-1.5">
                         <IoCalendarOutline size={14} />
                         <span>Issued On:</span>
                       </div>
-                      <div className="col-span-2 text-slate-800 font-extrabold">
+                      <div className="sm:col-span-2 text-slate-800 font-extrabold">
                         {new Date(cert.issuedAt).toLocaleDateString('en-PK', {
                           day: 'numeric',
                           month: 'long',
@@ -368,33 +364,33 @@ export default function VerifyCertificate() {
                   </div>
 
                   {/* Evaluation Marks Breakdown */}
-                  <div className="space-y-4 pt-2">
-                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest pb-1 border-b border-slate-50 m-0">
-                      Performance Evaluation breakdown
+                  <div className="space-y-3 sm:space-y-4 pt-1 sm:pt-2">
+                    <h4 className="text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-widest pb-1 border-b border-slate-50 m-0">
+                      Performance Evaluation Breakdown
                     </h4>
 
-                    <div className="grid grid-cols-4 gap-2 text-center text-xs">
-                      <div className="p-3 border border-slate-100 bg-slate-50/50 rounded-2xl">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+                      <div className="p-2.5 sm:p-3 border border-slate-100 bg-slate-50/50 rounded-xl sm:rounded-2xl">
                         <span className="text-[9px] font-bold text-slate-400 uppercase block">Attendance</span>
-                        <span className="font-extrabold text-slate-700 block mt-1">
+                        <span className="font-extrabold text-slate-700 block mt-1 text-[11px] sm:text-xs">
                           {cert.attendanceMarks.toFixed(1)}/20
                         </span>
                       </div>
-                      <div className="p-3 border border-slate-100 bg-slate-50/50 rounded-2xl">
+                      <div className="p-2.5 sm:p-3 border border-slate-100 bg-slate-50/50 rounded-xl sm:rounded-2xl">
                         <span className="text-[9px] font-bold text-slate-400 uppercase block">Assignments</span>
-                        <span className="font-extrabold text-slate-700 block mt-1">
+                        <span className="font-extrabold text-slate-700 block mt-1 text-[11px] sm:text-xs">
                           {cert.assignmentMarks.toFixed(1)}/20
                         </span>
                       </div>
-                      <div className="p-3 border border-slate-100 bg-slate-50/50 rounded-2xl">
+                      <div className="p-2.5 sm:p-3 border border-slate-100 bg-slate-50/50 rounded-xl sm:rounded-2xl">
                         <span className="text-[9px] font-bold text-slate-400 uppercase block">Final Quiz</span>
-                        <span className="font-extrabold text-slate-700 block mt-1">
+                        <span className="font-extrabold text-slate-700 block mt-1 text-[11px] sm:text-xs">
                           {cert.mcqMarks.toFixed(1)}/60
                         </span>
                       </div>
-                      <div className="p-3 border border-primary-100 bg-primary-50/20 rounded-2xl">
+                      <div className="p-2.5 sm:p-3 border border-primary-100 bg-primary-50/20 rounded-xl sm:rounded-2xl">
                         <span className="text-[9px] font-bold text-primary-500 uppercase block">Final Score</span>
-                        <span className="font-extrabold text-primary-700 block mt-1">
+                        <span className="font-extrabold text-primary-700 block mt-1 text-[11px] sm:text-xs">
                           {cert.finalMarks.toFixed(1)}/100
                         </span>
                       </div>
@@ -402,9 +398,9 @@ export default function VerifyCertificate() {
                   </div>
 
                   {/* Registry Verification code */}
-                  <div className="pt-6 border-t border-slate-100 text-center text-[10px] text-slate-400 font-medium space-y-1">
-                    <p className="m-0 font-mono">Verification Code: {cert.verificationCode}</p>
-                    <p className="m-0">Verified successfully via Swift Credential Authenticity Registry Node.</p>
+                  <div className="pt-4 sm:pt-6 border-t border-slate-100 text-center text-[10px] text-slate-400 font-medium space-y-1 px-1">
+                    <p className="m-0 font-mono break-all">Verification Code: {cert.verificationCode}</p>
+                    <p className="m-0 leading-relaxed">Verified successfully via Swift Credential Authenticity Registry Node.</p>
                   </div>
                 </div>
               ) : null}
@@ -422,42 +418,42 @@ export default function VerifyCertificate() {
           <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="space-y-6"
+            className="space-y-4 sm:space-y-6 w-full"
           >
             {/* Header Description */}
-            <div className="text-center space-y-2">
-              <h1 className="text-2xl font-extrabold tracking-tight text-primary-950 font-heading">
+            <div className="text-center space-y-2 px-1">
+              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-primary-950 font-heading leading-snug">
                 Certificate Verification Portal
               </h1>
-              <p className="text-slate-500 text-sm max-w-sm mx-auto leading-relaxed">
-                Verify credential Authenticity, Matching Graduate Registry Profiles, and Academic Transcripts in real-time.
+              <p className="text-slate-500 text-xs sm:text-sm max-w-sm mx-auto leading-relaxed">
+                Verify credential authenticity, matching graduate registry profiles, and academic transcripts in real-time.
               </p>
             </div>
 
-            <Card hover={false} className="bg-white border border-slate-100 p-6 sm:p-8 rounded-3xl shadow-xl space-y-6">
+            <Card hover={false} className="bg-white border border-slate-100 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl shadow-xl space-y-5 sm:space-y-6">
               {/* Tab Selector */}
-              <div className="flex border border-slate-100 bg-slate-50 p-1.5 rounded-2xl">
+              <div className="flex border border-slate-100 bg-slate-50 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl gap-0.5 sm:gap-0">
                 <button
                   onClick={() => { stopWebcam(); setActiveTab('ID'); }}
-                  className={`flex-1 py-2.5 text-xs font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  className={`flex-1 min-w-0 py-2 sm:py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-lg sm:rounded-xl transition-all flex items-center justify-center gap-1 sm:gap-2 cursor-pointer ${
                     activeTab === 'ID'
-                      ? 'bg-white text-primary-950 shadow-sm font-black'
+                      ? 'bg-white text-primary-950 shadow-sm'
                       : 'text-slate-400 hover:text-slate-700'
                   }`}
                 >
-                  <IoSearchOutline size={16} />
-                  <span>Verify by ID / Hash</span>
+                  <IoSearchOutline size={15} className="shrink-0" />
+                  <span className="truncate">Verify by ID</span>
                 </button>
                 <button
                   onClick={() => { setActiveTab('QR'); }}
-                  className={`flex-1 py-2.5 text-xs font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  className={`flex-1 min-w-0 py-2 sm:py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-lg sm:rounded-xl transition-all flex items-center justify-center gap-1 sm:gap-2 cursor-pointer ${
                     activeTab === 'QR'
-                      ? 'bg-white text-primary-950 shadow-sm font-black'
+                      ? 'bg-white text-primary-950 shadow-sm'
                       : 'text-slate-400 hover:text-slate-700'
                   }`}
                 >
-                  <IoQrCodeOutline size={16} />
-                  <span>Scan QR Code</span>
+                  <IoQrCodeOutline size={15} className="shrink-0" />
+                  <span className="truncate">Scan QR</span>
                 </button>
               </div>
 
@@ -465,7 +461,7 @@ export default function VerifyCertificate() {
               {activeTab === 'ID' && (
                 <form onSubmit={handleVerifySubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">
+                    <label className="text-[10px] sm:text-xs font-black text-slate-500 uppercase tracking-widest block">
                       Certificate ID or Verification Code
                     </label>
                     <div className="relative">
@@ -474,17 +470,18 @@ export default function VerifyCertificate() {
                         value={searchId}
                         onChange={(e) => setSearchId(e.target.value)}
                         placeholder="e.g., SST-2026-00000001"
-                        className="w-full pl-4 pr-11 py-3.5 rounded-2xl border border-slate-100 bg-slate-50/50 focus:outline-none focus:border-primary-600 focus:bg-white text-sm font-medium transition-all"
+                        className="w-full pl-3 sm:pl-4 pr-12 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl border border-slate-100 bg-slate-50/50 focus:outline-none focus:border-primary-600 focus:bg-white text-sm font-medium transition-all"
                       />
                       <button
                         type="submit"
-                        className="absolute right-2 top-1.5 p-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl transition-colors cursor-pointer"
+                        className="absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 p-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg sm:rounded-xl transition-colors cursor-pointer"
+                        aria-label="Verify certificate"
                       >
                         <IoSearchOutline size={18} />
                       </button>
                     </div>
-                    <span className="text-[10px] text-slate-400 block font-medium">
-                      Enter the unique identifier code or verification code string printed on the certificate document.
+                    <span className="text-[10px] text-slate-400 block font-medium leading-relaxed">
+                      Enter the unique identifier or verification code printed on the certificate.
                     </span>
                   </div>
                 </form>
@@ -492,10 +489,10 @@ export default function VerifyCertificate() {
 
               {/* Tab Content 2: QR Scanner / Upload Area */}
               {activeTab === 'QR' && (
-                <div className="space-y-5">
+                <div className="space-y-4 sm:space-y-5">
                   {scanning ? (
                     /* Webcam Camera Viewport */
-                    <div className="relative border border-slate-150 rounded-2xl bg-black overflow-hidden aspect-video flex items-center justify-center">
+                    <div className="relative border border-slate-150 rounded-xl sm:rounded-2xl bg-black overflow-hidden aspect-[4/3] sm:aspect-video flex items-center justify-center max-h-[70vh]">
                       <video
                         ref={videoRef}
                         className="w-full h-full object-cover"
@@ -505,8 +502,8 @@ export default function VerifyCertificate() {
                       />
 
                       {/* Scanning overlay guidelines */}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-40 h-40 border-2 border-dashed border-primary-500 rounded-2xl relative shadow-md">
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="w-36 h-36 sm:w-40 sm:h-40 border-2 border-dashed border-primary-500 rounded-2xl relative shadow-md">
                           <div className="absolute top-0 left-0 w-full h-0.5 bg-primary-500 animate-[bounce_2s_infinite]"></div>
                         </div>
                       </div>
@@ -514,30 +511,31 @@ export default function VerifyCertificate() {
                       {/* Stop webcam button */}
                       <button
                         onClick={stopWebcam}
-                        className="absolute top-3 right-3 p-2 bg-black/60 hover:bg-black/85 text-white rounded-full transition-colors cursor-pointer"
+                        className="absolute top-3 right-3 p-2 bg-black/60 hover:bg-black/85 text-white rounded-full transition-colors cursor-pointer z-10"
+                        aria-label="Stop camera"
                       >
                         <IoCloseOutline size={20} />
                       </button>
 
-                      <div className="absolute bottom-3 left-0 right-0 text-center">
-                        <span className="text-[10px] bg-black/75 px-3 py-1 text-white font-bold rounded-full tracking-wider uppercase">
+                      <div className="absolute bottom-3 left-2 right-2 text-center">
+                        <span className="inline-block text-[10px] bg-black/75 px-3 py-1 text-white font-bold rounded-full tracking-wider uppercase">
                           Align QR inside scanner box
                         </span>
                       </div>
                     </div>
                   ) : (
                     /* Scanner Menu option */
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       
                       {/* Open camera card */}
                       <button
                         onClick={startWebcam}
-                        className="p-6 border border-slate-100 bg-slate-50/50 hover:bg-primary-50/30 hover:border-primary-200 rounded-2xl text-center space-y-3 transition-all flex flex-col items-center justify-center cursor-pointer group"
+                        className="p-5 sm:p-6 border border-slate-100 bg-slate-50/50 hover:bg-primary-50/30 hover:border-primary-200 rounded-xl sm:rounded-2xl text-center space-y-3 transition-all flex flex-col items-center justify-center cursor-pointer group"
                       >
                         <div className="p-3 bg-white text-slate-600 group-hover:text-primary-600 rounded-xl shadow-xs transition-colors">
                           <IoCameraOutline size={22} />
                         </div>
-                        <div className="text-left text-center">
+                        <div className="text-center px-1">
                           <h4 className="text-xs font-extrabold text-slate-800">Scan via Camera</h4>
                           <p className="text-[10px] text-slate-400 mt-1 leading-snug">
                             Use device camera to instantly scan verification QR code.
@@ -550,7 +548,7 @@ export default function VerifyCertificate() {
                         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                         onDragLeave={() => setDragOver(false)}
                         onDrop={(e) => { e.preventDefault(); setDragOver(false); handleImageFile(e.dataTransfer.files?.[0]); }}
-                        className={`p-6 border-2 border-dashed rounded-2xl text-center space-y-3 transition-all flex flex-col items-center justify-center cursor-pointer relative ${
+                        className={`p-5 sm:p-6 border-2 border-dashed rounded-xl sm:rounded-2xl text-center space-y-3 transition-all flex flex-col items-center justify-center cursor-pointer relative ${
                           dragOver
                             ? 'border-primary-600 bg-primary-50/50'
                             : 'border-slate-150 bg-slate-50/50 hover:bg-primary-50/30 hover:border-primary-200'
@@ -570,12 +568,12 @@ export default function VerifyCertificate() {
                         <div className="p-3 bg-white text-slate-600 rounded-xl shadow-xs">
                           <IoCloudUploadOutline size={22} />
                         </div>
-                        <div>
-                          <h4 className="text-xs font-extrabold text-slate-800 truncate px-2">
+                        <div className="px-1">
+                          <h4 className="text-xs font-extrabold text-slate-800 truncate max-w-full">
                             {uploadFileName ? uploadFileName : 'Upload Image / Capture'}
                           </h4>
                           <p className="text-[10px] text-slate-400 mt-1 leading-snug">
-                            Drag & drop screenshot or click to parse code.
+                            Drag & drop screenshot or tap to parse code.
                           </p>
                         </div>
                       </div>
@@ -583,9 +581,9 @@ export default function VerifyCertificate() {
                     </div>
                   )}
 
-                  <div className="text-center pt-2">
+                  <div className="text-center pt-1 sm:pt-2 px-1">
                     <span className="text-[10px] text-slate-400 font-semibold tracking-wide block leading-relaxed">
-                      Unique QR codes are generated bottom-right on every issued Swift certificate. Scan using camera or upload screenshot to verify graduation credentials instantly.
+                      Unique QR codes are on every issued Swift certificate. Scan with camera or upload a screenshot to verify instantly.
                     </span>
                   </div>
                 </div>
