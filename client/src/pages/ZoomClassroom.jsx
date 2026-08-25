@@ -139,35 +139,41 @@ function getBackPath(role, courseId) {
   return getRoleHomePath(role);
 }
 
-// Zoom Component View sizes the video canvas to viewSizes, then stacks the
-// mic/camera/share footer BELOW that canvas. If we pass the full container
-// height, the toolbar is pushed off-screen and clipped by overflow:hidden.
-const ZOOM_FOOTER_PX = 72;
-// Zoom ribbon max width is 316px; ~300 gives a Meet/Zoom-style participant strip.
-const ZOOM_RIBBON_W = 300;
-const ZOOM_SHARE_GAP = 10;
+// Zoom stacks mic/camera/share under the video canvas — reserve room for the
+// toolbar; the stage still scrolls if Zoom grows past this.
+const ZOOM_FOOTER_PX = 80;
+// Zoom ribbon max width is 316px; keep it tight so the share stage can grow.
+const ZOOM_RIBBON_W = 280;
+const ZOOM_SHARE_GAP = 8;
 
 /**
  * Compute gallery vs screen-share viewSizes.
- * - Gallery/speaker: default fills the stage.
- * - Screen share: main stage + narrow vertical ribbon (participants on the right).
+ * Measure the stage (parent) — not #meetingSDKElement — because the mount
+ * height is auto so Zoom's toolbar can extend and the stage can scroll.
  */
 function measureZoomLayout(el, { sharing = false } = {}) {
-  const width = Math.max(320, Math.floor(el?.offsetWidth || window.innerWidth));
-  const available = Math.floor(el?.offsetHeight || Math.max(window.innerHeight - 44, 240));
-  const height = Math.max(180, available - ZOOM_FOOTER_PX);
+  const box = el?.parentElement || el;
+  const width = Math.max(320, Math.floor(box?.clientWidth || el?.offsetWidth || window.innerWidth));
+  const available = Math.floor(
+    box?.clientHeight || el?.offsetHeight || Math.max(window.innerHeight - 44, 240)
+  );
+  // Use as much vertical space as possible for video/share; leave room for toolbar
+  const height = Math.max(200, available - ZOOM_FOOTER_PX);
 
   if (sharing) {
-    const ribbonW = Math.min(ZOOM_RIBBON_W, Math.max(240, Math.floor(width * 0.22)));
-    const mainW = Math.max(480, width - ribbonW - ZOOM_SHARE_GAP);
+    // Maximize share width: full stage minus a compact participant ribbon
+    const ribbonW = Math.min(316, Math.max(240, ZOOM_RIBBON_W));
+    const shareW = Math.max(640, width - ribbonW - ZOOM_SHARE_GAP);
     return {
-      width: mainW,
+      width: shareW,
       height,
       viewSizes: {
-        default: { width: mainW, height },
+        default: { width: shareW, height },
         ribbon: { width: ribbonW, height },
       },
       ribbonW,
+      stageW: width,
+      stageH: available,
     };
   }
 
@@ -176,11 +182,101 @@ function measureZoomLayout(el, { sharing = false } = {}) {
     height,
     viewSizes: {
       default: { width, height },
-      // Keep a correct ribbon size ready for when share starts
       ribbon: { width: ZOOM_RIBBON_W, height },
     },
     ribbonW: ZOOM_RIBBON_W,
+    stageW: width,
+    stageH: available,
   };
+}
+
+/**
+ * Pin Zoom's share + ribbon DOM flush to the stage edges so leftover
+ * top/right black bars disappear (Component View often centers a smaller box).
+ */
+function forceShareFillLayout(root) {
+  if (!root) return;
+  const stage = root.parentElement || root;
+  const stageW = stage.clientWidth || 0;
+  const stageH = Math.max(0, (stage.clientHeight || 0) - ZOOM_FOOTER_PX);
+  if (stageW < 200 || stageH < 160) return;
+
+  const ribbonW = Math.min(316, Math.max(240, ZOOM_RIBBON_W));
+  const shareW = Math.max(480, stageW - ribbonW - ZOOM_SHARE_GAP);
+
+  const share =
+    root.querySelector('.sharee-container') ||
+    root.querySelector('.sharee-sp-container') ||
+    root.querySelector('[class*="sharee-container"]');
+  const ribbon =
+    root.querySelector('.speaker-bar-container') ||
+    root.querySelector('[class*="speaker-bar-container"]');
+  const suspension =
+    root.querySelector('.suspension-window') ||
+    root.querySelector('.suspension-window-container') ||
+    root.querySelector('[class*="suspension-window"]');
+
+  if (suspension instanceof HTMLElement) {
+    Object.assign(suspension.style, {
+      top: '0px',
+      left: '0px',
+      right: 'auto',
+      bottom: 'auto',
+      margin: '0px',
+      transform: 'none',
+      width: `${stageW}px`,
+      maxWidth: '100%',
+    });
+  }
+
+  if (share instanceof HTMLElement) {
+    Object.assign(share.style, {
+      position: 'relative',
+      top: '0px',
+      left: '0px',
+      margin: '0px',
+      transform: 'none',
+      width: `${shareW}px`,
+      maxWidth: `${shareW}px`,
+      height: `${stageH}px`,
+      maxHeight: `${stageH}px`,
+    });
+    const canvas =
+      share.querySelector('canvas') ||
+      share.querySelector('.sharee-container__canvas') ||
+      share.querySelector('[class*="sharee-container__canvas"]');
+    const viewport =
+      share.querySelector('.sharee-container__viewport') ||
+      share.querySelector('[class*="sharee-container__viewport"]');
+    if (canvas instanceof HTMLElement) {
+      Object.assign(canvas.style, {
+        width: '100%',
+        height: '100%',
+        maxWidth: '100%',
+        maxHeight: '100%',
+        objectFit: 'contain',
+      });
+    }
+    if (viewport instanceof HTMLElement) {
+      Object.assign(viewport.style, {
+        width: '100%',
+        height: '100%',
+        maxWidth: '100%',
+        maxHeight: '100%',
+      });
+    }
+  }
+
+  if (ribbon instanceof HTMLElement) {
+    Object.assign(ribbon.style, {
+      margin: '0px',
+      transform: 'none',
+      width: `${ribbonW}px`,
+      maxWidth: `${ribbonW}px`,
+      height: `${stageH}px`,
+      maxHeight: `${stageH}px`,
+    });
+  }
 }
 
 function applyZoomViewSizes(client, el, sharing) {
@@ -189,6 +285,13 @@ function applyZoomViewSizes(client, el, sharing) {
   try {
     client.updateVideoOptions({ viewSizes });
   } catch (_) {}
+  if (sharing) {
+    // Zoom paints share after a tick — force fill once canvas exists
+    requestAnimationFrame(() => forceShareFillLayout(el));
+    setTimeout(() => forceShareFillLayout(el), 80);
+    setTimeout(() => forceShareFillLayout(el), 300);
+    setTimeout(() => forceShareFillLayout(el), 700);
+  }
 }
 
 export default function ZoomClassroom() {
@@ -224,14 +327,19 @@ export default function ZoomClassroom() {
     isShareLayoutRef.current = !!active;
     setIsShareLayoutActive(!!active);
     applyZoomViewSizes(clientRef.current, containerRef.current, !!active);
-    // Give Zoom a beat to reflow share + ribbon, then re-apply sizes
+    // Give Zoom a beat to reflow share + ribbon, then re-apply sizes and fill gaps
     setTimeout(() => {
       applyZoomViewSizes(clientRef.current, containerRef.current, isShareLayoutRef.current);
       window.dispatchEvent(new Event('resize'));
+      if (isShareLayoutRef.current) forceShareFillLayout(containerRef.current);
     }, 120);
     setTimeout(() => {
       applyZoomViewSizes(clientRef.current, containerRef.current, isShareLayoutRef.current);
+      if (isShareLayoutRef.current) forceShareFillLayout(containerRef.current);
     }, 450);
+    setTimeout(() => {
+      if (isShareLayoutRef.current) forceShareFillLayout(containerRef.current);
+    }, 900);
   }, []);
 
   syncShareLayoutRef.current = syncShareLayout;
@@ -292,8 +400,13 @@ export default function ZoomClassroom() {
     const onFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
       // Give Zoom time to reflow, then fire resize so it re-renders to new dims
-      setTimeout(() => window.dispatchEvent(new Event('resize')), 150);
-      setTimeout(() => window.dispatchEvent(new Event('resize')), 500);
+      const refresh = () => {
+        window.dispatchEvent(new Event('resize'));
+        applyZoomViewSizes(clientRef.current, containerRef.current, isShareLayoutRef.current);
+        if (isShareLayoutRef.current) forceShareFillLayout(containerRef.current);
+      };
+      setTimeout(refresh, 150);
+      setTimeout(refresh, 500);
     };
     document.addEventListener('fullscreenchange', onFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
@@ -303,16 +416,19 @@ export default function ZoomClassroom() {
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+    const stage = el.parentElement || el;
     let resizeTimer;
     const applySize = () => {
       window.dispatchEvent(new Event('resize'));
       applyZoomViewSizes(clientRef.current, el, isShareLayoutRef.current);
+      if (isShareLayoutRef.current) forceShareFillLayout(el);
     };
     const ro = new ResizeObserver(() => {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(applySize, 100);
     });
-    ro.observe(el);
+    // Observe the stage (fixed flex slot), not the auto-height Zoom mount
+    ro.observe(stage);
     window.addEventListener('resize', applySize);
     return () => {
       ro.disconnect();
@@ -440,7 +556,10 @@ export default function ZoomClassroom() {
           let tries = 0;
           const check = () => {
             const el = containerRef.current;
-            if (el && el.offsetWidth > 0 && el.offsetHeight > 120) return resolve();
+            const stage = el?.parentElement;
+            const h = stage?.clientHeight || el?.offsetHeight || 0;
+            const w = stage?.clientWidth || el?.offsetWidth || 0;
+            if (el && w > 0 && h > 120) return resolve();
             if (++tries > 60) return resolve(); // give up after 3s
             setTimeout(check, 50);
           };
@@ -822,7 +941,17 @@ export default function ZoomClassroom() {
       {/* Zoom SDK mount — always occupies remaining height so init measurements are correct */}
       <div
         className={isShareLayoutActive ? 'lms-zoom-stage lms-zoom-sharing' : 'lms-zoom-stage'}
-        style={{ flex: 1, position: 'relative', minHeight: 0, width: '100%', overflow: 'hidden' }}
+        style={{
+          flex: 1,
+          position: 'relative',
+          minHeight: 0,
+          width: '100%',
+          // Zoom puts the control bar BELOW the video canvas. If content is taller
+          // than the viewport, users must be able to scroll to reach mic/camera/share.
+          overflowX: 'hidden',
+          overflowY: 'auto',
+          WebkitOverflowScrolling: 'touch',
+        }}
       >
         {/* Local presenter: hide recursive share preview — show a clean "presenting" stage.
             Remote attendees still receive the real screen stream; this only changes YOUR view
@@ -1010,7 +1139,7 @@ export default function ZoomClassroom() {
           style={{
             width: '100%',
             minHeight: '100%',
-            height: '100%',
+            height: 'auto',
             background: '#000',
             display: status === 'error' ? 'none' : 'block',
           }}
@@ -1024,12 +1153,19 @@ export default function ZoomClassroom() {
           50% { opacity: 0.3; }
         }
 
+        .lms-zoom-stage {
+          overflow-x: hidden !important;
+          overflow-y: auto !important;
+          -webkit-overflow-scrolling: touch;
+        }
+
         #meetingSDKElement {
           width: 100% !important;
-          height: 100% !important;
+          /* Let Zoom content (video + footer toolbar) define height so the stage can scroll */
+          height: auto !important;
           min-height: 100% !important;
           box-sizing: border-box !important;
-          overflow: hidden !important;
+          overflow: visible !important;
         }
 
         /* Do NOT force height:100% on Zoom's root — that clips the footer toolbar. */
@@ -1040,12 +1176,14 @@ export default function ZoomClassroom() {
           min-height: 100% !important;
           margin: 0 !important;
           padding: 0 !important;
+          overflow: visible !important;
           background: #0b1220 !important;
         }
 
         #meetingSDKElement > div {
           width: 100% !important;
           margin: 0 !important;
+          overflow: visible !important;
         }
 
         /* Gallery / speaker canvas — fill the stage cleanly */
@@ -1056,21 +1194,79 @@ export default function ZoomClassroom() {
           overflow: hidden !important;
         }
 
-        /* Professional share layout: main stage + participant ribbon (do NOT force 100% width) */
-        .lms-zoom-sharing #meetingSDKElement .sharee-container,
-        .lms-zoom-sharing #meetingSDKElement .share-container,
-        .lms-zoom-sharing #meetingSDKElement [class*="share-content"],
-        .lms-zoom-sharing #meetingSDKElement [class*="ShareCanvas"],
-        .lms-zoom-sharing #meetingSDKElement [class*="share-canvas"] {
-          border-radius: 12px !important;
-          overflow: hidden !important;
-          max-width: calc(100% - ${ZOOM_RIBBON_W}px - 16px) !important;
+        /* ── Screen-share: fill the stage edge-to-edge (kill Zoom centering gaps) ── */
+        .lms-zoom-sharing #meetingSDKElement #zmmtg-root,
+        .lms-zoom-sharing #meetingSDKElement .meeting-app,
+        .lms-zoom-sharing #meetingSDKElement .meeting-client,
+        .lms-zoom-sharing #meetingSDKElement .meeting-client-inner {
+          width: 100% !important;
+          margin: 0 !important;
+          padding: 0 !important;
         }
 
-        .lms-zoom-sharing #meetingSDKElement .share-container canvas,
-        .lms-zoom-sharing #meetingSDKElement .sharee-container canvas {
+        .lms-zoom-sharing #meetingSDKElement .suspension-window,
+        .lms-zoom-sharing #meetingSDKElement .suspension-window-container,
+        .lms-zoom-sharing #meetingSDKElement [class*="suspension-window"] {
+          top: 0 !important;
+          left: 0 !important;
+          right: auto !important;
+          margin: 0 !important;
+          transform: none !important;
+          max-width: 100% !important;
+        }
+
+        .lms-zoom-sharing #meetingSDKElement .sharee-container,
+        .lms-zoom-sharing #meetingSDKElement .sharee-sp-container,
+        .lms-zoom-sharing #meetingSDKElement [class*="sharee-container"] {
+          top: 0 !important;
+          left: 0 !important;
+          margin: 0 !important;
+          transform: none !important;
+          border-radius: 12px !important;
+          overflow: hidden !important;
+          max-width: none !important;
+          /* JS forceShareFillLayout sets exact px; these are the fallback */
+          width: calc(100% - ${ZOOM_RIBBON_W}px - ${ZOOM_SHARE_GAP}px) !important;
+          height: calc(100% - ${ZOOM_FOOTER_PX}px) !important;
+          max-height: calc(100% - ${ZOOM_FOOTER_PX}px) !important;
+        }
+
+        .lms-zoom-sharing #meetingSDKElement .sharee-container__viewport,
+        .lms-zoom-sharing #meetingSDKElement .sharee-container__canvas,
+        .lms-zoom-sharing #meetingSDKElement .sharee-container canvas,
+        .lms-zoom-sharing #meetingSDKElement .sharee-sp-container canvas,
+        .lms-zoom-sharing #meetingSDKElement [class*="sharee-container__viewport"],
+        .lms-zoom-sharing #meetingSDKElement [class*="sharee-container__canvas"] {
+          width: 100% !important;
+          height: 100% !important;
+          max-width: 100% !important;
+          max-height: 100% !important;
           object-fit: contain !important;
           background: #0b1220 !important;
+        }
+
+        .lms-zoom-sharing #meetingSDKElement .speaker-bar-container,
+        .lms-zoom-sharing #meetingSDKElement [class*="speaker-bar-container"] {
+          margin: 0 !important;
+          transform: none !important;
+          width: ${ZOOM_RIBBON_W}px !important;
+          max-width: ${ZOOM_RIBBON_W}px !important;
+          height: calc(100% - ${ZOOM_FOOTER_PX}px) !important;
+          max-height: calc(100% - ${ZOOM_FOOTER_PX}px) !important;
+        }
+
+        /* Wrap share + ribbon as a full-width row when Zoom nests them */
+        .lms-zoom-sharing #meetingSDKElement .suspension-content,
+        .lms-zoom-sharing #meetingSDKElement .suspension-content1,
+        .lms-zoom-sharing #meetingSDKElement .suspension-content2 {
+          display: flex !important;
+          flex-direction: row !important;
+          align-items: stretch !important;
+          justify-content: flex-start !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          margin: 0 !important;
+          gap: ${ZOOM_SHARE_GAP}px !important;
         }
 
         /* Local presenter: blank the recursive share preview under our overlay */

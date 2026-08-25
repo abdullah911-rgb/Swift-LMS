@@ -84,16 +84,19 @@ img, video, canvas, svg {
   max-width: 100%;
 }
 
-/* Zoom Embedded SDK: global max-width on canvas/video clips the toolbar */
-.zoom-classroom-open,
+/* Zoom Embedded SDK: unlock max-width; keep page chrome fixed while the stage scrolls */
+html.zoom-classroom-open,
+html.zoom-classroom-open body {
+  height: 100%;
+  max-width: none;
+  overflow: hidden;
+  background: #0b1220;
+}
+
 .zoom-classroom-open #root {
   height: 100%;
   max-width: none;
   overflow: hidden;
-}
-
-.zoom-classroom-open body,
-.zoom-classroom-open #root {
   background: #0b1220;
 }
 
@@ -105,9 +108,12 @@ img, video, canvas, svg {
   max-height: none;
 }
 
-/* Keep Zoom's footer toolbar reachable and the stage edge-to-edge */
+/* Stage is the scroll container — toolbar below the canvas must stay reachable */
 .zoom-classroom-open .lms-zoom-stage {
   background: #0b1220;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Glassmorphism utility */
