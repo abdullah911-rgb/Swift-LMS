@@ -146,10 +146,23 @@ const StudentCourseView = () => {
   };
 
   useEffect(() => {
-    if (activeTab === 'ASSIGNMENTS') {
+    const completed = Boolean(
+      enrollment?.isCompleted || enrollment?.status === 'COMPLETED' || enrollment?.certificateClaimed
+    );
+    if (activeTab === 'ASSIGNMENTS' && !completed) {
       fetchAssignments();
     }
-  }, [activeTab]);
+  }, [activeTab, enrollment]);
+
+  // Completed courses: assignments are fully closed — leave the tab if still selected
+  useEffect(() => {
+    const completed = Boolean(
+      enrollment?.isCompleted || enrollment?.status === 'COMPLETED' || enrollment?.certificateClaimed
+    );
+    if (completed && activeTab === 'ASSIGNMENTS') {
+      setActiveTab('CONTENT');
+    }
+  }, [enrollment, activeTab]);
 
   useEffect(() => {
     if (activeTab === 'PERFORMANCE') {
@@ -365,17 +378,19 @@ const StudentCourseView = () => {
                 <IoMegaphoneOutline size={18} />
                 <span>Announcements ({course.announcements?.length || 0})</span>
               </button>
-              <button
-                onClick={() => setActiveTab('ASSIGNMENTS')}
-                className={`py-3.5 px-5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all border-b-2 cursor-pointer shrink-0 ${
-                  activeTab === 'ASSIGNMENTS'
-                    ? 'border-primary-600 text-primary-700 bg-white'
-                    : 'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                <IoClipboardOutline size={18} />
-                <span>Assignments</span>
-              </button>
+              {!isCompleted && (
+                <button
+                  onClick={() => setActiveTab('ASSIGNMENTS')}
+                  className={`py-3.5 px-5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all border-b-2 cursor-pointer shrink-0 ${
+                    activeTab === 'ASSIGNMENTS'
+                      ? 'border-primary-600 text-primary-700 bg-white'
+                      : 'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  <IoClipboardOutline size={18} />
+                  <span>Assignments</span>
+                </button>
+              )}
               <button
                 onClick={() => setActiveTab('QUIZ')}
                 className={`py-3.5 px-5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all border-b-2 cursor-pointer shrink-0 ${
@@ -656,7 +671,7 @@ const StudentCourseView = () => {
                         const mySubmission = assignment.submissions?.[0];
                         const isSubmitting = submittingAssignId === assignment.id;
                         const isPastDue = assignment.dueDate && new Date(assignment.dueDate) < new Date();
-                        const isResubmission = (mySubmission?.resubmissionCount || 0) > 0;
+                        const isResubmission = mySubmission?.status === 'SUBMITTED' && Boolean(mySubmission?.reviewedAt);
                         const wasGraded = mySubmission && (mySubmission.status === 'GRADED' || mySubmission.status === 'REVIEWED');
 
                         return (
@@ -740,9 +755,6 @@ const StudentCourseView = () => {
                                     </p>
                                     <p className="text-[10px] text-slate-400">
                                       {isResubmission ? 'Last submitted' : 'Submitted'}: {new Date(mySubmission.submittedAt).toLocaleString()}
-                                      {isResubmission && mySubmission.firstSubmittedAt && (
-                                        <> · First: {new Date(mySubmission.firstSubmittedAt).toLocaleString()}</>
-                                      )}
                                     </p>
                                   </div>
                                   <a

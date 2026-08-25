@@ -121,9 +121,7 @@ const assignmentController = {
             grade: true,
             feedback: true,
             submittedAt: true,
-            firstSubmittedAt: true,
             reviewedAt: true,
-            resubmissionCount: true,
           },
         },
       },
@@ -186,11 +184,15 @@ const assignmentController = {
     // Detect existing submission (resubmit vs first submit)
     const existing = await prisma.assignmentSubmission.findUnique({
       where: { assignmentId_studentId: { assignmentId, studentId } },
-      select: { id: true, status: true, resubmissionCount: true, firstSubmittedAt: true },
+      select: { id: true, status: true, reviewedAt: true },
     });
     const isResubmission = Boolean(existing);
+    const wasPreviouslyReviewed = Boolean(
+      existing && (existing.status === 'GRADED' || existing.status === 'REVIEWED' || existing.reviewedAt)
+    );
 
-    // Upsert: first submit creates; later submits replace file, clear grade, flag as resubmission
+    // Upsert: first submit creates; later submits replace file and clear grade.
+    // Keep reviewedAt when previously reviewed so instructors can see it was a resubmission.
     const submission = await prisma.assignmentSubmission.upsert({
       where: { assignmentId_studentId: { assignmentId, studentId } },
       create: {
@@ -202,8 +204,6 @@ const assignmentController = {
         note: note || null,
         status: 'SUBMITTED',
         submittedAt: now,
-        firstSubmittedAt: now,
-        resubmissionCount: 0,
       },
       update: {
         fileUrl,
@@ -214,8 +214,8 @@ const assignmentController = {
         grade: null,
         feedback: null,
         submittedAt: now,
-        reviewedAt: null,
-        resubmissionCount: { increment: 1 },
+        // Preserve prior reviewedAt so instructor UI can flag "resubmitted after review"
+        ...(wasPreviouslyReviewed ? {} : { reviewedAt: null }),
       },
     });
 
@@ -223,7 +223,6 @@ const assignmentController = {
     try { await recalculateEnrollmentProgress(studentId, assignment.courseId); } catch (_) {}
 
     // Notify the instructor — call out resubmissions so they re-review
-    const wasPreviouslyReviewed = existing && (existing.status === 'GRADED' || existing.status === 'REVIEWED');
     await prisma.notification.create({
       data: {
         userId: assignment.instructorId,
@@ -267,11 +266,12 @@ const assignmentController = {
     });
 
     // Enrich with late / resubmission flags for instructor UI
+    // Resubmission after review: status is SUBMITTED again but reviewedAt is still set
     const dueDate = assignment.dueDate ? new Date(assignment.dueDate) : null;
     const enriched = submissions.map((sub) => {
       const submittedAt = new Date(sub.submittedAt);
       const isLate = Boolean(dueDate && submittedAt > dueDate);
-      const isResubmission = (sub.resubmissionCount || 0) > 0;
+      const isResubmission = sub.status === 'SUBMITTED' && Boolean(sub.reviewedAt);
       return {
         ...sub,
         isLate,

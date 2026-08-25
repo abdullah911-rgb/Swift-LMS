@@ -702,20 +702,18 @@ model Assignment {
 // ─── ASSIGNMENT SUBMISSION ────────────────────────────────────────────────────
 
 model AssignmentSubmission {
-  id                String           @id @default(uuid())
-  assignmentId      String
-  studentId         String
-  fileUrl           String           // Student's submitted file
-  fileType          String?
-  fileName          String?
-  note              String?
-  status            SubmissionStatus @default(SUBMITTED)
-  grade             String?          // Optional grading by instructor
-  feedback          String?          // Optional instructor feedback
-  submittedAt       DateTime         @default(now())
-  firstSubmittedAt  DateTime         @default(now()) // Original submission time (never overwritten on resubmit)
-  reviewedAt        DateTime?
-  resubmissionCount Int              @default(0) // Increments each time student replaces a prior submission
+  id           String           @id @default(uuid())
+  assignmentId String
+  studentId    String
+  fileUrl      String           // Student's submitted file
+  fileType     String?
+  fileName     String?
+  note         String?
+  status       SubmissionStatus @default(SUBMITTED)
+  grade        String?          // Optional grading by instructor
+  feedback     String?          // Optional instructor feedback
+  submittedAt  DateTime         @default(now())
+  reviewedAt   DateTime?
 
   assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   student      User       @relation("StudentSubmissions", fields: [studentId], references: [id], onDelete: Cascade)

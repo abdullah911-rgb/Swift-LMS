@@ -1400,7 +1400,7 @@ const CourseForm = () => {
                     </div>
                   ) : (
                     submissions.map((sub) => {
-                      const isResubmission = sub.isResubmission || (sub.resubmissionCount || 0) > 0;
+                      const isResubmission = Boolean(sub.isResubmission);
                       const isLate = Boolean(
                         sub.isLate ||
                         (viewingSubmissionsFor?.dueDate &&
@@ -1441,7 +1441,7 @@ const CourseForm = () => {
                               </span>
                               {isResubmission && (
                                 <span className="inline-block text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider bg-violet-100 text-violet-700">
-                                  🔄 Resubmitted{sub.resubmissionCount > 1 ? ` ×${sub.resubmissionCount}` : ''}
+                                  🔄 Resubmitted
                                 </span>
                               )}
                               {isLate && (
@@ -1479,9 +1479,9 @@ const CourseForm = () => {
                               {isResubmission ? 'Last submitted' : 'Submitted'}: {new Date(sub.submittedAt).toLocaleString()}
                               {isLate && <span className="text-rose-600 font-semibold"> (after due date)</span>}
                             </p>
-                            {isResubmission && sub.firstSubmittedAt && (
+                            {isResubmission && sub.reviewedAt && (
                               <p className="text-[10px] text-violet-600">
-                                First submission: {new Date(sub.firstSubmittedAt).toLocaleString()}
+                                Previously reviewed: {new Date(sub.reviewedAt).toLocaleString()} — needs re-grade
                               </p>
                             )}
                           </div>
