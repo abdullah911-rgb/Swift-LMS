@@ -142,9 +142,9 @@ function getBackPath(role, courseId) {
 // Zoom stacks mic/camera/share under the video canvas — reserve room for the
 // toolbar; the stage still scrolls if Zoom grows past this.
 const ZOOM_FOOTER_PX = 80;
-// Zoom ribbon max width is 316px; keep it tight so the share stage can grow.
-const ZOOM_RIBBON_W = 280;
-const ZOOM_SHARE_GAP = 8;
+// Keep the participant ribbon narrow so the share canvas gets maximum space
+const ZOOM_RIBBON_W = 200;
+const ZOOM_SHARE_GAP = 0;
 
 /**
  * Compute gallery vs screen-share viewSizes.
@@ -162,7 +162,8 @@ function measureZoomLayout(el, { sharing = false } = {}) {
 
   if (sharing) {
     const ribbonW = ZOOM_RIBBON_W;
-    const shareW = Math.max(480, width - ribbonW - ZOOM_SHARE_GAP);
+    // Share canvas fills everything except the ribbon on the right — no gap
+    const shareW = Math.max(480, width - ribbonW);
     return {
       width: shareW,
       height,
@@ -218,6 +219,27 @@ function flattenShareAncestors(el, stopAt) {
   }
 }
 
+// All known Zoom share-canvas selectors across SDK versions
+const SHARE_SELECTORS = [
+  '.sharee-container',
+  '.sharee-sp-container',
+  '[class*="sharee"]',
+  '[class*="share-content"]',
+  '[class*="sharing-content"]',
+  '[class*="screen-share"]',
+];
+
+// All known Zoom participant-ribbon selectors across SDK versions
+const RIBBON_SELECTORS = [
+  '.speaker-bar-container',
+  '[class*="speaker-bar"]',
+  '[class*="ribbon"]',
+  '[class*="video-avatar-list"]',
+  '[class*="participant-list"]',
+  '[class*="gallery-video"]',
+  '[class*="video-list"]',
+];
+
 /**
  * Pin share to the left and the participant ribbon to the far right of the stage.
  * Zoom Component View otherwise leaves a black strip because it sizes a floating window.
@@ -230,13 +252,14 @@ function forceShareFillLayout(root) {
   if (stageW < 200 || stageH < 160) return;
 
   const ribbonW = ZOOM_RIBBON_W;
-  const shareW = Math.max(320, stageW - ribbonW - ZOOM_SHARE_GAP);
+  // Share canvas fills everything to the left of the ribbon — no gap
+  const shareW = Math.max(320, stageW - ribbonW);
 
   root.style.setProperty('position', 'relative', 'important');
   root.style.setProperty('width', '100%', 'important');
 
-  const share = firstMatch(root, ['.sharee-container', '.sharee-sp-container']);
-  const ribbon = firstMatch(root, ['.speaker-bar-container']);
+  const share = firstMatch(root, SHARE_SELECTORS);
+  const ribbon = firstMatch(root, RIBBON_SELECTORS);
   const suspension = firstMatch(root, ['.suspension-window', '.suspension-window-container']);
 
   if (share) flattenShareAncestors(share, root);
@@ -254,11 +277,12 @@ function forceShareFillLayout(root) {
   }
 
   if (share) {
+    // Share canvas: from left edge to (ribbonW)px from the right edge
     share.style.setProperty('position', 'absolute', 'important');
     share.style.setProperty('top', '0px', 'important');
     share.style.setProperty('left', '0px', 'important');
-    share.style.setProperty('right', `${ribbonW + ZOOM_SHARE_GAP}px`, 'important');
-    share.style.setProperty('bottom', 'auto', 'important');
+    share.style.setProperty('right', `${ribbonW}px`, 'important');
+    share.style.setProperty('bottom', '0px', 'important');
     share.style.setProperty('margin', '0px', 'important');
     share.style.setProperty('transform', 'none', 'important');
     share.style.setProperty('width', `${shareW}px`, 'important');
@@ -267,7 +291,7 @@ function forceShareFillLayout(root) {
     share.style.setProperty('max-height', 'none', 'important');
     share.style.setProperty('z-index', '2', 'important');
 
-    share.querySelectorAll('canvas, .sharee-container__canvas, .sharee-container__viewport').forEach((node) => {
+    share.querySelectorAll('canvas, .sharee-container__canvas, .sharee-container__viewport, [class*="canvas"], [class*="viewport"]').forEach((node) => {
       if (!(node instanceof HTMLElement)) return;
       node.style.setProperty('width', '100%', 'important');
       node.style.setProperty('height', '100%', 'important');
@@ -278,11 +302,12 @@ function forceShareFillLayout(root) {
   }
 
   if (ribbon) {
+    // Participant ribbon: pinned to the absolute right edge
     ribbon.style.setProperty('position', 'absolute', 'important');
     ribbon.style.setProperty('top', '0px', 'important');
     ribbon.style.setProperty('right', '0px', 'important');
     ribbon.style.setProperty('left', 'auto', 'important');
-    ribbon.style.setProperty('bottom', 'auto', 'important');
+    ribbon.style.setProperty('bottom', '0px', 'important');
     ribbon.style.setProperty('margin', '0px', 'important');
     ribbon.style.setProperty('transform', 'none', 'important');
     ribbon.style.setProperty('width', `${ribbonW}px`, 'important');
@@ -290,8 +315,11 @@ function forceShareFillLayout(root) {
     ribbon.style.setProperty('height', `${stageH}px`, 'important');
     ribbon.style.setProperty('max-height', 'none', 'important');
     ribbon.style.setProperty('z-index', '3', 'important');
+    ribbon.style.setProperty('overflow-y', 'auto', 'important');
+    ribbon.style.setProperty('overflow-x', 'hidden', 'important');
   }
 }
+
 
 function applyZoomViewSizes(client, el, sharing) {
   if (!client || typeof client.updateVideoOptions !== 'function' || !el) return;
