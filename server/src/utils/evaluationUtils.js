@@ -84,11 +84,24 @@ async function calculateAssignmentMarks(studentId, courseId) {
 
 /**
  * Get the best completed quiz attempt for a student.
- * Returns { passed, mcqMarks, percentage } or null if never attempted.
+ * Returns:
+ *   { exists: false, ... }           — course has no final quiz (component waived)
+ *   { exists: true, attempted: false, ... } — quiz exists but student never finished an attempt
+ *   { exists: true, attempted: true, passed, mcqMarks, percentage, ... }
  */
 async function getBestQuizAttempt(studentId, courseId) {
   const quiz = await prisma.quiz.findUnique({ where: { courseId } });
-  if (!quiz) return null;
+  if (!quiz) {
+    return {
+      exists: false,
+      attempted: false,
+      passed: true,
+      mcqMarks: 60,
+      percentage: 0,
+      passMark: null,
+      attemptNumber: null,
+    };
+  }
 
   const attempts = await prisma.quizAttempt.findMany({
     where: { quizId: quiz.id, userId: studentId, completedAt: { not: null } },
@@ -96,12 +109,26 @@ async function getBestQuizAttempt(studentId, courseId) {
     take: 1,
   });
 
-  if (attempts.length === 0) return null;
+  if (attempts.length === 0) {
+    return {
+      exists: true,
+      attempted: false,
+      passed: false,
+      mcqMarks: 0,
+      percentage: 0,
+      passMark: quiz.passMark,
+      attemptNumber: null,
+      quizId: quiz.id,
+    };
+  }
+
   const best = attempts[0];
   return {
+    exists: true,
+    attempted: true,
     quizId: quiz.id,
     passed: best.passed,
-    mcqMarks: best.mcqMarks,
+    mcqMarks: best.mcqMarks ?? 0,
     percentage: best.score,
     passMark: quiz.passMark,
     attemptNumber: best.attemptNumber,
@@ -125,14 +152,18 @@ async function computeFinalScore(studentId, courseId) {
 
   const attendanceMarks = attendanceData.marks20;
   const assignmentMarks = assignmentData.marks20;
-  const mcqMarks = quizData ? (quizData.mcqMarks ?? 0) : 60;
+  // Actual quiz marks only — never award 60/60 for an unattempted quiz.
+  // If the course has no quiz at all, the MCQ component is waived at full marks.
+  const mcqMarks = quizData.exists && !quizData.attempted
+    ? 0
+    : (quizData.mcqMarks ?? 0);
   const finalMarks = Math.round((attendanceMarks + assignmentMarks + mcqMarks) * 100) / 100;
 
   // Eligibility checks
   const attendanceOk = attendanceData.percentage >= 80;
   const assignmentSubmittedOk = assignmentData.allSubmitted;
   const assignmentGradedOk = assignmentData.allGraded;
-  const quizPassedOk = quizData === null || quizData.passed === true;
+  const quizPassedOk = !quizData.exists || (quizData.attempted && quizData.passed === true);
   const finalMarksOk = finalMarks >= 60;
 
   const dynamicEligible = attendanceOk && assignmentSubmittedOk && assignmentGradedOk && quizPassedOk && finalMarksOk;
@@ -156,7 +187,7 @@ async function computeFinalScore(studentId, courseId) {
     } else if (!assignmentGradedOk) {
       reason = `Not all assignments graded: ${assignmentData.graded}/${assignmentData.total} graded.`;
     } else if (!quizPassedOk) {
-      reason = quizData
+      reason = quizData.attempted
         ? `Final quiz not passed: ${quizData.percentage.toFixed(1)}% (minimum ${quizData.passMark}% required).`
         : 'Final quiz not attempted.';
     } else if (!finalMarksOk) {
@@ -178,8 +209,10 @@ async function computeFinalScore(studentId, courseId) {
       assignmentsTotal: assignmentData.total,
       assignmentsSubmitted: assignmentData.submitted,
       assignmentsGraded: assignmentData.graded,
-      quizPassed: quizData?.passed ?? false,
-      quizPercentage: quizData?.percentage ?? 0,
+      quizExists: quizData.exists,
+      quizAttempted: quizData.attempted,
+      quizPassed: quizData.attempted ? quizData.passed : false,
+      quizPercentage: quizData.attempted ? quizData.percentage : 0,
     },
   };
 }
@@ -223,6 +256,8 @@ async function issueCertificateWithMarks(studentId, courseId, breakdown) {
     const num = parseInt(parts[parts.length - 1], 10);
     if (!isNaN(num)) next = num + 1;
   }
+
+  const certificateId = `${prefix}${String(next).padStart(8, '0')}`;
 
   const cert = await prisma.certificate.create({
     data: { studentId, courseId, certificateId, ...marksData },

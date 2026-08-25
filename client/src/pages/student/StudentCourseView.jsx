@@ -997,7 +997,11 @@ const StudentCourseView = () => {
                               ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
                               : 'bg-slate-50 text-slate-500 border-slate-200'
                           }`}>
-                            {evaluation.breakdown.quizPassed ? 'Passed' : 'No / Failed'}
+                            {evaluation.breakdown.quizPassed
+                              ? 'Passed'
+                              : evaluation.breakdown.quizAttempted === false
+                              ? 'Not Attempted'
+                              : 'No / Failed'}
                           </span>
                         </div>
                       </div>
@@ -1021,19 +1025,31 @@ const StudentCourseView = () => {
 
                       {/* Quiz Progress Graph */}
                       <div className="space-y-2">
-                        <div className="flex justify-between items-center text-xs">
+                        <div className="flex justify-between items-center text-xs gap-2">
                           <span className="font-bold text-slate-700">🧠 Final MCQ Assessment</span>
-                          <span className="text-slate-500 font-semibold">Best Attempt: {evaluation.breakdown.quizPercentage}%</span>
+                          <span className="text-slate-500 font-semibold shrink-0">
+                            {evaluation.breakdown.quizAttempted === false && evaluation.breakdown.quizExists !== false
+                              ? 'Not Attempted'
+                              : `Best Attempt: ${evaluation.breakdown.quizPercentage}%`}
+                          </span>
                         </div>
                         <div className="h-6 bg-slate-100 rounded-lg overflow-hidden relative">
                           <div
                             className="h-full bg-gradient-to-r from-primary-500 to-primary-600 transition-all flex items-center justify-end pr-2.5 text-[10px] font-black text-white"
-                            style={{ width: `${evaluation.breakdown.quizPercentage}%` }}
+                            style={{ width: `${evaluation.breakdown.quizPercentage || 0}%` }}
                           >
-                            {evaluation.breakdown.quizPercentage}%
+                            {(evaluation.breakdown.quizPercentage || 0) > 8 ? `${evaluation.breakdown.quizPercentage}%` : ''}
                           </div>
                         </div>
-                        <p className="text-[10px] text-slate-400 font-medium">Earned Score: <span className="font-bold text-slate-700">{evaluation.breakdown.mcqMarks}/60 Marks</span></p>
+                        <p className="text-[10px] text-slate-400 font-medium">
+                          Earned Score:{' '}
+                          <span className="font-bold text-slate-700">
+                            {evaluation.breakdown.mcqMarks}/60 Marks
+                          </span>
+                          {evaluation.breakdown.quizAttempted === false && evaluation.breakdown.quizExists !== false && (
+                            <span className="text-amber-600"> — complete the final quiz to earn these marks</span>
+                          )}
+                        </p>
                       </div>
 
                       {/* Assignments Progress Graph */}
