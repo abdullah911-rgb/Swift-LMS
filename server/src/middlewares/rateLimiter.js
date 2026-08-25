@@ -6,22 +6,26 @@ const rateLimitMessage = (req, res) => {
 };
 
 /**
- * General API rate limiter — 100 requests per 15 minutes
+ * General API rate limiter — 500 requests per 15 minutes
+ * (covers all /api/* routes including /me on every page load)
  */
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 500,
   standardHeaders: true,
   legacyHeaders: false,
   handler: rateLimitMessage,
+  skipSuccessfulRequests: false,
 });
 
 /**
- * Auth rate limiter — 10 attempts per 15 minutes
+ * Auth rate limiter — 50 login attempts per 15 minutes per IP
+ * Only failed requests count (skipSuccessfulRequests: true)
+ * This still protects against brute-force while allowing normal use
  */
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 50,
   standardHeaders: true,
   legacyHeaders: false,
   handler: rateLimitMessage,
@@ -29,11 +33,11 @@ const authLimiter = rateLimit({
 });
 
 /**
- * OTP rate limiter — 5 attempts per 10 minutes
+ * OTP rate limiter — 20 attempts per 15 minutes
  */
 const otpLimiter = rateLimit({
-  windowMs: 10 * 60 * 1000,
-  max: 5,
+  windowMs: 15 * 60 * 1000,
+  max: 20,
   standardHeaders: true,
   legacyHeaders: false,
   handler: rateLimitMessage,
