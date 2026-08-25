@@ -92,12 +92,22 @@ img, video, canvas, svg {
   overflow: hidden;
 }
 
+.zoom-classroom-open body,
+.zoom-classroom-open #root {
+  background: #0b1220;
+}
+
 .zoom-classroom-open #meetingSDKElement img,
 .zoom-classroom-open #meetingSDKElement video,
 .zoom-classroom-open #meetingSDKElement canvas,
 .zoom-classroom-open #meetingSDKElement svg {
   max-width: none;
   max-height: none;
+}
+
+/* Keep Zoom's footer toolbar reachable and the stage edge-to-edge */
+.zoom-classroom-open .lms-zoom-stage {
+  background: #0b1220;
 }
 
 /* Glassmorphism utility */

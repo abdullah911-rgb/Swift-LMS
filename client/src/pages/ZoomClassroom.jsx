@@ -29,8 +29,22 @@ if (typeof window !== 'undefined' && !window.__lmsMediaTracked) {
 
   if (navigator?.mediaDevices?.getDisplayMedia) {
     const origGetDisplayMedia = navigator.mediaDevices.getDisplayMedia.bind(navigator.mediaDevices);
-    navigator.mediaDevices.getDisplayMedia = async (...args) => {
-      const stream = await origGetDisplayMedia(...args);
+    navigator.mediaDevices.getDisplayMedia = async (constraints = {}) => {
+      // Break the most common infinity-mirror paths:
+      // - exclude this classroom tab from the picker (Chrome 107+)
+      // - never prefer the current tab as the share target
+      const enhanced = {
+        ...constraints,
+        preferCurrentTab: false,
+        selfBrowserSurface: 'exclude',
+        surfaceSwitching: constraints?.surfaceSwitching ?? 'include',
+        video:
+          typeof constraints?.video === 'object' && constraints.video !== null
+            ? { ...constraints.video }
+            : (constraints?.video ?? true),
+      };
+
+      const stream = await origGetDisplayMedia(enhanced);
       if (stream?.getTracks) {
         stream.getTracks().forEach((track) => {
           window.__lmsScreenTracks.add(track);
@@ -128,13 +142,53 @@ function getBackPath(role, courseId) {
 // Zoom Component View sizes the video canvas to viewSizes, then stacks the
 // mic/camera/share footer BELOW that canvas. If we pass the full container
 // height, the toolbar is pushed off-screen and clipped by overflow:hidden.
-const ZOOM_FOOTER_PX = 64;
+const ZOOM_FOOTER_PX = 72;
+// Zoom ribbon max width is 316px; ~300 gives a Meet/Zoom-style participant strip.
+const ZOOM_RIBBON_W = 300;
+const ZOOM_SHARE_GAP = 10;
 
-function measureZoomView(el) {
+/**
+ * Compute gallery vs screen-share viewSizes.
+ * - Gallery/speaker: default fills the stage.
+ * - Screen share: main stage + narrow vertical ribbon (participants on the right).
+ */
+function measureZoomLayout(el, { sharing = false } = {}) {
   const width = Math.max(320, Math.floor(el?.offsetWidth || window.innerWidth));
   const available = Math.floor(el?.offsetHeight || Math.max(window.innerHeight - 44, 240));
   const height = Math.max(180, available - ZOOM_FOOTER_PX);
-  return { width, height };
+
+  if (sharing) {
+    const ribbonW = Math.min(ZOOM_RIBBON_W, Math.max(240, Math.floor(width * 0.22)));
+    const mainW = Math.max(480, width - ribbonW - ZOOM_SHARE_GAP);
+    return {
+      width: mainW,
+      height,
+      viewSizes: {
+        default: { width: mainW, height },
+        ribbon: { width: ribbonW, height },
+      },
+      ribbonW,
+    };
+  }
+
+  return {
+    width,
+    height,
+    viewSizes: {
+      default: { width, height },
+      // Keep a correct ribbon size ready for when share starts
+      ribbon: { width: ZOOM_RIBBON_W, height },
+    },
+    ribbonW: ZOOM_RIBBON_W,
+  };
+}
+
+function applyZoomViewSizes(client, el, sharing) {
+  if (!client || typeof client.updateVideoOptions !== 'function' || !el) return;
+  const { viewSizes } = measureZoomLayout(el, { sharing });
+  try {
+    client.updateVideoOptions({ viewSizes });
+  } catch (_) {}
 }
 
 export default function ZoomClassroom() {
@@ -157,10 +211,30 @@ export default function ZoomClassroom() {
   const [joinUrl, setJoinUrl] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isSharingMyScreen, setIsSharingMyScreen] = useState(false);
+  // Anyone in the meeting is actively sharing (drives share+ribbon layout)
+  const [isShareLayoutActive, setIsShareLayoutActive] = useState(false);
   // Tracks whether someone in the meeting is actively sharing their screen (student view)
   const [activeSharerName, setActiveSharerName] = useState(null);
+  const isShareLayoutRef = useRef(false);
+  const syncShareLayoutRef = useRef(null);
 
   const isHost = user?.role === 'INSTRUCTOR' || user?.role === 'ADMIN';
+
+  const syncShareLayout = useCallback((active) => {
+    isShareLayoutRef.current = !!active;
+    setIsShareLayoutActive(!!active);
+    applyZoomViewSizes(clientRef.current, containerRef.current, !!active);
+    // Give Zoom a beat to reflow share + ribbon, then re-apply sizes
+    setTimeout(() => {
+      applyZoomViewSizes(clientRef.current, containerRef.current, isShareLayoutRef.current);
+      window.dispatchEvent(new Event('resize'));
+    }, 120);
+    setTimeout(() => {
+      applyZoomViewSizes(clientRef.current, containerRef.current, isShareLayoutRef.current);
+    }, 450);
+  }, []);
+
+  syncShareLayoutRef.current = syncShareLayout;
 
   // Let Zoom's UI use the full viewport; global html/body/#root overflow-x:hidden
   // otherwise clips the footer toolbar and blocks scrolling to it.
@@ -177,12 +251,18 @@ export default function ZoomClassroom() {
   useEffect(() => {
     const onScreenShareChange = (isSharing) => {
       setIsSharingMyScreen(isSharing);
+      if (isSharing) {
+        // Local presenter: switch to share+ribbon and cover the recursive preview
+        syncShareLayout(true);
+      } else if (!activeSharerName) {
+        syncShareLayout(false);
+      }
     };
     window.__lmsScreenShareListeners?.add(onScreenShareChange);
     return () => {
       window.__lmsScreenShareListeners?.delete(onScreenShareChange);
     };
-  }, []);
+  }, [syncShareLayout, activeSharerName]);
 
   const stopMyScreenShare = useCallback(() => {
     try {
@@ -194,7 +274,8 @@ export default function ZoomClassroom() {
       }
     } catch (_) {}
     setIsSharingMyScreen(false);
-  }, []);
+    if (!activeSharerName) syncShareLayout(false);
+  }, [activeSharerName, syncShareLayout]);
 
   // ── Fullscreen toggle ──────────────────────────────────────────────────────
   const toggleFullscreen = useCallback(() => {
@@ -225,17 +306,7 @@ export default function ZoomClassroom() {
     let resizeTimer;
     const applySize = () => {
       window.dispatchEvent(new Event('resize'));
-      const client = clientRef.current;
-      if (!client || typeof client.updateVideoOptions !== 'function') return;
-      const { width, height } = measureZoomView(el);
-      try {
-        client.updateVideoOptions({
-          viewSizes: {
-            default: { width, height },
-            ribbon: { width, height },
-          },
-        });
-      } catch (_) {}
+      applyZoomViewSizes(clientRef.current, el, isShareLayoutRef.current);
     };
     const ro = new ResizeObserver(() => {
       clearTimeout(resizeTimer);
@@ -405,7 +476,7 @@ export default function ZoomClassroom() {
 
         // ── Step 6: Init SDK; leave room below the canvas for Zoom's footer ─
         await new Promise((r) => requestAnimationFrame(r));
-        const { width: vw, height: vh } = measureZoomView(containerEl);
+        const { viewSizes: initialViewSizes } = measureZoomLayout(containerEl, { sharing: false });
 
         try {
           await client.init({
@@ -413,20 +484,18 @@ export default function ZoomClassroom() {
             language: 'en-US',
             patchJsMedia: true,
             leaveOnPageUnload: true,
+            maximumVideosInGalleryView: 25,
             customize: {
               video: {
                 isResizable: false,
-                viewSizes: {
-                  default: { width: vw, height: vh },
-                  ribbon: { width: vw, height: vh },
-                },
+                defaultViewType: 'gallery',
+                viewSizes: initialViewSizes,
+                popper: { disableDraggable: true },
               },
               sharing: {
-                isResizable: false,
-                viewSizes: {
-                  default: { width: vw, height: vh },
+                options: {
+                  hideShareAudioOption: false,
                 },
-                popper: { disableDraggable: true },
               },
             },
           });
@@ -458,22 +527,32 @@ export default function ZoomClassroom() {
           }
         });
 
-        // ── Track active screen share (for student-side infinity-mirror warning) ──
+        // ── Track active screen share → professional share + ribbon layout ──
         client.on('active-share-change', (ev) => {
           if (!isMounted) return;
           if (ev?.state === 'Active') {
             setActiveSharerName(ev?.displayName || 'the instructor');
+            syncShareLayoutRef.current?.(true);
           } else {
             setActiveSharerName(null);
+            // Keep share layout if we are still the local presenter
+            if (!window.__lmsScreenTracks || window.__lmsScreenTracks.size === 0) {
+              setIsSharingMyScreen(false);
+              syncShareLayoutRef.current?.(false);
+            }
           }
         });
-        // Also handle when someone starts/stops sharing
         client.on('peer-share-state-change', (ev) => {
           if (!isMounted) return;
           if (ev?.action === 'Start') {
             setActiveSharerName(ev?.userName || ev?.displayName || 'the instructor');
+            syncShareLayoutRef.current?.(true);
           } else if (ev?.action === 'Stop') {
             setActiveSharerName(null);
+            if (!window.__lmsScreenTracks || window.__lmsScreenTracks.size === 0) {
+              setIsSharingMyScreen(false);
+              syncShareLayoutRef.current?.(false);
+            }
           }
         });
 
@@ -502,6 +581,16 @@ export default function ZoomClassroom() {
         if (!isMounted) return;
         hasJoinedRef.current = true;
         setStatus('live');
+
+        // Lock gallery sizing once the meeting is live (professional equal-tile view)
+        requestAnimationFrame(() => {
+          syncShareLayoutRef.current?.(false);
+          try {
+            if (typeof client.setViewType === 'function') {
+              client.setViewType('gallery');
+            }
+          } catch (_) {}
+        });
 
         // ── Step 9: Record attendance ──────────────────────────────────────
         try {
@@ -731,26 +820,152 @@ export default function ZoomClassroom() {
       )}
 
       {/* Zoom SDK mount — always occupies remaining height so init measurements are correct */}
-      <div style={{ flex: 1, position: 'relative', minHeight: 0, width: '100%', overflow: 'auto' }}>
-        {/* Instructor: floating "you are sharing" pill */}
+      <div
+        className={isShareLayoutActive ? 'lms-zoom-stage lms-zoom-sharing' : 'lms-zoom-stage'}
+        style={{ flex: 1, position: 'relative', minHeight: 0, width: '100%', overflow: 'hidden' }}
+      >
+        {/* Local presenter: hide recursive share preview — show a clean "presenting" stage.
+            Remote attendees still receive the real screen stream; this only changes YOUR view
+            so entire-screen capture no longer nests the meeting UI into itself. */}
         {isSharingMyScreen && (
-          <div style={{
-            position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)',
-            zIndex: 40, background: 'rgba(15, 23, 42, 0.92)', backdropFilter: 'blur(8px)',
-            border: '1px solid rgba(59, 130, 246, 0.5)', borderRadius: 30, padding: '5px 16px',
-            display: 'flex', alignItems: 'center', gap: 10,
-            boxShadow: '0 4px 18px rgba(0, 0, 0, 0.5)', color: '#fff',
-            fontSize: 12, fontWeight: 600, pointerEvents: 'auto',
-          }}>
+          <div
+            className="lms-presenter-stage"
+            style={{
+              position: 'absolute',
+              top: 8,
+              left: 8,
+              right: `calc(${ZOOM_RIBBON_W}px + 18px)`,
+              bottom: ZOOM_FOOTER_PX + 8,
+              zIndex: 36,
+              borderRadius: 12,
+              background:
+                'radial-gradient(ellipse at 30% 20%, #1e3a5f 0%, #0f172a 55%, #020617 100%)',
+              border: '1px solid rgba(148, 163, 184, 0.25)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 14,
+              boxShadow: '0 12px 40px rgba(0,0,0,0.45)',
+              pointerEvents: 'auto',
+              padding: 24,
+              textAlign: 'center',
+            }}
+          >
+            <div
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: '50%',
+                background: 'rgba(34, 197, 94, 0.15)',
+                border: '1px solid rgba(34, 197, 94, 0.45)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="2" y="3" width="20" height="14" rx="2" stroke="#4ade80" strokeWidth="1.8" />
+                <path d="M8 21h8M12 17v4" stroke="#4ade80" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            </div>
+            <div style={{ color: '#f8fafc', fontSize: 18, fontWeight: 700, letterSpacing: '-0.01em' }}>
+              You are presenting
+            </div>
+            <p style={{ color: '#94a3b8', fontSize: 13, margin: 0, maxWidth: 360, lineHeight: 1.45 }}>
+              Your screen is visible to the class. Participants appear on the right.
+              Prefer sharing a <strong style={{ color: '#e2e8f0' }}>Window</strong> or{' '}
+              <strong style={{ color: '#e2e8f0' }}>Chrome Tab</strong> for the cleanest view.
+            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4 }}>
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  color: '#4ade80',
+                  fontSize: 12,
+                  fontWeight: 600,
+                }}
+              >
+                <span
+                  style={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: '50%',
+                    background: '#22c55e',
+                    animation: 'pulse 1.5s infinite',
+                  }}
+                />
+                Sharing live
+              </span>
+              <button
+                onClick={stopMyScreenShare}
+                style={{
+                  background: '#dc2626',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 20,
+                  padding: '8px 16px',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                Stop sharing
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Compact status pill when presenting (mobile / narrow ribbon overlap fallback) */}
+        {isSharingMyScreen && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 10,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 40,
+              background: 'rgba(15, 23, 42, 0.92)',
+              backdropFilter: 'blur(8px)',
+              border: '1px solid rgba(59, 130, 246, 0.5)',
+              borderRadius: 30,
+              padding: '5px 16px',
+              display: 'none',
+              alignItems: 'center',
+              gap: 10,
+              boxShadow: '0 4px 18px rgba(0, 0, 0, 0.5)',
+              color: '#fff',
+              fontSize: 12,
+              fontWeight: 600,
+              pointerEvents: 'auto',
+            }}
+            className="lms-presenter-pill-mobile"
+          >
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#4ade80' }}>
-              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', animation: 'pulse 1.5s infinite' }} />
+              <span
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: '50%',
+                  background: '#22c55e',
+                  animation: 'pulse 1.5s infinite',
+                }}
+              />
               Sharing Your Screen
             </span>
             <button
               onClick={stopMyScreenShare}
               style={{
-                background: '#dc2626', color: '#fff', border: 'none',
-                borderRadius: 14, padding: '3px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                background: '#dc2626',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 14,
+                padding: '3px 10px',
+                fontSize: 11,
+                fontWeight: 700,
+                cursor: 'pointer',
               }}
             >
               Stop
@@ -758,20 +973,32 @@ export default function ZoomClassroom() {
           </div>
         )}
 
-        {/* Student: screen-share active tip banner */}
-        {!isHost && activeSharerName && (
-          <div style={{
-            position: 'absolute', bottom: 70, left: '50%', transform: 'translateX(-50%)',
-            zIndex: 40, background: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(8px)',
-            border: '1px solid #f59e0b', borderRadius: 10, padding: '8px 18px',
-            display: 'flex', alignItems: 'center', gap: 10,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.5)', color: '#fef3c7',
-            fontSize: 12, fontWeight: 500, maxWidth: '90%', whiteSpace: 'nowrap',
-          }}>
-            <span style={{ fontSize: 16 }}>🖥️</span>
+        {/* Viewer tip when someone else is presenting */}
+        {!isSharingMyScreen && activeSharerName && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 12,
+              left: 12,
+              zIndex: 40,
+              background: 'rgba(15, 23, 42, 0.88)',
+              backdropFilter: 'blur(8px)',
+              border: '1px solid rgba(59, 130, 246, 0.35)',
+              borderRadius: 10,
+              padding: '7px 14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+              color: '#e2e8f0',
+              fontSize: 12,
+              fontWeight: 500,
+              maxWidth: 'min(420px, 70%)',
+            }}
+          >
+            <span style={{ color: '#60a5fa', fontWeight: 700 }}>●</span>
             <span>
-              <strong style={{ color: '#fbbf24' }}>{activeSharerName}</strong> is sharing their screen.
-              {' '}If you see a looping view, share a specific Window or Tab instead.
+              <strong style={{ color: '#f8fafc' }}>{activeSharerName}</strong> is presenting
             </span>
           </div>
         )}
@@ -779,6 +1006,7 @@ export default function ZoomClassroom() {
         <div
           ref={containerRef}
           id="meetingSDKElement"
+          className={isSharingMyScreen ? 'lms-local-presenting' : undefined}
           style={{
             width: '100%',
             minHeight: '100%',
@@ -795,12 +1023,15 @@ export default function ZoomClassroom() {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.3; }
         }
+
         #meetingSDKElement {
           width: 100% !important;
           height: 100% !important;
           min-height: 100% !important;
           box-sizing: border-box !important;
+          overflow: hidden !important;
         }
+
         /* Do NOT force height:100% on Zoom's root — that clips the footer toolbar. */
         #meetingSDKElement #zmmtg-root,
         #meetingSDKElement .meeting-app {
@@ -809,22 +1040,79 @@ export default function ZoomClassroom() {
           min-height: 100% !important;
           margin: 0 !important;
           padding: 0 !important;
+          background: #0b1220 !important;
         }
+
         #meetingSDKElement > div {
           width: 100% !important;
           margin: 0 !important;
         }
-        #meetingSDKElement .share-container,
-        #meetingSDKElement .share-container canvas {
-          width: 100% !important;
+
+        /* Gallery / speaker canvas — fill the stage cleanly */
+        #meetingSDKElement .suspension-window,
+        #meetingSDKElement .speaker-bar-container,
+        #meetingSDKElement .gallery-video-container {
+          border-radius: 12px !important;
+          overflow: hidden !important;
         }
+
+        /* Professional share layout: main stage + participant ribbon (do NOT force 100% width) */
+        .lms-zoom-sharing #meetingSDKElement .sharee-container,
+        .lms-zoom-sharing #meetingSDKElement .share-container,
+        .lms-zoom-sharing #meetingSDKElement [class*="share-content"],
+        .lms-zoom-sharing #meetingSDKElement [class*="ShareCanvas"],
+        .lms-zoom-sharing #meetingSDKElement [class*="share-canvas"] {
+          border-radius: 12px !important;
+          overflow: hidden !important;
+          max-width: calc(100% - ${ZOOM_RIBBON_W}px - 16px) !important;
+        }
+
+        .lms-zoom-sharing #meetingSDKElement .share-container canvas,
+        .lms-zoom-sharing #meetingSDKElement .sharee-container canvas {
+          object-fit: contain !important;
+          background: #0b1220 !important;
+        }
+
+        /* Local presenter: blank the recursive share preview under our overlay */
+        #meetingSDKElement.lms-local-presenting .share-container canvas,
+        #meetingSDKElement.lms-local-presenting .sharee-container canvas,
+        #meetingSDKElement.lms-local-presenting .share-container video,
+        #meetingSDKElement.lms-local-presenting .sharee-container video,
+        #meetingSDKElement.lms-local-presenting [class*="share-content"] canvas,
+        #meetingSDKElement.lms-local-presenting [class*="share-content"] video {
+          opacity: 0 !important;
+          visibility: hidden !important;
+        }
+
         #meetingSDKElement video,
         #meetingSDKElement canvas {
           max-width: none !important;
           max-height: none !important;
         }
+
         #meetingSDKElement video {
           object-fit: contain !important;
+        }
+
+        /* Participant tiles — rounded, consistent gaps */
+        #meetingSDKElement .speaker-active-container,
+        #meetingSDKElement .gallery-video-container > div,
+        #meetingSDKElement [class*="video-avatar"],
+        #meetingSDKElement [class*="participant-video"] {
+          border-radius: 12px !important;
+        }
+
+        @media (max-width: 900px) {
+          .lms-presenter-stage {
+            right: 8px !important;
+            bottom: ${ZOOM_FOOTER_PX + 56}px !important;
+          }
+          .lms-presenter-pill-mobile {
+            display: flex !important;
+          }
+          .lms-presenter-stage {
+            display: none !important;
+          }
         }
       `}</style>
     </div>
