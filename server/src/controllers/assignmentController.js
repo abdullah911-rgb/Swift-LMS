@@ -3,6 +3,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/apiResponse');
 const { recalculateEnrollmentProgress } = require('./enrollmentController');
 const path = require('path');
+const fs = require('fs');
 
 const assignmentController = {
   // ── Instructor: POST /api/assignments/course/:courseId ──────────────────────
@@ -19,14 +20,29 @@ const assignmentController = {
     });
     if (!course) return sendError(res, 'Course not found or not authorized.', 404);
 
-    // Build file info if a file was uploaded
+    // Build file info if a file was uploaded — save directly into database (FileStore)
     let fileUrl = null;
     let fileType = null;
     let fileName = null;
     if (req.file) {
-      fileUrl = `/uploads/${req.file.filename}`;
-      fileType = path.extname(req.file.originalname).replace('.', '').toLowerCase();
-      fileName = req.file.originalname;
+      const fileBuffer = req.file.buffer || (req.file.path && fs.existsSync(req.file.path) ? fs.readFileSync(req.file.path) : null);
+      if (fileBuffer) {
+        fileName = req.file.originalname;
+        fileType = path.extname(req.file.originalname).replace('.', '').toLowerCase();
+        const mimeType = req.file.mimetype || 'application/octet-stream';
+        const stored = await prisma.fileStore.create({
+          data: {
+            data: fileBuffer,
+            mimeType,
+            fileName,
+            fileSize: fileBuffer.length,
+          },
+        });
+        fileUrl = `/api/assignments/files/${stored.id}/${encodeURIComponent(fileName)}`;
+        if (req.file.path && fs.existsSync(req.file.path)) {
+          try { fs.unlinkSync(req.file.path); } catch (_) {}
+        }
+      }
     }
 
     const assignment = await prisma.assignment.create({
@@ -176,10 +192,28 @@ const assignmentController = {
       return sendError(res, 'You have already completed this course and earned your certificate. Assignment submissions are closed.', 403);
     }
 
-    const fileUrl = `/uploads/${req.file.filename}`;
-    const fileType = path.extname(req.file.originalname).replace('.', '').toLowerCase();
+    const fileBuffer = req.file.buffer || (req.file.path && fs.existsSync(req.file.path) ? fs.readFileSync(req.file.path) : null);
+    if (!fileBuffer) return sendError(res, 'Failed to read submitted file for database storage.', 400);
+
     const fileName = req.file.originalname;
+    const fileType = path.extname(req.file.originalname).replace('.', '').toLowerCase();
+    const mimeType = req.file.mimetype || 'application/octet-stream';
+
+    const stored = await prisma.fileStore.create({
+      data: {
+        data: fileBuffer,
+        mimeType,
+        fileName,
+        fileSize: fileBuffer.length,
+      },
+    });
+
+    const fileUrl = `/api/assignments/files/${stored.id}/${encodeURIComponent(fileName)}`;
     const now = new Date();
+
+    if (req.file.path && fs.existsSync(req.file.path)) {
+      try { fs.unlinkSync(req.file.path); } catch (_) {}
+    }
 
     // Detect existing submission (resubmit vs first submit)
     const existing = await prisma.assignmentSubmission.findUnique({
@@ -338,6 +372,30 @@ const assignmentController = {
     });
 
     sendSuccess(res, 'Submission reviewed.', { submission: updated });
+  }),
+
+  // ── GET /api/assignments/files/:fileId (and /:fileId/:filename) ───────────
+  // Download an assignment file or submission file directly from the database (PostgreSQL BYTEA)
+  downloadFile: asyncHandler(async (req, res) => {
+    const { fileId } = req.params;
+    if (!fileId) return sendError(res, 'File ID is required.', 400);
+
+    const fileRecord = await prisma.fileStore.findUnique({
+      where: { id: fileId },
+    });
+
+    if (!fileRecord || !fileRecord.data) {
+      return sendError(res, 'The requested file was not found in the database.', 404);
+    }
+
+    res.setHeader('Content-Type', fileRecord.mimeType || 'application/octet-stream');
+    res.setHeader('Content-Length', fileRecord.fileSize || fileRecord.data.length);
+    const safeName = (fileRecord.fileName || 'file').replace(/["\r\n]/g, '_');
+    const encodedName = encodeURIComponent(fileRecord.fileName || 'file').replace(/['()]/g, escape);
+    res.setHeader('Content-Disposition', `attachment; filename="${safeName}"; filename*=UTF-8''${encodedName}`);
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    return res.end(fileRecord.data);
   }),
 };
 

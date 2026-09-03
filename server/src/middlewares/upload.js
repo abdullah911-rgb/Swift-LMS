@@ -63,4 +63,11 @@ const uploadAny = multer({
   limits: { fileSize: config.upload.maxFileSize },
 });
 
-module.exports = { uploadImage, uploadVideo, uploadDocument, uploadAny };
+// Memory storage for assignments to store files directly into the database (PostgreSQL BYTEA)
+const memoryStorage = multer.memoryStorage();
+const uploadAssignment = multer({
+  storage: memoryStorage,
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+});
+
+module.exports = { uploadImage, uploadVideo, uploadDocument, uploadAny, uploadAssignment };

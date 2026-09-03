@@ -723,3 +723,16 @@ model AssignmentSubmission {
   @@index([studentId])
   @@map("assignment_submissions")
 }
+
+// ─── FILE STORE (Assignment files stored in DB for serverless compatibility) ──
+
+model FileStore {
+  id        String   @id @default(uuid())
+  data      Bytes
+  mimeType  String
+  fileName  String
+  fileSize  Int
+  createdAt DateTime @default(now())
+
+  @@map("file_store")
+}

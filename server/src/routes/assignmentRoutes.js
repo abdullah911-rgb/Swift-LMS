@@ -3,7 +3,11 @@ const router = express.Router();
 const assignmentController = require('../controllers/assignmentController');
 const { requireAuth } = require('../middlewares/auth');
 const { requireRole } = require('../middlewares/roles');
-const { uploadAny } = require('../middlewares/upload');
+const { uploadAssignment } = require('../middlewares/upload');
+
+// ── Public / Download Route (serves DB-stored files) ──────────────────────────
+router.get('/files/:fileId', assignmentController.downloadFile);
+router.get('/files/:fileId/:filename', assignmentController.downloadFile);
 
 // ── Instructor routes ─────────────────────────────────────────────────────────
 
@@ -12,7 +16,7 @@ router.post(
   '/course/:courseId',
   requireAuth,
   requireRole('INSTRUCTOR', 'ADMIN'),
-  uploadAny.single('file'),
+  uploadAssignment.single('file'),
   assignmentController.createAssignment
 );
 
@@ -63,7 +67,7 @@ router.post(
   '/:assignmentId/submit',
   requireAuth,
   requireRole('STUDENT'),
-  uploadAny.single('file'),
+  uploadAssignment.single('file'),
   assignmentController.submitAssignment
 );
 
