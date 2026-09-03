@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import { adminService, zoomService } from '../../services/portalService';
+import usePolling from '../../hooks/usePolling';
 import toast from 'react-hot-toast';
 import {
   IoCheckmarkCircleOutline,
@@ -15,7 +16,7 @@ import {
 } from 'react-icons/io5';
 
 const AdminApprovals = () => {
-  const [activeTab, setActiveTab] = useState('courses');
+  const [activeTab, setActiveTab] = useState('classes');
   const [courses, setCourses] = useState([]);
   const [meetings, setMeetings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +29,7 @@ const AdminApprovals = () => {
       const res = await adminService.getPendingCourses();
       if (res.data?.data?.courses) setCourses(res.data.data.courses);
     } catch {
-      toast.error('Failed to load pending courses.');
+      // Non-critical background failure
     }
   };
 
@@ -37,7 +38,7 @@ const AdminApprovals = () => {
       const res = await zoomService.getPendingApprovals();
       if (res.data?.data?.meetings) setMeetings(res.data.data.meetings);
     } catch {
-      toast.error('Failed to load pending class requests.');
+      // Non-critical background failure
     }
   };
 
@@ -47,7 +48,14 @@ const AdminApprovals = () => {
     setLoading(false);
   };
 
+  const fetchPendingSilently = async () => {
+    await Promise.all([fetchPendingCourses(), fetchPendingMeetings()]);
+  };
+
   useEffect(() => { fetchPending(); }, []);
+
+  // Real-time auto-polling every 15 seconds so new class requests appear automatically
+  usePolling(fetchPendingSilently, 15000, true);
 
   const handleApproveCourse = async (id) => {
     setActionId(id);
@@ -109,32 +117,28 @@ const AdminApprovals = () => {
 
   return (
     <div className="space-y-6 font-sans">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-heading font-bold text-primary-900">Approvals</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Review instructor course submissions and live class requests.
+            Review instructor live class requests and course approvals.
           </p>
         </div>
-        <button
-          onClick={fetchPending}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-100 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-600 transition-all cursor-pointer"
-        >
-          <IoRefreshOutline size={14} /> Refresh
-        </button>
+        <div className="flex items-center gap-2.5">
+          <span className="hidden sm:inline-flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl font-semibold">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            Live Auto-Update (15s)
+          </span>
+          <button
+            onClick={fetchPending}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-100 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-600 transition-all cursor-pointer"
+          >
+            <IoRefreshOutline size={14} /> Refresh
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-2">
-        <button
-          onClick={() => setActiveTab('courses')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeTab === 'courses'
-              ? 'bg-primary-600 text-white'
-              : 'bg-white border border-slate-100 text-slate-600 hover:bg-slate-50'
-          }`}
-        >
-          Courses {courses.length > 0 && `(${courses.length})`}
-        </button>
         <button
           onClick={() => setActiveTab('classes')}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
@@ -145,6 +149,18 @@ const AdminApprovals = () => {
         >
           Live Classes {meetings.length > 0 && `(${meetings.length})`}
         </button>
+        {courses.length > 0 && (
+          <button
+            onClick={() => setActiveTab('courses')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeTab === 'courses'
+                ? 'bg-primary-600 text-white'
+                : 'bg-white border border-slate-100 text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            Pending Courses ({courses.length})
+          </button>
+        )}
       </div>
 
       {loading ? (

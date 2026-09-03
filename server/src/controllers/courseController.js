@@ -179,6 +179,10 @@ const courseController = {
 
     const targetInstructorId = (req.user.role === 'ADMIN' && instructorId) ? instructorId : req.user.id;
 
+    // Admin creates courses as PUBLISHED directly — no approval needed.
+    // Instructors (if they ever create) get DRAFT + pendingApproval.
+    const isCreatedByAdmin = req.user.role === 'ADMIN';
+
     const course = await prisma.course.create({
       data: {
         title,
@@ -196,11 +200,24 @@ const courseController = {
         learningOutcomes: learningOutcomes || [],
         prerequisites: prerequisites || [],
         certificate: certificate !== 'false',
-        status: 'DRAFT',
+        status: isCreatedByAdmin ? 'PUBLISHED' : 'DRAFT',
         pendingApproval: false,
       },
       include: { category: true, instructor: { select: { id: true, name: true } } },
     });
+
+    // If an instructor is assigned to this course, notify them
+    if (targetInstructorId && targetInstructorId !== req.user.id) {
+      await prisma.notification.create({
+        data: {
+          userId: targetInstructorId,
+          title: '📚 New Course Assigned',
+          message: `You have been assigned to teach the course "${course.title}".`,
+          type: 'INFO',
+          link: `/instructor/courses/${course.id}/manage`,
+        },
+      }).catch(() => {});
+    }
 
     sendSuccess(res, 'Course created successfully.', { course }, 201);
   }),
@@ -309,19 +326,47 @@ const courseController = {
     const course = await prisma.course.findUnique({ where: { id } });
     if (!course) return sendError(res, 'Course not found.', 404);
 
-    // Apply any pending edits
-    const dataToApply = course.pendingEdits || {};
+    // Safely apply any pending edits — only allow known Course fields to avoid Prisma errors
+    const ALLOWED_EDIT_FIELDS = [
+      'title', 'slug', 'description', 'shortDescription', 'categoryId',
+      'level', 'price', 'isFree', 'durationInMonths', 'language',
+      'learningOutcomes', 'prerequisites', 'certificate', 'thumbnail',
+    ];
+
+    const rawEdits = course.pendingEdits || {};
+    const safeEdits = {};
+    for (const key of ALLOWED_EDIT_FIELDS) {
+      if (Object.prototype.hasOwnProperty.call(rawEdits, key)) {
+        safeEdits[key] = rawEdits[key];
+      }
+    }
+
     const updated = await prisma.course.update({
       where: { id },
       data: {
-        ...dataToApply,
+        ...safeEdits,
         pendingApproval: false,
         pendingEdits: null,
         status: 'PUBLISHED',
       },
     });
+
+    // Notify the instructor that their course/edits were approved
+    if (course.instructorId) {
+      await prisma.notification.create({
+        data: {
+          userId: course.instructorId,
+          title: '✅ Course Approved & Published',
+          message: `Your course "${updated.title}" has been approved and is now live for students.`,
+          type: 'SUCCESS',
+          link: `/instructor/courses/${id}/manage`,
+        },
+      }).catch(() => {});
+    }
+
     sendSuccess(res, 'Course approved and published.', { course: updated });
   }),
+
 
   // PATCH /api/courses/:id/reject (Admin) — reject a pending approval
   rejectCourse: asyncHandler(async (req, res) => {

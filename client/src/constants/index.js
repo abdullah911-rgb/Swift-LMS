@@ -19,6 +19,52 @@ const SLUG_THUMBNAIL_MAP = {
   'website-design-course': '/uploads/website-design-course.jfif',
 };
 
+export const getServerBase = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '');
+  }
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return 'http://localhost:5000';
+  }
+  return '';
+};
+
+export const getFileUrl = (path) => {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('blob:') || path.startsWith('data:')) {
+    return path;
+  }
+  const base = getServerBase();
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${base}${normalizedPath}`;
+};
+
+export const downloadFile = async (url, fallbackName = 'download') => {
+  const fullUrl = getFileUrl(url);
+  try {
+    const res = await fetch(fullUrl, { mode: 'cors' });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    const blob = await res.blob();
+    const objectUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = objectUrl;
+    a.download = fallbackName || 'download';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => window.URL.revokeObjectURL(objectUrl), 1000);
+  } catch {
+    const a = document.createElement('a');
+    a.href = fullUrl;
+    a.download = fallbackName || 'download';
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+};
+
 export const getImageUrl = (path, slug) => {
   let targetPath = path;
 
@@ -30,13 +76,7 @@ export const getImageUrl = (path, slug) => {
   }
 
   if (!targetPath) return '';
-  if (targetPath.startsWith('http://') || targetPath.startsWith('https://')) return targetPath;
-  
-  const base = import.meta.env.VITE_API_URL 
-    ? import.meta.env.VITE_API_URL.replace('/api', '') 
-    : (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? (import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : '') : '');
-  
-  return `${base}${targetPath}`;
+  return getFileUrl(targetPath);
 };
 
 export const ROUTES = {

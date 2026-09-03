@@ -252,3 +252,11 @@ export const announcementService = {
     api.delete(`/courses/${courseId}/announcements/${announcementId}`),
 };
 
+export const notificationService = {
+  getNotifications: () => api.get('/users/notifications'),
+  markAllRead: () => api.patch('/users/notifications/read-all'),
+  markRead: (id) => api.patch(`/users/notifications/${id}/read`),
+  deleteNotification: (id) => api.delete(`/users/notifications/${id}`),
+};
+
+

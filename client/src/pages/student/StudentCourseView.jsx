@@ -4,7 +4,8 @@ import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import { enrollmentService, assignmentService, certificateService, quizService, zoomService } from '../../services/portalService';
 import api from '../../services/api';
-import { ROUTES, getImageUrl } from '../../constants';
+import { ROUTES, getImageUrl, getFileUrl, downloadFile } from '../../constants';
+import usePolling from '../../hooks/usePolling';
 import { 
   IoChevronBackOutline, 
   IoChevronForwardOutline,
@@ -130,6 +131,31 @@ const StudentCourseView = () => {
       fetchLiveMeetings();
     }
   }, [activeTab, courseId]);
+
+  // Background auto-refresh every 15 seconds so live classes and assignments appear without refresh
+  usePolling(() => {
+    if (activeTab === 'MEETINGS' && !isCompleted) {
+      zoomService.getByCourse(courseId)
+        .then((res) => {
+          if (res.data?.data?.meetings) {
+            setEnrollment((prev) => {
+              if (!prev?.course) return prev;
+              return {
+                ...prev,
+                course: { ...prev.course, zoomMeetings: res.data.data.meetings },
+              };
+            });
+          }
+        })
+        .catch(() => {});
+    } else if (activeTab === 'ASSIGNMENTS' && !isCompleted) {
+      assignmentService.getStudentAssignments(courseId)
+        .then((res) => {
+          if (res.data?.data?.assignments) setAssignments(res.data.data.assignments);
+        })
+        .catch(() => {});
+    }
+  }, 15000, true);
 
   const fetchAssignments = async () => {
     setLoadingAssignments(true);
@@ -497,9 +523,14 @@ const StudentCourseView = () => {
                                     <p className="text-[10px] text-slate-400 capitalize mt-0.5">{res.fileType}</p>
                                   </div>
                                 </div>
-                                <a href={res.fileUrl} download target="_blank" rel="noreferrer" className="text-slate-400 hover:text-primary-600 p-1.5 hover:bg-slate-50 rounded-lg">
+                                <button
+                                  type="button"
+                                  onClick={() => downloadFile(res.fileUrl, res.name || 'resource')}
+                                  className="text-slate-400 hover:text-primary-600 p-1.5 hover:bg-slate-50 rounded-lg cursor-pointer"
+                                  title="Download resource"
+                                >
                                   <IoDownloadOutline size={18} />
-                                </a>
+                                </button>
                               </div>
                             ))}
                           </div>
@@ -733,14 +764,14 @@ const StudentCourseView = () => {
 
                               {/* Download assignment file */}
                               {assignment.fileUrl && (
-                                <a
-                                  href={getImageUrl(assignment.fileUrl)}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="flex items-center gap-1.5 px-3 py-2 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold rounded-xl transition-all shrink-0"
+                                <button
+                                  type="button"
+                                  onClick={() => downloadFile(assignment.fileUrl, assignment.fileName || `${assignment.title.replace(/\s+/g, '_')}.pdf`)}
+                                  className="flex items-center gap-1.5 px-3 py-2 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold rounded-xl transition-all shrink-0 cursor-pointer shadow-sm"
+                                  title="Download assignment file"
                                 >
                                   <IoDownloadOutline size={14} /> Download
-                                </a>
+                                </button>
                               )}
                             </div>
 
@@ -757,14 +788,13 @@ const StudentCourseView = () => {
                                       {isResubmission ? 'Last submitted' : 'Submitted'}: {new Date(mySubmission.submittedAt).toLocaleString()}
                                     </p>
                                   </div>
-                                  <a
-                                    href={getImageUrl(mySubmission.fileUrl)}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="text-[10px] font-bold text-primary-600 hover:underline flex items-center gap-0.5"
+                                  <button
+                                    type="button"
+                                    onClick={() => downloadFile(mySubmission.fileUrl, mySubmission.fileName || 'my_submission')}
+                                    className="text-[10px] font-bold text-primary-600 hover:underline flex items-center gap-0.5 cursor-pointer"
                                   >
-                                    <IoDownloadOutline size={12} /> View
-                                  </a>
+                                    <IoDownloadOutline size={12} /> Download
+                                  </button>
                                 </div>
 
                                 {/* Instructor feedback / grade */}

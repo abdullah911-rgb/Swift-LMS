@@ -29,7 +29,9 @@ const app = express();
 
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (mobile apps, Postman, curl)
@@ -104,6 +106,8 @@ if (!fs.existsSync(uploadDir)) {
 }
 
 app.use('/uploads', (req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.setHeader('Access-Control-Allow-Origin', '*');
   if (req.path.endsWith('.jfif')) {
     res.setHeader('Content-Type', 'image/jpeg');
   }

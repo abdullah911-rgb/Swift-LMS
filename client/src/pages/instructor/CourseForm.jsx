@@ -1,4 +1,4 @@
-import { getImageUrl } from '../../constants/index';
+import { getImageUrl, getFileUrl, downloadFile } from '../../constants/index';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Card from '../../components/ui/Card';
@@ -558,38 +558,45 @@ const CourseForm = () => {
         </div>
       </div>
 
-      {/* Approval Status Banner */}
+      {/* Course Status Banner */}
       {isEditMode && (
         <div className={`rounded-xl px-4 py-3 flex items-center justify-between gap-4 text-sm ${
           courseApprovalStatus.status === 'PUBLISHED'
             ? 'bg-green-50 border border-green-100 text-green-700'
-            : courseApprovalStatus.pendingApproval
-            ? 'bg-amber-50 border border-amber-100 text-amber-700'
             : 'bg-slate-50 border border-slate-100 text-slate-600'
         }`}>
           <div className="flex items-center gap-2">
             {courseApprovalStatus.status === 'PUBLISHED' ? (
               <IoCheckmarkCircleOutline size={18} />
-            ) : courseApprovalStatus.pendingApproval ? (
-              <IoTimeOutline size={18} />
             ) : (
               <IoDocumentOutline size={18} />
             )}
             <span className="font-semibold text-xs">
               {courseApprovalStatus.status === 'PUBLISHED'
-                ? 'This course is live and visible to students.'
-                : courseApprovalStatus.pendingApproval
-                ? 'Pending admin approval — changes will go live once approved.'
-                : 'This course is a draft. Submit for admin review to publish.'}
+                ? 'This course is published and visible to students.'
+                : 'This course is in draft mode.'}
             </span>
           </div>
-          {!courseApprovalStatus.pendingApproval && courseApprovalStatus.status !== 'PUBLISHED' && (
+          {user?.role === 'ADMIN' && (
             <button
-              onClick={handleSubmitForApproval}
-              disabled={submittingApproval}
-              className="shrink-0 px-4 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold rounded-lg transition-all disabled:opacity-50 cursor-pointer"
+              type="button"
+              onClick={async () => {
+                try {
+                  const res = await adminService.togglePublish(courseId);
+                  const newStatus = res.data?.data?.course?.status;
+                  setCourseApprovalStatus((prev) => ({ ...prev, status: newStatus }));
+                  toast.success(`Course ${newStatus === 'PUBLISHED' ? 'published' : 'unpublished'}.`);
+                } catch {
+                  toast.error('Failed to update course status.');
+                }
+              }}
+              className={`shrink-0 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                courseApprovalStatus.status === 'PUBLISHED'
+                  ? 'bg-slate-200 hover:bg-slate-300 text-slate-700'
+                  : 'bg-primary-600 hover:bg-primary-700 text-white shadow-sm'
+              }`}
             >
-              {submittingApproval ? 'Submitting...' : 'Submit for Approval'}
+              {courseApprovalStatus.status === 'PUBLISHED' ? 'Unpublish' : 'Publish Course'}
             </button>
           )}
         </div>
@@ -805,12 +812,13 @@ const CourseForm = () => {
 
                 {!isFree && (
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-500">Price ($USD)</label>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Price (PKR ₨)</label>
                     <input
                       type="number"
                       required
-                      min="0.01"
-                      step="0.01"
+                      min="1"
+                      step="1"
+                      placeholder="e.g. 5000"
                       value={price}
                       onChange={(e) => setPrice(e.target.value)}
                       className="w-full px-4 py-2.5 rounded-xl border border-slate-100 focus:outline-none focus:border-primary-600 text-sm"
@@ -829,16 +837,25 @@ const CourseForm = () => {
                 </div>
 
                 <div className="space-y-1.5 pt-2 border-t border-slate-50">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Course Duration</label>
-                  <select
-                    value={durationInMonths}
-                    onChange={(e) => setDurationInMonths(parseInt(e.target.value, 10))}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-100 focus:outline-none focus:border-primary-600 text-sm bg-white cursor-pointer"
-                  >
-                    <option value={2}>2 Months Course</option>
-                    <option value={4}>4 Months Course</option>
-                    <option value={6}>6 Months Course</option>
-                  </select>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Course Duration (Months)</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="1"
+                      max="60"
+                      value={durationInMonths}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        setDurationInMonths(isNaN(val) ? '' : val);
+                      }}
+                      placeholder="e.g. 3"
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-100 focus:outline-none focus:border-primary-600 text-sm pr-16"
+                    />
+                    <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-semibold pointer-events-none">
+                      Months
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-400">Set any custom duration (e.g. 1, 2, 3, 4, 6, 12 months)</p>
                 </div>
               </div>
             </Card>
@@ -1337,15 +1354,14 @@ const CourseForm = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0 ml-3">
-                        <a
-                          href={getImageUrl(file.fileUrl)}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="p-1.5 hover:bg-slate-100 text-slate-500 rounded-lg transition-all"
+                        <button
+                          type="button"
+                          onClick={() => downloadFile(file.fileUrl, file.name)}
+                          className="p-1.5 hover:bg-slate-100 text-slate-500 rounded-lg transition-all cursor-pointer"
                           title="Download file"
                         >
                           <IoDownloadOutline size={16} />
-                        </a>
+                        </button>
                         <button
                           onClick={() => handleDeleteResource(file.id)}
                           className="p-1.5 hover:bg-red-50 text-red-500 hover:text-red-600 rounded-lg transition-all cursor-pointer"
@@ -1485,14 +1501,14 @@ const CourseForm = () => {
                               </p>
                             )}
                           </div>
-                          <a
-                            href={getImageUrl(sub.fileUrl)}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="flex items-center gap-1 px-3 py-1.5 bg-primary-50 hover:bg-primary-100 text-primary-700 text-[10px] font-bold rounded-lg transition-colors"
+                          <button
+                            type="button"
+                            onClick={() => downloadFile(sub.fileUrl, sub.fileName || 'submission')}
+                            className="flex items-center gap-1 px-3 py-1.5 bg-primary-50 hover:bg-primary-100 text-primary-700 text-[10px] font-bold rounded-lg transition-colors cursor-pointer"
+                            title="Download student submission"
                           >
                             <IoDownloadOutline size={13} /> Download
-                          </a>
+                          </button>
                         </div>
 
                         {sub.note && (
@@ -1759,14 +1775,14 @@ const CourseForm = () => {
                                 </span>
                               )}
                               {a.fileName && (
-                                <a
-                                  href={getImageUrl(a.fileUrl)}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="text-[10px] text-primary-600 hover:text-primary-700 font-bold flex items-center gap-0.5 hover:underline"
+                                <button
+                                  type="button"
+                                  onClick={() => downloadFile(a.fileUrl, a.fileName)}
+                                  className="text-[10px] text-primary-600 hover:text-primary-700 font-bold flex items-center gap-0.5 hover:underline cursor-pointer"
+                                  title="Download assignment template"
                                 >
                                   <IoDownloadOutline size={11} /> {a.fileName}
-                                </a>
+                                </button>
                               )}
                               <span className="text-[10px] text-slate-400">
                                 Posted: {new Date(a.createdAt).toLocaleDateString()}

@@ -13,6 +13,7 @@ import {
   IoCloseOutline,
 } from 'react-icons/io5';
 import AnnouncementBanner from '../common/AnnouncementBanner';
+import NotificationBell from '../common/NotificationBell';
 
 const InstructorLayout = () => {
   const { user, logout } = useAuth();
@@ -131,6 +132,7 @@ const InstructorLayout = () => {
           </h2>
 
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <NotificationBell />
             <span className="hidden sm:block text-sm font-medium text-slate-600 truncate max-w-[160px]">
               Instructor: {user?.name}
             </span>

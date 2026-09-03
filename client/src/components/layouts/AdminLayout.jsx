@@ -21,6 +21,7 @@ import {
   IoClipboardOutline,
 } from 'react-icons/io5';
 import AnnouncementBanner from '../common/AnnouncementBanner';
+import NotificationBell from '../common/NotificationBell';
 
 const AdminLayout = () => {
   const { user, logout } = useAuth();
@@ -44,7 +45,7 @@ const AdminLayout = () => {
 
   useEffect(() => {
     fetchPendingCount();
-    const interval = setInterval(fetchPendingCount, 60000);
+    const interval = setInterval(fetchPendingCount, 20000);
     return () => clearInterval(interval);
   }, [fetchPendingCount, location.pathname]);
 
@@ -169,9 +170,12 @@ const AdminLayout = () => {
               System Admin Control Center
             </h2>
           </div>
-          <span className="text-xs font-bold text-accent-600 bg-accent-50 border border-accent-200 px-3 py-1.5 rounded-lg shrink-0">
-            Role: Admin
-          </span>
+          <div className="flex items-center gap-3 shrink-0">
+            <NotificationBell />
+            <span className="text-xs font-bold text-accent-600 bg-accent-50 border border-accent-200 px-3 py-1.5 rounded-lg shrink-0">
+              Role: Admin
+            </span>
+          </div>
         </header>
 
         <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 lg:p-8">

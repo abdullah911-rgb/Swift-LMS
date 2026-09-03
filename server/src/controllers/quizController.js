@@ -266,6 +266,25 @@ const quizController = {
       data: { isPublished: !quiz.isPublished },
     });
 
+    if (updated.isPublished) {
+      const enrollments = await prisma.enrollment.findMany({
+        where: { courseId: quiz.courseId, status: 'ACTIVE' },
+        select: { studentId: true },
+      });
+      if (enrollments.length > 0) {
+        const course = await prisma.course.findUnique({ where: { id: quiz.courseId }, select: { title: true } });
+        await prisma.notification.createMany({
+          data: enrollments.map((e) => ({
+            userId: e.studentId,
+            title: '🎯 Final Quiz Available',
+            message: `The assessment quiz for "${course?.title || 'your course'}" is now available.`,
+            type: 'INFO',
+            link: `/student/course/${quiz.courseId}`,
+          })),
+        }).catch(() => {});
+      }
+    }
+
     sendSuccess(res, `Quiz ${updated.isPublished ? 'published' : 'unpublished'}.`, { quiz: updated });
   }),
 
@@ -666,11 +685,41 @@ const quizController = {
       console.error('[Quiz submit] Evaluation error:', err.message);
     }
 
-    // Count remaining attempts
     const completedAttempts = await prisma.quizAttempt.count({
       where: { quizId: quiz.id, userId: studentId, completedAt: { not: null } },
     });
     const remainingAttempts = Math.max(0, quiz.maxAttempts - completedAttempts);
+
+    const roundedScore = Math.round(percentage * 100) / 100;
+    // Notify student about their quiz result
+    await prisma.notification.create({
+      data: {
+        userId: studentId,
+        title: passed ? '🎉 Quiz Passed!' : '📋 Quiz Result',
+        message: passed
+          ? `Congratulations! You passed the quiz for "${quiz.course.title}" with a score of ${roundedScore}%.`
+          : `You scored ${roundedScore}% on "${quiz.course.title}". Pass mark is ${quiz.passMark}%.`,
+        type: passed ? 'SUCCESS' : 'WARNING',
+        link: `/student/course/${quiz.courseId}`,
+      },
+    }).catch(() => {});
+
+    // Notify instructor about student quiz completion
+    const courseOwner = await prisma.course.findUnique({
+      where: { id: quiz.courseId },
+      select: { instructorId: true, title: true },
+    });
+    if (courseOwner?.instructorId && courseOwner.instructorId !== studentId) {
+      await prisma.notification.create({
+        data: {
+          userId: courseOwner.instructorId,
+          title: '📝 Student Quiz Submitted',
+          message: `${req.user.name} completed the quiz for "${courseOwner.title}" with a score of ${roundedScore}% (${passed ? 'PASSED' : 'FAILED'}).`,
+          type: passed ? 'SUCCESS' : 'INFO',
+          link: `/instructor/courses/${quiz.courseId}/manage`,
+        },
+      }).catch(() => {});
+    }
 
     sendSuccess(res, passed ? 'Quiz passed!' : 'Quiz submitted.', {
       passed,

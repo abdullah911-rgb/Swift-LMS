@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import { enrollmentService } from '../../services/portalService';
+import usePolling from '../../hooks/usePolling';
 import { ROUTES } from '../../constants';
 import { IoBookOutline, IoTimeOutline, IoRibbonOutline } from 'react-icons/io5';
 
@@ -27,6 +28,14 @@ const MyCourses = () => {
     };
     fetchEnrollments();
   }, []);
+
+  usePolling(() => {
+    enrollmentService.getMyEnrollments()
+      .then((res) => {
+        if (res.data?.data?.enrollments) setEnrollments(res.data.data.enrollments);
+      })
+      .catch(() => {});
+  }, 20000, true);
 
   const filteredEnrollments = enrollments.filter((e) => {
     if (filter === 'IN_PROGRESS') return e.progress < 100;

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Card from '../../components/ui/Card';
 import { instructorService } from '../../services/portalService';
+import usePolling from '../../hooks/usePolling';
 import { IoBookOutline, IoPeopleOutline, IoLayersOutline, IoInformationCircleOutline, IoSettingsOutline } from 'react-icons/io5';
 import toast from 'react-hot-toast';
 
@@ -24,6 +25,14 @@ const InstructorCourses = () => {
   };
 
   useEffect(() => { fetchCourses(); }, []);
+
+  usePolling(() => {
+    instructorService.getMyCourses()
+      .then((res) => {
+        if (res.data?.data?.courses) setCourses(res.data.data.courses);
+      })
+      .catch(() => {});
+  }, 20000, true);
 
   if (loading) {
     return (

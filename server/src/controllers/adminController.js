@@ -436,6 +436,17 @@ const adminController = {
       include: { instructor: { select: { id: true, name: true, email: true } } },
     });
 
+    // Notify the instructor about the new course assignment
+    await prisma.notification.create({
+      data: {
+        userId: id,
+        title: '📚 New Course Assigned',
+        message: `You have been assigned to teach "${updated.title}". Visit your courses to get started.`,
+        type: 'INFO',
+        link: `/instructor/courses/${courseId}/manage`,
+      },
+    }).catch(() => {});
+
     sendSuccess(res, 'Course assigned to instructor successfully.', { course: updated });
   }),
 
@@ -457,6 +468,16 @@ const adminController = {
       data: { instructorId },
       include: { instructor: { select: { id: true, name: true, email: true } } },
     });
+
+    await prisma.notification.create({
+      data: {
+        userId: instructorId,
+        title: '📚 Course Assigned to You',
+        message: `You have been assigned to teach "${updated.title}".`,
+        type: 'INFO',
+        link: `/instructor/courses/${courseId}/manage`,
+      },
+    }).catch(() => {});
 
     sendSuccess(res, 'Course reassigned to instructor successfully.', { course: updated });
   }),

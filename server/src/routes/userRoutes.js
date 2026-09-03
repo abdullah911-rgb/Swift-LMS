@@ -15,6 +15,7 @@ router.put('/change-password', requireAuth, authValidators.changePassword, userC
 router.get('/notifications', requireAuth, userController.getNotifications);
 router.patch('/notifications/read-all', requireAuth, userController.markAllNotificationsRead);
 router.patch('/notifications/:id/read', requireAuth, userController.markNotificationRead);
+router.delete('/notifications/:id', requireAuth, userController.deleteNotification);
 
 // Admin routes
 router.get('/', requireAuth, requireRole('ADMIN'), userController.getAllUsers);

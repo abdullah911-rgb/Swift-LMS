@@ -2,6 +2,7 @@ import { getImageUrl } from '../../constants/index';
 import React, { useEffect, useState } from 'react';
 import Card from '../../components/ui/Card';
 import { adminService } from '../../services/portalService';
+import usePolling from '../../hooks/usePolling';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import {
@@ -62,6 +63,17 @@ const AdminCourses = () => {
   };
 
   useEffect(() => { fetchCourses(); }, [search, statusFilter]);
+
+  usePolling(() => {
+    adminService.getAllCourses({ search, status: statusFilter, page: pagination.page, limit: 12 })
+      .then((res) => {
+        if (res.data?.data) {
+          setCourses(res.data.data.courses);
+          setPagination(res.data.data.pagination);
+        }
+      })
+      .catch(() => {});
+  }, 20000, true);
 
   const handleTogglePublish = async (courseId, currentStatus) => {
     setActionId(courseId);
@@ -217,7 +229,7 @@ const AdminCourses = () => {
                         <IoAlertCircleOutline size={9} /> Unassigned
                       </span>
                     )}
-                    {course.pendingApproval && (
+                    {course.pendingApproval && course.status !== 'PUBLISHED' && (
                       <span className="text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100 px-2 py-0.5 rounded-full flex items-center gap-0.5">
                         <IoTimeOutline size={9} /> Pending
                       </span>

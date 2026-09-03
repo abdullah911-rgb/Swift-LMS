@@ -11,6 +11,7 @@ import {
   IoLogOutOutline, 
   IoReaderOutline,
 } from 'react-icons/io5';
+import NotificationBell from './NotificationBell';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -97,12 +98,14 @@ const Navbar = () => {
           {/* Action buttons / User dropdown */}
           <div className="hidden xl:flex items-center gap-4">
             {user ? (
-              <div className="relative">
-                {/* User Info Bar */}
-                <button
-                  onClick={toggleProfileDropdown}
-                  className="flex items-center gap-2.5 p-1.5 pr-3 rounded-xl hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100 cursor-pointer"
-                >
+              <div className="flex items-center gap-2">
+                <NotificationBell />
+                <div className="relative">
+                  {/* User Info Bar */}
+                  <button
+                    onClick={toggleProfileDropdown}
+                    className="flex items-center gap-2.5 p-1.5 pr-3 rounded-xl hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100 cursor-pointer"
+                  >
                   <div className="h-8 w-8 rounded-lg bg-primary-100 text-primary-700 flex items-center justify-center font-heading font-semibold text-sm">
                     {user.name.split(' ').map(n => n[0]).join('')}
                   </div>
@@ -149,7 +152,8 @@ const Navbar = () => {
                   )}
                 </AnimatePresence>
               </div>
-            ) : (
+            </div>
+          ) : (
               <div className="flex items-center gap-2.5">
                 <Link to={ROUTES.LOGIN}>
                   <Button variant="text" size="sm">Sign In</Button>

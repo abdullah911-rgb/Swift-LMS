@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { zoomService } from '../../services/portalService';
+import usePolling from '../../hooks/usePolling';
 import { IoCalendarOutline, IoVideocamOutline, IoChevronBackOutline, IoChevronForwardOutline, IoTimeOutline, IoPersonOutline } from 'react-icons/io5';
 
 const STATUS_STYLES = {
@@ -109,19 +110,23 @@ export default function StudentCalendar() {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
+  const fetchMeetings = async (showLoading = false) => {
+    if (showLoading) setLoading(true);
+    try {
+      const { data } = await zoomService.getCalendar();
+      setMeetings(data.data.meetings || []);
+    } catch (e) {
+      console.error('Calendar fetch error:', e);
+    } finally {
+      if (showLoading) setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetch = async () => {
-      try {
-        const { data } = await zoomService.getCalendar();
-        setMeetings(data.data.meetings || []);
-      } catch (e) {
-        console.error('Calendar fetch error:', e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetch();
+    fetchMeetings(true);
   }, []);
+
+  usePolling(() => fetchMeetings(false), 15000, true);
 
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));

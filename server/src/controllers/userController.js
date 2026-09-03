@@ -131,6 +131,15 @@ const userController = {
     });
     sendSuccess(res, 'Notification marked as read.');
   }),
+
+  // DELETE /api/users/notifications/:id
+  deleteNotification: asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    await prisma.notification.deleteMany({
+      where: { id, userId: req.user.id },
+    });
+    sendSuccess(res, 'Notification deleted.');
+  }),
 };
 
 module.exports = userController;
