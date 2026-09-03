@@ -140,6 +140,14 @@ const userController = {
     });
     sendSuccess(res, 'Notification deleted.');
   }),
+
+  // DELETE /api/users/notifications
+  clearAllNotifications: asyncHandler(async (req, res) => {
+    await prisma.notification.deleteMany({
+      where: { userId: req.user.id },
+    });
+    sendSuccess(res, 'All notifications cleared.');
+  }),
 };
 
 module.exports = userController;

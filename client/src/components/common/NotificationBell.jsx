@@ -95,6 +95,15 @@ const NotificationBell = () => {
     }
   };
 
+  const handleClearAll = async () => {
+    try {
+      await notificationService.clearAllNotifications();
+      setNotifications([]);
+    } catch (err) {
+      console.error('Failed to clear all notifications:', err);
+    }
+  };
+
   const handleItemClick = async (notif) => {
     if (!notif.isRead) {
       try {
@@ -108,7 +117,9 @@ const NotificationBell = () => {
     }
     setIsOpen(false);
     if (notif.link) {
-      navigate(notif.link);
+      // Normalize legacy /edit link to /manage to ensure no 404
+      const targetLink = notif.link.replace(/\/courses\/([^/]+)\/edit\/?$/, '/courses/$1/manage');
+      navigate(targetLink);
     }
   };
 
@@ -162,7 +173,18 @@ const NotificationBell = () => {
                   title="Mark all as read"
                 >
                   <IoCheckmarkDoneOutline size={14} />
-                  <span>Mark all read</span>
+                  <span>Mark read</span>
+                </button>
+              )}
+              {notifications.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleClearAll}
+                  className="flex items-center gap-1 text-[11px] font-bold text-slate-400 hover:text-red-600 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
+                  title="Clear all notifications"
+                >
+                  <IoTrashOutline size={13} />
+                  <span>Clear</span>
                 </button>
               )}
               <button

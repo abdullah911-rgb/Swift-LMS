@@ -124,7 +124,7 @@ export const adminService = {
   approveInstructor: (id) => api.patch(`/admin/instructors/${id}/approve`),
   rejectInstructor: (id, reason) => api.patch(`/admin/instructors/${id}/reject`, { reason }),
   assignCourse: (instructorId, courseId) => api.patch(`/admin/instructors/${instructorId}/assign-course`, { courseId }),
-  getInstructors: () => api.get('/admin/instructors'),
+  getInstructors: (params) => api.get('/admin/instructors', { params }),
 
   // Attendance
   getCourseAttendance: (courseId) => api.get(`/admin/attendance/${courseId}`),
@@ -257,6 +257,7 @@ export const notificationService = {
   markAllRead: () => api.patch('/users/notifications/read-all'),
   markRead: (id) => api.patch(`/users/notifications/${id}/read`),
   deleteNotification: (id) => api.delete(`/users/notifications/${id}`),
+  clearAllNotifications: () => api.delete('/users/notifications'),
 };
 
 

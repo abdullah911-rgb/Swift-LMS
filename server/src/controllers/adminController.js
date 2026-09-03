@@ -532,9 +532,25 @@ const adminController = {
 
   // GET /api/admin/instructors — List all instructors with courses and enrollment counts
   getInstructors: asyncHandler(async (req, res) => {
+    const { activeOnly } = req.query;
+    const where = { role: 'INSTRUCTOR' };
+    if (activeOnly === 'true' || activeOnly === true) {
+      where.isActive = true;
+      where.instructorApproval = 'APPROVED';
+    }
+
     const instructors = await prisma.user.findMany({
-      where: { role: 'INSTRUCTOR' },
-      include: {
+      where,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        isActive: true,
+        instructorApproval: true,
+        avatar: true,
+        phone: true,
+        createdAt: true,
         courses: {
           where: { status: { not: 'ARCHIVED' } },
           include: {

@@ -1,4 +1,4 @@
-import { getImageUrl } from '../../constants/index';
+import { getImageUrl, formatCourseDuration } from '../../constants/index';
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
@@ -138,7 +138,7 @@ const CourseDetailPage = () => {
             <div className="flex flex-wrap gap-5 text-xs font-semibold text-slate-500 border-y border-slate-100 py-4">
               <span className="flex items-center gap-1.5">
                 <IoTimeOutline size={16} />
-                <span>{course.durationInMonths && course.durationInMonths > 0 ? `${course.durationInMonths} ${course.durationInMonths === 1 ? 'Month' : 'Months'}` : course.duration ? `${Math.round(course.duration / 60)} Hours` : '—'}</span>
+                <span>{formatCourseDuration(course)}</span>
               </span>
               <span className="flex items-center gap-1.5">
                 <IoGlobeOutline size={16} />

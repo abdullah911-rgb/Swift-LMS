@@ -52,7 +52,8 @@ const CourseForm = () => {
   const [isFree, setIsFree] = useState(true);
   const [language, setLanguage] = useState('English');
   const [certificate, setCertificate] = useState(true);
-  const [durationInMonths, setDurationInMonths] = useState(2);
+  const [durationInMonths, setDurationInMonths] = useState('');
+  const [durationUnit, setDurationUnit] = useState('months'); // 'hours', 'days', 'weeks', 'months'
   const [thumbnail, setThumbnail] = useState(null);
   const [thumbnailPreview, setThumbnailPreview] = useState('');
   const [savingCourse, setSavingCourse] = useState(false);
@@ -201,7 +202,7 @@ const CourseForm = () => {
         }
 
         if (user?.role === 'ADMIN') {
-          const instRes = await adminService.getInstructors();
+          const instRes = await adminService.getInstructors({ activeOnly: 'true' });
           if (instRes.data?.data?.instructors) {
             setInstructors(instRes.data.data.instructors);
           }
@@ -221,7 +222,9 @@ const CourseForm = () => {
             setIsFree(match.isFree);
             setLanguage(match.language || 'English');
             setCertificate(match.certificate);
-            setDurationInMonths(match.durationInMonths || 2);
+            // Duration — preserve months value, unit defaults to 'months'
+            setDurationInMonths(match.durationInMonths || '');
+            setDurationUnit('months');
             setCourseApprovalStatus({ pendingApproval: match.pendingApproval, status: match.status });
             if (match.instructorId) {
               setInstructorId(match.instructorId);
@@ -284,7 +287,12 @@ const CourseForm = () => {
       formData.append('isFree', isFree.toString());
       formData.append('language', language);
       formData.append('certificate', certificate.toString());
-      formData.append('durationInMonths', durationInMonths.toString());
+      // Convert duration input + unit to months for storage
+      let finalDurationMonths = parseInt(durationInMonths, 10) || 0;
+      if (durationUnit === 'hours') finalDurationMonths = Math.round(finalDurationMonths / 720); // ~720 hrs/month
+      else if (durationUnit === 'days') finalDurationMonths = Math.round(finalDurationMonths / 30);
+      else if (durationUnit === 'weeks') finalDurationMonths = Math.round(finalDurationMonths / 4.33);
+      formData.append('durationInMonths', finalDurationMonths.toString());
       if (thumbnail) {
         formData.append('thumbnail', thumbnail);
       }
@@ -837,25 +845,31 @@ const CourseForm = () => {
                 </div>
 
                 <div className="space-y-1.5 pt-2 border-t border-slate-50">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Course Duration (Months)</label>
-                  <div className="relative">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Course Duration</label>
+                  <div className="flex gap-2">
                     <input
                       type="number"
                       min="1"
-                      max="60"
                       value={durationInMonths}
                       onChange={(e) => {
                         const val = parseInt(e.target.value, 10);
                         setDurationInMonths(isNaN(val) ? '' : val);
                       }}
                       placeholder="e.g. 3"
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-100 focus:outline-none focus:border-primary-600 text-sm pr-16"
+                      className="flex-1 px-4 py-2.5 rounded-xl border border-slate-100 focus:outline-none focus:border-primary-600 text-sm"
                     />
-                    <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-semibold pointer-events-none">
-                      Months
-                    </span>
+                    <select
+                      value={durationUnit}
+                      onChange={(e) => setDurationUnit(e.target.value)}
+                      className="px-3 py-2.5 rounded-xl border border-slate-100 focus:outline-none focus:border-primary-600 text-sm font-semibold text-slate-600 bg-white cursor-pointer"
+                    >
+                      <option value="hours">Hours</option>
+                      <option value="days">Days</option>
+                      <option value="weeks">Weeks</option>
+                      <option value="months">Months</option>
+                    </select>
                   </div>
-                  <p className="text-[10px] text-slate-400">Set any custom duration (e.g. 1, 2, 3, 4, 6, 12 months)</p>
+                  <p className="text-[10px] text-slate-400">Set any duration — hours, days, weeks, or months</p>
                 </div>
               </div>
             </Card>

@@ -154,6 +154,7 @@ function App() {
             <Route path="dashboard" element={<InstructorDashboard />} />
             <Route path="courses" element={<InstructorCourses />} />
             <Route path="courses/:courseId/manage" element={<CourseForm />} />
+            <Route path="courses/:courseId/edit" element={<CourseForm />} />
             <Route path="courses/new" element={<CourseForm />} />
             <Route path="students" element={<InstructorStudents />} />
             <Route path="profile" element={<InstructorProfile />} />
@@ -175,6 +176,7 @@ function App() {
             <Route path="users" element={<AdminUsers />} />
             <Route path="courses" element={<AdminCourses />} />
             <Route path="courses/:courseId/manage" element={<CourseForm />} />
+            <Route path="courses/:courseId/edit" element={<CourseForm />} />
             <Route path="courses/new" element={<CourseForm />} />
             <Route path="enrollments" element={<AdminEnrollments />} />
             <Route path="instructors" element={<AdminInstructors />} />

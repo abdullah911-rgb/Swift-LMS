@@ -640,7 +640,7 @@ const zoomController = {
         title: 'Class Request Approved',
         message: `Your class "${meeting.topic}" has been approved${isFuture ? ' and scheduled' : ' and is now live'}.`,
         type: 'SUCCESS',
-        link: `/instructor/courses/${pending.courseId}/edit`,
+        link: `/instructor/courses/${pending.courseId}/manage`,
       },
     });
 
@@ -673,7 +673,7 @@ const zoomController = {
           ? `Your class "${pending.topic}" was rejected: ${reason}`
           : `Your class "${pending.topic}" was rejected by admin.`,
         type: 'ERROR',
-        link: `/instructor/courses/${pending.courseId}/edit`,
+        link: `/instructor/courses/${pending.courseId}/manage`,
       },
     });
 

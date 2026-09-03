@@ -16,6 +16,7 @@ router.get('/notifications', requireAuth, userController.getNotifications);
 router.patch('/notifications/read-all', requireAuth, userController.markAllNotificationsRead);
 router.patch('/notifications/:id/read', requireAuth, userController.markNotificationRead);
 router.delete('/notifications/:id', requireAuth, userController.deleteNotification);
+router.delete('/notifications', requireAuth, userController.clearAllNotifications);
 
 // Admin routes
 router.get('/', requireAuth, requireRole('ADMIN'), userController.getAllUsers);

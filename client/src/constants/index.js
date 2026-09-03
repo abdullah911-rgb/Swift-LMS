@@ -79,6 +79,27 @@ export const getImageUrl = (path, slug) => {
   return getFileUrl(targetPath);
 };
 
+export const formatCourseDuration = (course) => {
+  if (!course) return '—';
+  if (course.durationInMonths && course.durationInMonths > 0) {
+    return `${course.durationInMonths} ${course.durationInMonths === 1 ? 'Month' : 'Months'}`;
+  }
+  if (course.duration && course.duration > 0) {
+    const mins = course.duration;
+    if (mins % 10080 === 0) {
+      const weeks = mins / 10080;
+      return `${weeks} ${weeks === 1 ? 'Week' : 'Weeks'}`;
+    }
+    if (mins % 1440 === 0) {
+      const days = mins / 1440;
+      return `${days} ${days === 1 ? 'Day' : 'Days'}`;
+    }
+    const hours = Math.round(mins / 60);
+    return `${hours} ${hours === 1 ? 'Hour' : 'Hours'}`;
+  }
+  return '—';
+};
+
 export const ROUTES = {
   HOME: '/',
   ABOUT: '/about',
