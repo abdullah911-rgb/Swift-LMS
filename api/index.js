@@ -28,6 +28,14 @@ module.exports = async (req, res) => {
     
     const queryString = new URLSearchParams(queryParams).toString();
     req.url = originalPath + (queryString ? '?' + queryString : '');
+  } else if (parsedUrl.query && parsedUrl.query._uploadPath) {
+    const originalPath = '/uploads/' + parsedUrl.query._uploadPath;
+    
+    const queryParams = { ...parsedUrl.query };
+    delete queryParams._uploadPath;
+    
+    const queryString = new URLSearchParams(queryParams).toString();
+    req.url = originalPath + (queryString ? '?' + queryString : '');
   }
 
   return app(req, res);

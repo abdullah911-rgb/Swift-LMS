@@ -280,7 +280,7 @@ const AdminApprovals = () => {
                 </span>
                 <span className="flex items-center gap-1">
                   <IoTimeOutline size={13} />
-                  {new Date(meeting.startTime).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
+                  {meeting?.startTime ? new Date(meeting.startTime).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : '—'}
                 </span>
                 <span>{meeting.duration} min</span>
               </div>

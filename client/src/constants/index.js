@@ -40,10 +40,19 @@ export const getFileUrl = (path) => {
 };
 
 export const downloadFile = async (url, fallbackName = 'download') => {
+  if (!url) {
+    try {
+      const { default: toast } = await import('react-hot-toast');
+      toast.error('File link not available.');
+    } catch {}
+    return;
+  }
   const fullUrl = getFileUrl(url);
   try {
     const res = await fetch(fullUrl, { mode: 'cors' });
-    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    if (!res.ok) {
+      throw new Error(`HTTP_${res.status}`);
+    }
     const blob = await res.blob();
     const objectUrl = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -53,15 +62,23 @@ export const downloadFile = async (url, fallbackName = 'download') => {
     a.click();
     document.body.removeChild(a);
     setTimeout(() => window.URL.revokeObjectURL(objectUrl), 1000);
-  } catch {
-    const a = document.createElement('a');
-    a.href = fullUrl;
-    a.download = fallbackName || 'download';
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+  } catch (err) {
+    if (err.message && err.message.includes('404')) {
+      try {
+        const { default: toast } = await import('react-hot-toast');
+        toast.error('This file is currently unavailable or has expired on the server.');
+      } catch {}
+    } else {
+      // Fallback for CORS or direct downloads
+      const a = document.createElement('a');
+      a.href = fullUrl;
+      a.download = fallbackName || 'download';
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
   }
 };
 

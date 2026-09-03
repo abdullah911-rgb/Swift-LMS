@@ -589,6 +589,7 @@ const StudentCourseView = () => {
                           // Terminal / admin-set states — never override with time
                           if (s === 'ENDED' || s === 'CANCELLED' || s === 'REJECTED' || s === 'PENDING_APPROVAL') return s;
                           if (s === 'LIVE') return 'LIVE';
+                          if (!meeting?.startTime) return s || 'SCHEDULED';
                           // For SCHEDULED: transition based on clock
                           const start = new Date(meeting.startTime);
                           const end = new Date(start.getTime() + (meeting.duration || 60) * 60 * 1000);
@@ -611,7 +612,7 @@ const StudentCourseView = () => {
                             </span>
                             <h4 className="text-sm font-bold text-slate-800">{meeting.topic}</h4>
                             <p className="text-[11px] text-slate-500">
-                              Date: {new Date(meeting.startTime).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })} ({meeting.duration} Mins duration)
+                              Date: {meeting?.startTime ? new Date(meeting.startTime).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : '—'} ({meeting.duration || 60} Mins duration)
                             </p>
                             {meeting.agenda && <p className="text-xs text-slate-400 mt-1">{meeting.agenda}</p>}
                           </div>

@@ -1243,7 +1243,7 @@ const CourseForm = () => {
                   // Terminal / admin-set states — never override with time
                   if (s !== 'SCHEDULED' && s !== 'APPROVED') {
                     currentStatus = s;
-                  } else {
+                  } else if (meeting?.startTime) {
                     const start = new Date(meeting.startTime);
                     const end = new Date(start.getTime() + (meeting.duration || 60) * 60 * 1000);
                     const now = new Date();
@@ -1279,7 +1279,7 @@ const CourseForm = () => {
                       </div>
 
                       <div className="text-[10px] text-slate-500 leading-tight space-y-0.5">
-                        <p>Start: {new Date(meeting.startTime).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</p>
+                        <p>Start: {meeting?.startTime ? new Date(meeting.startTime).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : '—'}</p>
                         <p>Duration: {meeting.duration} Mins</p>
                       </div>
 

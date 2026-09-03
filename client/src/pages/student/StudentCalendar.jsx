@@ -16,11 +16,13 @@ const STATUS_STYLES = {
 // DB status (ENDED, LIVE, CANCELLED, REJECTED) always wins.
 // Only SCHEDULED/APPROVED fall back to time-based live detection.
 function computeCurrentStatus(meeting) {
+  if (!meeting) return 'ENDED';
   const status = meeting.status;
   // Terminal / admin-set states — never override these
   if (status === 'ENDED' || status === 'CANCELLED' || status === 'REJECTED' || status === 'PENDING_APPROVAL') return status;
   // For LIVE: trust DB (instructor manually started/ended it)
   if (status === 'LIVE') return 'LIVE';
+  if (!meeting.startTime) return status || 'SCHEDULED';
   // For SCHEDULED/APPROVED: transition to LIVE based on time
   const start = new Date(meeting.startTime);
   const end = new Date(start.getTime() + (meeting.duration || 60) * 60 * 1000);
@@ -41,7 +43,8 @@ function CalendarGrid({ year, month, meetings, selectedDay, onSelectDay }) {
   // Build a Set of "YYYY-M-D" strings that have meetings
   const meetingDays = useMemo(() => {
     const s = new Set();
-    meetings.forEach((m) => {
+    (meetings || []).forEach((m) => {
+      if (!m?.startTime) return;
       const d = new Date(m.startTime);
       s.add(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
     });
@@ -50,10 +53,13 @@ function CalendarGrid({ year, month, meetings, selectedDay, onSelectDay }) {
 
   const liveMeetingDays = useMemo(() => {
     const s = new Set();
-    meetings.filter(m => computeCurrentStatus(m) === 'LIVE').forEach((m) => {
-      const d = new Date(m.startTime);
-      s.add(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
-    });
+    (meetings || [])
+      .filter((m) => m && computeCurrentStatus(m) === 'LIVE')
+      .forEach((m) => {
+        if (!m?.startTime) return;
+        const d = new Date(m.startTime);
+        s.add(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
+      });
     return s;
   }, [meetings]);
 
@@ -132,7 +138,8 @@ export default function StudentCalendar() {
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
 
   // Filter meetings for currently viewed month
-  const monthMeetings = useMemo(() => meetings.filter((m) => {
+  const monthMeetings = useMemo(() => (meetings || []).filter((m) => {
+    if (!m?.startTime) return false;
     const d = new Date(m.startTime);
     return d.getFullYear() === year && d.getMonth() === month;
   }), [meetings, year, month]);
@@ -141,17 +148,19 @@ export default function StudentCalendar() {
   const displayedMeetings = useMemo(() => {
     if (selectedDay === null) {
       // Show all upcoming / today's meetings across all time
-      return [...meetings]
+      return [...(meetings || [])]
         .filter(m => {
+          if (!m?.startTime) return false;
           const s = computeCurrentStatus(m);
           return s !== 'ENDED' && s !== 'CANCELLED';
         })
-        .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+        .sort((a, b) => new Date(a?.startTime || 0) - new Date(b?.startTime || 0));
     }
     return monthMeetings.filter((m) => {
+      if (!m?.startTime) return false;
       const d = new Date(m.startTime);
       return d.getDate() === selectedDay;
-    }).sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+    }).sort((a, b) => new Date(a?.startTime || 0) - new Date(b?.startTime || 0));
   }, [selectedDay, monthMeetings, meetings]);
 
   return (
