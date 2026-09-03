@@ -5,6 +5,7 @@ import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import { useAuth } from '../../contexts/AuthContext';
 import { enrollmentService } from '../../services/portalService';
+import usePolling from '../../hooks/usePolling';
 import { ROUTES } from '../../constants';
 import { IoBookOutline, IoTimeOutline, IoRibbonOutline, IoCalendarOutline, IoChevronForwardOutline } from 'react-icons/io5';
 
@@ -28,6 +29,14 @@ const StudentDashboard = () => {
     };
     fetchDashboardData();
   }, []);
+
+  usePolling(() => {
+    enrollmentService.getMyEnrollments()
+      .then((res) => {
+        if (res.data?.data?.enrollments) setEnrollments(res.data.data.enrollments);
+      })
+      .catch(() => {});
+  }, 20000, true);
 
   const totalCourses = enrollments.length;
   const completedCourses = enrollments.filter((e) => e.progress === 100).length;

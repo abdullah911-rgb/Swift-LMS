@@ -66,8 +66,8 @@ const NotificationBell = () => {
     fetchNotifications();
   }, [fetchNotifications]);
 
-  // Auto-poll every 20 seconds so updates arrive automatically without page refresh
-  usePolling(fetchNotifications, 20000, true);
+  // Auto-poll every 10 seconds so updates arrive near real-time without page refresh
+  usePolling(fetchNotifications, 10000, true);
 
   // Close dropdown on outside click
   useEffect(() => {

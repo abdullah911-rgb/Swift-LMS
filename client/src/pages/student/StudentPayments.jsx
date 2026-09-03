@@ -2,6 +2,7 @@ import { getImageUrl } from '../../constants/index';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { paymentService } from '../../services/portalService';
+import usePolling from '../../hooks/usePolling';
 import toast from 'react-hot-toast';
 
 const STATUS_STYLES = {
@@ -25,6 +26,14 @@ export default function StudentPayments() {
       finally { setLoading(false); }
     })();
   }, []);
+
+  usePolling(() => {
+    paymentService.getMyRequests()
+      .then(res => {
+        if (res.data?.data?.requests) setRequests(res.data.data.requests);
+      })
+      .catch(() => {});
+  }, 15000, true);
 
   if (loading) return <div style={{ textAlign: 'center', padding: 60, color: '#94a3b8', fontFamily: "'Inter',sans-serif" }}>Loading…</div>;
 

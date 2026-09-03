@@ -7,6 +7,7 @@ import { instructorService, moduleService, lessonService, zoomService, resourceS
 import api from '../../services/api';
 import { ROUTES } from '../../constants';
 import { useAuth } from '../../contexts/AuthContext';
+import usePolling from '../../hooks/usePolling';
 import { 
   IoChevronBackOutline, 
   IoBookOutline, 
@@ -174,6 +175,14 @@ const CourseForm = () => {
       fetchAnnouncements(courseId);
     }
   }, [activeTab, courseId, isEditMode]);
+
+  // Real-time auto-polling every 15s for active tab (live classes, assignments, submissions)
+  usePolling(() => {
+    if (!isEditMode || !courseId) return;
+    if (activeTab === 'ZOOM') fetchMeetings(courseId);
+    if (activeTab === 'ASSIGNMENTS') fetchAssignments(courseId);
+    if (activeTab === 'ANNOUNCEMENTS') fetchAnnouncements(courseId);
+  }, 15000, isEditMode);
 
   // Syllabus management state (modals / forms)
   const [showModuleForm, setShowModuleForm] = useState(false);
@@ -846,7 +855,7 @@ const CourseForm = () => {
 
                 <div className="space-y-1.5 pt-2 border-t border-slate-50">
                   <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Course Duration</label>
-                  <div className="flex gap-2">
+                  <div className="flex items-stretch rounded-xl border border-slate-200 bg-white overflow-hidden focus-within:border-primary-600 focus-within:ring-1 focus-within:ring-primary-600 w-full transition-all">
                     <input
                       type="number"
                       min="1"
@@ -856,18 +865,20 @@ const CourseForm = () => {
                         setDurationInMonths(isNaN(val) ? '' : val);
                       }}
                       placeholder="e.g. 3"
-                      className="flex-1 px-4 py-2.5 rounded-xl border border-slate-100 focus:outline-none focus:border-primary-600 text-sm"
+                      className="min-w-0 flex-1 px-3.5 py-2.5 text-sm bg-transparent border-none focus:outline-none text-slate-800"
                     />
-                    <select
-                      value={durationUnit}
-                      onChange={(e) => setDurationUnit(e.target.value)}
-                      className="px-3 py-2.5 rounded-xl border border-slate-100 focus:outline-none focus:border-primary-600 text-sm font-semibold text-slate-600 bg-white cursor-pointer"
-                    >
-                      <option value="hours">Hours</option>
-                      <option value="days">Days</option>
-                      <option value="weeks">Weeks</option>
-                      <option value="months">Months</option>
-                    </select>
+                    <div className="border-l border-slate-100 bg-slate-50 flex items-center shrink-0">
+                      <select
+                        value={durationUnit}
+                        onChange={(e) => setDurationUnit(e.target.value)}
+                        className="bg-transparent text-xs font-semibold text-slate-700 py-2.5 pl-2.5 pr-3 border-none focus:outline-none cursor-pointer"
+                      >
+                        <option value="hours">Hours</option>
+                        <option value="days">Days</option>
+                        <option value="weeks">Weeks</option>
+                        <option value="months">Months</option>
+                      </select>
+                    </div>
                   </div>
                   <p className="text-[10px] text-slate-400">Set any duration — hours, days, weeks, or months</p>
                 </div>

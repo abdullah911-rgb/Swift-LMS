@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import { instructorService } from '../../services/portalService';
+import usePolling from '../../hooks/usePolling';
 import { ROUTES } from '../../constants';
 import { IoBookOutline, IoPeopleOutline, IoLayersOutline, IoAddOutline, IoEyeOutline } from 'react-icons/io5';
 
@@ -25,6 +26,14 @@ const InstructorDashboard = () => {
     };
     fetchDashboardData();
   }, []);
+
+  usePolling(() => {
+    instructorService.getMyCourses()
+      .then((res) => {
+        if (res.data?.data?.courses) setCourses(res.data.data.courses);
+      })
+      .catch(() => {});
+  }, 20000, true);
 
   const totalCourses = courses.length;
   const totalStudents = courses.reduce((acc, curr) => acc + (curr._count?.enrollments || 0), 0);

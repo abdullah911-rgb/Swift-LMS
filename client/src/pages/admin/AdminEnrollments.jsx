@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import { adminService } from '../../services/portalService';
+import usePolling from '../../hooks/usePolling';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import {
@@ -40,6 +41,14 @@ const AdminEnrollments = () => {
   };
 
   useEffect(() => { fetchEnrollments(); }, []);
+
+  usePolling(() => {
+    adminService.getRecentEnrollments()
+      .then(res => {
+        if (res.data?.data?.enrollments) setEnrollments(res.data.data.enrollments);
+      })
+      .catch(() => {});
+  }, 20000, true);
 
   const handleToggleCertEligibility = async (e, enrId) => {
     e.stopPropagation(); // Prevent row click opening modal

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Card from '../../components/ui/Card';
 import { adminService } from '../../services/portalService';
+import usePolling from '../../hooks/usePolling';
 import {
   IoPeopleOutline,
   IoBookOutline,
@@ -48,7 +49,21 @@ const AdminDashboard = () => {
     }
   };
 
+  const fetchSilently = async () => {
+    try {
+      const [statsRes, pendingRes, enrollRes] = await Promise.all([
+        adminService.getStats(),
+        adminService.getPendingCourses(),
+        adminService.getRecentEnrollments(),
+      ]);
+      if (statsRes.data?.data?.stats) setStats(statsRes.data.data.stats);
+      if (pendingRes.data?.data?.courses) setPendingCourses(pendingRes.data.data.courses.slice(0, 5));
+      if (enrollRes.data?.data?.enrollments) setRecentEnrollments(enrollRes.data.data.enrollments.slice(0, 8));
+    } catch {}
+  };
+
   useEffect(() => { fetchData(); }, []);
+  usePolling(fetchSilently, 20000, true);
 
   return (
     <div className="space-y-8 font-sans">

@@ -31,13 +31,15 @@ const AdminLayout = () => {
 
   const fetchPendingCount = useCallback(async () => {
     try {
-      const [coursesRes, meetingsRes] = await Promise.all([
+      const [coursesRes, meetingsRes, instructorsRes] = await Promise.all([
         adminService.getPendingCourses(),
         zoomService.getPendingApprovals(),
+        adminService.getPendingInstructors(),
       ]);
       const courseCount = coursesRes.data?.data?.courses?.length ?? 0;
       const meetingCount = meetingsRes.data?.data?.meetings?.length ?? 0;
-      setPendingApprovals(courseCount + meetingCount);
+      const instructorCount = instructorsRes.data?.data?.instructors?.length ?? 0;
+      setPendingApprovals(courseCount + meetingCount + instructorCount);
     } catch {
       // Non-critical — badge stays at last known count
     }
@@ -45,7 +47,7 @@ const AdminLayout = () => {
 
   useEffect(() => {
     fetchPendingCount();
-    const interval = setInterval(fetchPendingCount, 20000);
+    const interval = setInterval(fetchPendingCount, 15000);
     return () => clearInterval(interval);
   }, [fetchPendingCount, location.pathname]);
 

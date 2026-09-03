@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import { adminService } from '../../services/portalService';
+import usePolling from '../../hooks/usePolling';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import {
@@ -67,6 +68,24 @@ const AdminInstructors = () => {
   };
 
   useEffect(() => { loadData(); }, []);
+
+  usePolling(() => {
+    Promise.all([
+      adminService.getInstructors(),
+      adminService.getPendingInstructors(),
+      api.get('/admin/courses?limit=200'),
+    ]).then(([instRes, pendRes, coursesRes]) => {
+      if (instRes.data?.data?.instructors) {
+        setInstructors(instRes.data.data.instructors.filter(u => u.instructorApproval === 'APPROVED'));
+      }
+      if (pendRes.data?.data?.instructors) {
+        setPendingInstructors(pendRes.data.data.instructors);
+      }
+      if (coursesRes.data?.data?.courses) {
+        setAllCourses(coursesRes.data.data.courses);
+      }
+    }).catch(() => {});
+  }, 20000, true);
 
   const handleApprove = async (id) => {
     setActionId(id);

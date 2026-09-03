@@ -1,6 +1,7 @@
 import { getImageUrl } from '../../constants/index';
 import React, { useState, useEffect, useCallback } from 'react';
 import { paymentService } from '../../services/portalService';
+import usePolling from '../../hooks/usePolling';
 import toast from 'react-hot-toast';
 
 const METHOD_TYPES = [
@@ -55,6 +56,16 @@ export default function AdminPayments() {
 
   useEffect(() => { if (tab === 'requests') fetchRequests(); }, [tab, fetchRequests]);
   useEffect(() => { if (tab === 'methods') fetchMethods(); }, [tab, fetchMethods]);
+
+  usePolling(() => {
+    if (tab === 'requests') {
+      paymentService.adminGetRequests({ status: statusFilter || undefined })
+        .then(res => {
+          if (res.data?.data?.requests) setRequests(res.data.data.requests);
+        })
+        .catch(() => {});
+    }
+  }, 15000, true);
 
   const handleApprove = async (id) => {
     if (!window.confirm('Approve this payment and enroll the student?')) return;
