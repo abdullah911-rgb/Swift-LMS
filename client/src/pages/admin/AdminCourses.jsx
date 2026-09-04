@@ -334,9 +334,10 @@ const AdminCourses = () => {
                       onClick={() => handleDeleteCourse(course.id, course.title)}
                       disabled={actionId === course.id}
                       title="Delete this course permanently"
-                      className="px-2.5 py-1.5 rounded-lg text-xs font-bold border border-red-300 text-red-700 bg-red-50 hover:bg-red-100 transition-all cursor-pointer disabled:opacity-50"
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-red-600 hover:bg-red-700 text-white transition-all cursor-pointer disabled:opacity-50 shrink-0"
                     >
                       <IoTrashOutline size={13} />
+                      <span>Delete</span>
                     </button>
                   </div>
                 </div>

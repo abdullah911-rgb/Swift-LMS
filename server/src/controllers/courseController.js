@@ -330,11 +330,21 @@ const courseController = {
     const { id } = req.params;
     const course = await prisma.course.findUnique({ where: { id } });
     if (!course) return sendError(res, 'Course not found.', 404);
-    if (req.user.role === 'INSTRUCTOR' && course.instructorId !== req.user.id) {
-      return sendError(res, 'Not authorized.', 403);
-    }
-    await prisma.course.update({ where: { id }, data: { status: 'ARCHIVED' } });
-    sendSuccess(res, 'Course archived.');
+
+    // Delete all related records to satisfy FK constraints
+    await prisma.$transaction([
+      prisma.notification.deleteMany({ where: { link: { contains: id } } }),
+      prisma.assignment.deleteMany({ where: { courseId: id } }),
+      prisma.liveClass.deleteMany({ where: { courseId: id } }),
+      prisma.enrollment.deleteMany({ where: { courseId: id } }),
+      prisma.paymentRequest.deleteMany({ where: { courseId: id } }),
+      prisma.review.deleteMany({ where: { courseId: id } }),
+      prisma.announcement.deleteMany({ where: { courseId: id } }),
+      prisma.module.deleteMany({ where: { courseId: id } }),
+      prisma.course.delete({ where: { id } }),
+    ]);
+
+    sendSuccess(res, 'Course deleted successfully.');
   }),
 
   // PATCH /api/courses/:id/submit-approval (Instructor) — submit new course for admin approval
