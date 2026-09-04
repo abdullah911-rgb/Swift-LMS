@@ -146,6 +146,7 @@ export const adminService = {
   // Courses - reassign / unassign instructor
   reassignCourseInstructor: (courseId, instructorId) => api.patch(`/admin/courses/${courseId}/reassign-instructor`, { instructorId }),
   unassignCourse: (courseId) => api.patch(`/admin/courses/${courseId}/unassign-instructor`),
+  deleteCourse: (courseId) => api.delete(`/courses/${courseId}`),
 
   // Platform Announcements
   createAnnouncement: (data) => api.post('/admin/announcements', data),
