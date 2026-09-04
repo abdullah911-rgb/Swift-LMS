@@ -1,7 +1,7 @@
 import { getImageUrl } from '../../constants/index';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { paymentService } from '../../services/portalService';
+import { paymentService, enrollmentService } from '../../services/portalService';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
@@ -20,6 +20,7 @@ export default function PaymentPage() {
   const [transactionRef, setTransactionRef] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [existing, setExisting] = useState(null);
+  const [eligibilityError, setEligibilityError] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -38,7 +39,18 @@ export default function PaymentPage() {
 
         const reqs = myReqRes.data?.data?.requests || [];
         const ex = reqs.find(r => r.courseId === courseId || r.course?.id === courseId);
-        if (ex) setExisting(ex);
+        if (ex) {
+          setExisting(ex);
+        } else if (c?.id) {
+          // Check single-course eligibility
+          try {
+            const elRes = await enrollmentService.checkEligibility(c.id);
+            const el = elRes.data?.data?.eligibility;
+            if (el && !el.allowed && !el.alreadyEnrolled) {
+              setEligibilityError(el.reason);
+            }
+          } catch (_) {}
+        }
       } catch (e) {
         toast.error('Failed to load payment page.');
         navigate(-1);
@@ -77,6 +89,28 @@ export default function PaymentPage() {
   };
 
   if (loading) return <div style={{ textAlign: 'center', padding: 80, fontFamily: "'Inter',sans-serif", color: '#94a3b8' }}>Loading…</div>;
+
+  if (eligibilityError) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Inter',sans-serif", padding: 24 }}>
+        <div style={{ background: '#fff', borderRadius: 24, padding: 40, maxWidth: 480, width: '100%', textAlign: 'center', boxShadow: '0 8px 40px rgba(0,0,0,0.08)' }}>
+          <div style={{ fontSize: 56, marginBottom: 16 }}>⚠️</div>
+          <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '0 0 8px' }}>
+            One Course at a Time
+          </h2>
+          <p style={{ fontSize: 13, color: '#64748b', lineHeight: 1.6, marginBottom: 24 }}>
+            {eligibilityError}
+          </p>
+          <Link
+            to="/student/my-courses"
+            style={{ display: 'inline-block', width: '100%', padding: '14px', background: '#0284c7', color: '#fff', fontWeight: 700, borderRadius: 12, textDecoration: 'none' }}
+          >
+            Go to My Courses
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   // Already submitted state
   if (existing) {

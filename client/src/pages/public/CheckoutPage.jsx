@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
 import { ROUTES } from '../../constants';
 import { getImageUrl } from '../../constants/index';
+import { enrollmentService } from '../../services/portalService';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import {
@@ -42,6 +43,7 @@ export default function CheckoutPage() {
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [eligibilityError, setEligibilityError] = useState(null);
 
   const [form, setForm] = useState({
     fullName: user?.name || '',
@@ -60,7 +62,18 @@ export default function CheckoutPage() {
       try {
         // courseId may be a UUID (from handleEnroll) or a slug — try both
         const res = await api.get(`/courses/${courseId}`);
-        setCourse(res.data?.data?.course || res.data?.data);
+        const c = res.data?.data?.course || res.data?.data;
+        setCourse(c);
+
+        if (user && user.role === 'STUDENT' && c?.id) {
+          try {
+            const elRes = await enrollmentService.checkEligibility(c.id);
+            const el = elRes.data?.data?.eligibility;
+            if (el && !el.allowed) {
+              setEligibilityError(el.reason);
+            }
+          } catch (_) {}
+        }
       } catch {
         toast.error('Could not load course details.');
         navigate(ROUTES.COURSES);
@@ -69,7 +82,7 @@ export default function CheckoutPage() {
       }
     };
     fetchCourse();
-  }, [courseId, navigate]);
+  }, [courseId, navigate, user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -216,6 +229,32 @@ export default function CheckoutPage() {
       autoComplete: 'current-password',
     },
   ];
+
+  if (eligibilityError) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans p-4">
+        <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-lg border border-slate-100 space-y-4">
+          <div className="h-16 w-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto text-2xl">
+            ⚠️
+          </div>
+          <h2 className="text-xl font-heading font-extrabold text-slate-800">
+            One Course at a Time
+          </h2>
+          <p className="text-xs text-slate-600 leading-relaxed">
+            {eligibilityError}
+          </p>
+          <div className="pt-2">
+            <button
+              onClick={() => navigate('/student/my-courses')}
+              className="w-full py-3 px-4 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold rounded-xl transition-all shadow-md cursor-pointer"
+            >
+              Go to My Courses
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-primary-50/30 to-slate-100 py-6 sm:py-12 px-3 sm:px-6 lg:px-8 font-sans w-full max-w-full overflow-x-hidden">

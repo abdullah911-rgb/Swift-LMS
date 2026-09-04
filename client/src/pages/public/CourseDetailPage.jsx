@@ -19,7 +19,8 @@ import {
   IoChevronUpOutline,
   IoPlayCircleOutline,
   IoDocumentTextOutline,
-  IoCloudDownloadOutline
+  IoCloudDownloadOutline,
+  IoAlertCircleOutline
 } from 'react-icons/io5';
 
 const CourseDetailPage = () => {
@@ -28,6 +29,7 @@ const CourseDetailPage = () => {
   const navigate = useNavigate();
   const [course, setCourse] = useState(null);
   const [isEnrolled, setIsEnrolled] = useState(false);
+  const [eligibility, setEligibility] = useState(null);
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [enrollSubmitting, setEnrollSubmitting] = useState(false);
@@ -47,6 +49,11 @@ const CourseDetailPage = () => {
           if (res.data?.data?.resources) {
             setResources(res.data.data.resources);
           }
+        } else if (user && user.role === 'STUDENT' && data.data.course?.id) {
+          try {
+            const elRes = await enrollmentService.checkEligibility(data.data.course.id);
+            setEligibility(elRes.data?.data?.eligibility || null);
+          } catch (_) {}
         }
       } catch (err) {
         console.error('Failed to fetch course details:', err);
@@ -56,12 +63,17 @@ const CourseDetailPage = () => {
       }
     };
     fetchCourseDetail();
-  }, [slug]);
+  }, [slug, user]);
 
   const handleEnroll = async () => {
     if (!user) {
       toast.error('Please sign in to enroll in courses.');
       navigate(ROUTES.LOGIN, { state: { from: { pathname: `/checkout/${course.id}` } } });
+      return;
+    }
+
+    if (eligibility && !eligibility.allowed) {
+      toast.error(eligibility.reason);
       return;
     }
 
@@ -347,6 +359,25 @@ const CourseDetailPage = () => {
                       Already Enrolled — Go to Portal
                     </Button>
                   </Link>
+                ) : eligibility && !eligibility.allowed ? (
+                  <div className="space-y-3">
+                    <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl space-y-1.5 text-left">
+                      <div className="flex items-center gap-1.5 text-amber-800 font-bold text-xs">
+                        <IoAlertCircleOutline size={16} className="text-amber-600 shrink-0" />
+                        <span>One Course at a Time</span>
+                      </div>
+                      <p className="text-[11px] text-amber-700 leading-relaxed">
+                        {eligibility.reason}
+                      </p>
+                    </div>
+                    <Button 
+                      variant="secondary" 
+                      className="w-full opacity-60 cursor-not-allowed"
+                      onClick={() => toast.error(eligibility.reason)}
+                    >
+                      Active Course in Progress
+                    </Button>
+                  </div>
                 ) : (
                   <Button 
                     variant="primary" 

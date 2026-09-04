@@ -6,6 +6,7 @@ const { requireRole } = require('../middlewares/roles');
 
 // Student routes
 router.get('/my', requireAuth, requireRole('STUDENT'), enrollmentController.getMyEnrollments);
+router.get('/eligibility/:courseId', requireAuth, requireRole('STUDENT'), enrollmentController.checkEligibility);
 router.post('/:courseId', requireAuth, requireRole('STUDENT'), enrollmentController.enroll);
 router.get('/:courseId', requireAuth, requireRole('STUDENT'), enrollmentController.getCourseAccess);
 router.post('/:courseId/lessons/:lessonId/complete', requireAuth, requireRole('STUDENT'), enrollmentController.completeLesson);

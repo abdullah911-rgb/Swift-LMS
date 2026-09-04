@@ -1,6 +1,7 @@
 const prisma = require('../config/db');
 const asyncHandler = require('../utils/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/apiResponse');
+const { checkStudentCourseEligibility } = require('../utils/enrollmentEligibility');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
@@ -92,11 +93,11 @@ const paymentController = {
       if (!course) return sendError(res, 'Course not found.', 404);
       if (course.isFree) return sendError(res, 'This course is free — no payment needed.', 400);
 
-      // Check if already enrolled
-      const existing = await prisma.enrollment.findUnique({
-        where: { studentId_courseId: { studentId, courseId } },
-      });
-      if (existing) return sendError(res, 'You are already enrolled in this course.', 400);
+      // Check if already enrolled or has another active uncompleted course
+      const eligibility = await checkStudentCourseEligibility(studentId, courseId);
+      if (!eligibility.allowed) {
+        return sendError(res, eligibility.reason, 400);
+      }
 
       // Check if already has a pending/approved payment request
       const existingRequest = await prisma.paymentRequest.findUnique({
@@ -184,6 +185,16 @@ const paymentController = {
     if (!request) return sendError(res, 'Payment request not found.', 404);
     if (request.status !== 'PENDING') {
       return sendError(res, `Request is already ${request.status.toLowerCase()}.`, 400);
+    }
+
+    // Verify student doesn't already have another active uncertified course
+    const eligibility = await checkStudentCourseEligibility(request.studentId, request.courseId);
+    if (!eligibility.allowed && !eligibility.alreadyEnrolled) {
+      return sendError(
+        res,
+        `Cannot approve enrollment: Student is currently enrolled in "${eligibility.activeCourse?.title || 'another course'}". Students can only be enrolled in one course at a time.`,
+        400
+      );
     }
 
     // Update request + create enrollment in a transaction

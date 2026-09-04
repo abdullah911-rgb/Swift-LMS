@@ -10,6 +10,9 @@ export const enrollmentService = {
   // Get full access to a course (modules, lessons, zoom links)
   getCourseAccess: (courseId) => api.get(`/enrollments/${courseId}`),
 
+  // Check if student is eligible to enroll (one course at a time rule)
+  checkEligibility: (courseId) => api.get(`/enrollments/eligibility/${courseId}`),
+
   // Mark a lesson as completed
   completeLesson: (courseId, lessonId, watchedSeconds = 0) =>
     api.post(`/enrollments/${courseId}/lessons/${lessonId}/complete`, { watchedSeconds }),

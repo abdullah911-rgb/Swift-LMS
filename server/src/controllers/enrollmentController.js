@@ -1,6 +1,7 @@
 const prisma = require('../config/db');
 const asyncHandler = require('../utils/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/apiResponse');
+const { checkStudentCourseEligibility } = require('../utils/enrollmentEligibility');
 
 async function recalculateEnrollmentProgress(studentId, courseId) {
   const enrollment = await prisma.enrollment.findUnique({
@@ -87,10 +88,11 @@ const enrollmentController = {
     });
     if (!course) return sendError(res, 'Course not found or not published.', 404);
 
-    const existing = await prisma.enrollment.findUnique({
-      where: { studentId_courseId: { studentId, courseId } },
-    });
-    if (existing) return sendError(res, 'Already enrolled in this course.', 409);
+    // Enforce: One course enrollment at a time per student
+    const eligibility = await checkStudentCourseEligibility(studentId, courseId);
+    if (!eligibility.allowed) {
+      return sendError(res, eligibility.reason, eligibility.alreadyEnrolled ? 409 : 400);
+    }
 
     // Generate sequential Roll Number (SST-YYYY-NNNNNNNN)
     const year = new Date().getFullYear();
@@ -390,6 +392,13 @@ const enrollmentController = {
     sendSuccess(res, 'Students fetched.', { enrollments: enrichedEnrollments, totalMeetings });
   }),
 
+  // GET /api/enrollments/eligibility/:courseId — Check if logged-in student can enroll in target course
+  checkEligibility: asyncHandler(async (req, res) => {
+    const { courseId } = req.params;
+    const studentId = req.user.id;
+    const eligibility = await checkStudentCourseEligibility(studentId, courseId);
+    sendSuccess(res, 'Eligibility checked.', { eligibility });
+  }),
 };
 
 module.exports = {
