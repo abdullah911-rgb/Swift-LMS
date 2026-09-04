@@ -331,18 +331,8 @@ const courseController = {
     const course = await prisma.course.findUnique({ where: { id } });
     if (!course) return sendError(res, 'Course not found.', 404);
 
-    // Delete all related records to satisfy FK constraints
-    await prisma.$transaction([
-      prisma.notification.deleteMany({ where: { link: { contains: id } } }),
-      prisma.assignment.deleteMany({ where: { courseId: id } }),
-      prisma.liveClass.deleteMany({ where: { courseId: id } }),
-      prisma.enrollment.deleteMany({ where: { courseId: id } }),
-      prisma.paymentRequest.deleteMany({ where: { courseId: id } }),
-      prisma.review.deleteMany({ where: { courseId: id } }),
-      prisma.announcement.deleteMany({ where: { courseId: id } }),
-      prisma.module.deleteMany({ where: { courseId: id } }),
-      prisma.course.delete({ where: { id } }),
-    ]);
+    // All related tables have onDelete: Cascade in schema — Postgres handles cascade automatically
+    await prisma.course.delete({ where: { id } });
 
     sendSuccess(res, 'Course deleted successfully.');
   }),
