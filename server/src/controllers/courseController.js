@@ -332,55 +332,57 @@ const courseController = {
     if (!course) return sendError(res, 'Course not found.', 404);
 
     // Collect IDs of nested records needed for deep cleanup
-    const [modules, quizzes, assignments, meetings, enrollments] = await Promise.all([
-      prisma.module.findMany({ where: { courseId: id }, select: { id: true } }),
-      prisma.quiz.findMany({ where: { courseId: id }, select: { id: true } }),
-      prisma.assignment.findMany({ where: { courseId: id }, select: { id: true } }),
-      prisma.zoomMeeting.findMany({ where: { courseId: id }, select: { id: true } }),
-      prisma.enrollment.findMany({ where: { courseId: id }, select: { id: true } }),
-    ]);
+    const modules = await prisma.module.findMany({ where: { courseId: id }, select: { id: true } });
     const moduleIds = modules.map((m) => m.id);
+
+    const quizzes = await prisma.quiz.findMany({ where: { courseId: id }, select: { id: true } });
     const quizIds = quizzes.map((q) => q.id);
+
+    const assignments = await prisma.assignment.findMany({ where: { courseId: id }, select: { id: true } });
     const assignmentIds = assignments.map((a) => a.id);
+
+    const meetings = await prisma.zoomMeeting.findMany({ where: { courseId: id }, select: { id: true } });
     const meetingIds = meetings.map((m) => m.id);
+
+    const enrollments = await prisma.enrollment.findMany({ where: { courseId: id }, select: { id: true } });
     const enrollmentIds = enrollments.map((e) => e.id);
 
-    // Sequential delete in dependency order (deepest children first)
-    await prisma.$transaction(async (tx) => {
-      // Leaf records
-      if (quizIds.length) {
-        await tx.quizSession.deleteMany({ where: { quizId: { in: quizIds } } });
-        await tx.quizAttempt.deleteMany({ where: { quizId: { in: quizIds } } });
-        await tx.quizQuestion.deleteMany({ where: { quizId: { in: quizIds } } });
-      }
-      if (enrollmentIds.length) {
-        await tx.lessonProgress.deleteMany({ where: { enrollmentId: { in: enrollmentIds } } });
-      }
-      if (assignmentIds.length) {
-        await tx.assignmentSubmission.deleteMany({ where: { assignmentId: { in: assignmentIds } } });
-      }
-      if (meetingIds.length) {
-        await tx.attendance.deleteMany({ where: { meetingId: { in: meetingIds } } });
-      }
-      await tx.resource.deleteMany({ where: { courseId: id } });
+    // Delete deepest children first — NO $transaction (Neon Pool adapter doesn't support interactive transactions)
+    if (quizIds.length) {
+      await prisma.quizSession.deleteMany({ where: { quizId: { in: quizIds } } });
+      await prisma.quizAttempt.deleteMany({ where: { quizId: { in: quizIds } } });
+      await prisma.quizQuestion.deleteMany({ where: { quizId: { in: quizIds } } });
+    }
+    if (enrollmentIds.length) {
+      await prisma.lessonProgress.deleteMany({ where: { enrollmentId: { in: enrollmentIds } } });
+    }
+    if (moduleIds.length) {
+      await prisma.lessonProgress.deleteMany({ where: { lesson: { moduleId: { in: moduleIds } } } }).catch(() => {});
+    }
+    if (assignmentIds.length) {
+      await prisma.assignmentSubmission.deleteMany({ where: { assignmentId: { in: assignmentIds } } });
+    }
+    if (meetingIds.length) {
+      await prisma.attendance.deleteMany({ where: { meetingId: { in: meetingIds } } });
+    }
+    await prisma.resource.deleteMany({ where: { courseId: id } });
 
-      // Mid-level records
-      await tx.certificate.deleteMany({ where: { courseId: id } });
-      await tx.review.deleteMany({ where: { courseId: id } });
-      await tx.announcement.deleteMany({ where: { courseId: id } });
-      await tx.paymentRequest.deleteMany({ where: { courseId: id } });
-      await tx.enrollment.deleteMany({ where: { courseId: id } });
-      await tx.assignment.deleteMany({ where: { courseId: id } });
-      await tx.zoomMeeting.deleteMany({ where: { courseId: id } });
-      if (quizIds.length) await tx.quiz.deleteMany({ where: { courseId: id } });
-      if (moduleIds.length) {
-        await tx.lesson.deleteMany({ where: { moduleId: { in: moduleIds } } });
-      }
-      await tx.module.deleteMany({ where: { courseId: id } });
+    // Mid-level records
+    await prisma.certificate.deleteMany({ where: { courseId: id } });
+    await prisma.review.deleteMany({ where: { courseId: id } });
+    await prisma.announcement.deleteMany({ where: { courseId: id } });
+    await prisma.paymentRequest.deleteMany({ where: { courseId: id } });
+    await prisma.enrollment.deleteMany({ where: { courseId: id } });
+    await prisma.assignment.deleteMany({ where: { courseId: id } });
+    await prisma.zoomMeeting.deleteMany({ where: { courseId: id } });
+    if (quizIds.length) await prisma.quiz.deleteMany({ where: { courseId: id } });
+    if (moduleIds.length) {
+      await prisma.lesson.deleteMany({ where: { moduleId: { in: moduleIds } } });
+    }
+    await prisma.module.deleteMany({ where: { courseId: id } });
 
-      // Finally delete the course
-      await tx.course.delete({ where: { id } });
-    });
+    // Finally delete the course itself
+    await prisma.course.delete({ where: { id } });
 
     sendSuccess(res, 'Course deleted successfully.');
   }),
