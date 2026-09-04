@@ -4,7 +4,7 @@ const courseController = require('../controllers/courseController');
 const { requireAuth } = require('../middlewares/auth');
 const { optionalAuth } = require('../middlewares/auth');
 const { requireRole } = require('../middlewares/roles');
-const { uploadImage } = require('../middlewares/upload');
+const { uploadAssignment } = require('../middlewares/upload');
 
 // Public routes
 router.get('/stats', courseController.getStats);
@@ -19,8 +19,8 @@ router.patch('/:id/publish', requireAuth, requireRole('ADMIN'), courseController
 // Instructor routes — instructors can view their assigned courses but cannot create/delete
 router.get('/instructor/my-courses', requireAuth, requireRole('INSTRUCTOR', 'ADMIN'), courseController.getInstructorCourses);
 // Only admin can create, update, delete courses
-router.post('/', requireAuth, requireRole('ADMIN'), uploadImage.single('thumbnail'), courseController.create);
-router.put('/:id', requireAuth, requireRole('ADMIN'), uploadImage.single('thumbnail'), courseController.update);
+router.post('/', requireAuth, requireRole('ADMIN'), uploadAssignment.single('thumbnail'), courseController.create);
+router.put('/:id', requireAuth, requireRole('ADMIN'), uploadAssignment.single('thumbnail'), courseController.update);
 router.delete('/:id', requireAuth, requireRole('ADMIN'), courseController.delete);
 
 // Public listing and detail (must come AFTER specific named routes)

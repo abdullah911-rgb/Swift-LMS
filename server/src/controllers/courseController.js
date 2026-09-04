@@ -175,7 +175,19 @@ const courseController = {
   create: asyncHandler(async (req, res) => {
     const { title, description, shortDescription, categoryId, level, price, isFree, language, learningOutcomes, prerequisites, certificate, durationInMonths, instructorId } = req.body;
     const slug = slugify(title, { lower: true, strict: true }) + '-' + Date.now();
-    const thumbnail = req.file ? `/uploads/${req.file.filename}` : null;
+
+    let thumbnail = null;
+    if (req.file) {
+      const stored = await prisma.fileStore.create({
+        data: {
+          data: req.file.buffer,
+          mimeType: req.file.mimetype || 'image/jpeg',
+          fileName: req.file.originalname,
+          fileSize: req.file.size,
+        },
+      });
+      thumbnail = `/api/assignments/files/${stored.id}/${encodeURIComponent(req.file.originalname)}`;
+    }
 
     const targetInstructorId = (req.user.role === 'ADMIN' && instructorId) ? instructorId : req.user.id;
 
@@ -252,7 +264,17 @@ const courseController = {
       if (learningOutcomes) pendingEdits.learningOutcomes = learningOutcomes;
       if (prerequisites) pendingEdits.prerequisites = prerequisites;
       if (certificate !== undefined) pendingEdits.certificate = certificate !== 'false';
-      if (req.file) pendingEdits.thumbnail = `/uploads/${req.file.filename}`;
+      if (req.file) {
+        const stored = await prisma.fileStore.create({
+          data: {
+            data: req.file.buffer,
+            mimeType: req.file.mimetype || 'image/jpeg',
+            fileName: req.file.originalname,
+            fileSize: req.file.size,
+          },
+        });
+        pendingEdits.thumbnail = `/api/assignments/files/${stored.id}/${encodeURIComponent(req.file.originalname)}`;
+      }
 
       const updated = await prisma.course.update({
         where: { id },
@@ -276,7 +298,17 @@ const courseController = {
     if (learningOutcomes) data.learningOutcomes = learningOutcomes;
     if (prerequisites) data.prerequisites = prerequisites;
     if (certificate !== undefined) data.certificate = certificate !== 'false';
-    if (req.file) data.thumbnail = `/uploads/${req.file.filename}`;
+    if (req.file) {
+      const stored = await prisma.fileStore.create({
+        data: {
+          data: req.file.buffer,
+          mimeType: req.file.mimetype || 'image/jpeg',
+          fileName: req.file.originalname,
+          fileSize: req.file.size,
+        },
+      });
+      data.thumbnail = `/api/assignments/files/${stored.id}/${encodeURIComponent(req.file.originalname)}`;
+    }
     if (req.user.role === 'ADMIN' && instructorId) data.instructorId = instructorId;
 
     const updated = await prisma.course.update({ where: { id }, data, include: { category: true } });

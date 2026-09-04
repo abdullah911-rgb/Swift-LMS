@@ -18,6 +18,7 @@ import {
   IoAlertCircleOutline,
   IoSwapHorizontalOutline,
   IoCloseOutline,
+  IoTrashOutline,
 } from 'react-icons/io5';
 
 const statusBadge = {
@@ -135,6 +136,20 @@ const AdminCourses = () => {
       toast.success('Instructor unassigned from course!');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to unassign.');
+    } finally {
+      setActionId(null);
+    }
+  };
+
+  const handleDeleteCourse = async (courseId, courseTitle) => {
+    if (!window.confirm(`Are you sure you want to permanently delete "${courseTitle}"? This action cannot be undone.`)) return;
+    setActionId(courseId);
+    try {
+      await adminService.deleteCourse(courseId);
+      setCourses((prev) => prev.filter((c) => c.id !== courseId));
+      toast.success('Course deleted successfully.');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete course.');
     } finally {
       setActionId(null);
     }
@@ -315,6 +330,14 @@ const AdminCourses = () => {
                         Unassign
                       </button>
                     )}
+                    <button
+                      onClick={() => handleDeleteCourse(course.id, course.title)}
+                      disabled={actionId === course.id}
+                      title="Delete this course permanently"
+                      className="px-2.5 py-1.5 rounded-lg text-xs font-bold border border-red-300 text-red-700 bg-red-50 hover:bg-red-100 transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      <IoTrashOutline size={13} />
+                    </button>
                   </div>
                 </div>
               </Card>
