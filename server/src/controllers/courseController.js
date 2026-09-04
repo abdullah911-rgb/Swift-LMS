@@ -331,7 +331,16 @@ const courseController = {
     const course = await prisma.course.findUnique({ where: { id } });
     if (!course) return sendError(res, 'Course not found.', 404);
 
-    // Collect IDs of nested records needed for deep cleanup
+    const step = async (label, fn) => {
+      try {
+        await fn();
+      } catch (err) {
+        console.error(`[DELETE COURSE] Failed at step "${label}":`, err.message, err.code, err.meta);
+        throw new Error(`Delete failed at step "${label}": ${err.message}`);
+      }
+    };
+
+    // Collect parent IDs first
     const modules = await prisma.module.findMany({ where: { courseId: id }, select: { id: true } });
     const moduleIds = modules.map((m) => m.id);
 
@@ -347,42 +356,39 @@ const courseController = {
     const enrollments = await prisma.enrollment.findMany({ where: { courseId: id }, select: { id: true } });
     const enrollmentIds = enrollments.map((e) => e.id);
 
-    // Delete deepest children first — NO $transaction (Neon Pool adapter doesn't support interactive transactions)
+    // Delete deepest children first — step by step with individual error reporting
     if (quizIds.length) {
-      await prisma.quizSession.deleteMany({ where: { quizId: { in: quizIds } } });
-      await prisma.quizAttempt.deleteMany({ where: { quizId: { in: quizIds } } });
-      await prisma.quizQuestion.deleteMany({ where: { quizId: { in: quizIds } } });
+      await step('quizSession', () => prisma.quizSession.deleteMany({ where: { quizId: { in: quizIds } } }));
+      await step('quizAttempt', () => prisma.quizAttempt.deleteMany({ where: { quizId: { in: quizIds } } }));
+      await step('quizQuestion', () => prisma.quizQuestion.deleteMany({ where: { quizId: { in: quizIds } } }));
     }
     if (enrollmentIds.length) {
-      await prisma.lessonProgress.deleteMany({ where: { enrollmentId: { in: enrollmentIds } } });
-    }
-    if (moduleIds.length) {
-      await prisma.lessonProgress.deleteMany({ where: { lesson: { moduleId: { in: moduleIds } } } }).catch(() => {});
+      await step('lessonProgress(enrollment)', () => prisma.lessonProgress.deleteMany({ where: { enrollmentId: { in: enrollmentIds } } }));
     }
     if (assignmentIds.length) {
-      await prisma.assignmentSubmission.deleteMany({ where: { assignmentId: { in: assignmentIds } } });
+      await step('assignmentSubmission', () => prisma.assignmentSubmission.deleteMany({ where: { assignmentId: { in: assignmentIds } } }));
     }
     if (meetingIds.length) {
-      await prisma.attendance.deleteMany({ where: { meetingId: { in: meetingIds } } });
+      await step('attendance', () => prisma.attendance.deleteMany({ where: { meetingId: { in: meetingIds } } }));
     }
-    await prisma.resource.deleteMany({ where: { courseId: id } });
 
-    // Mid-level records
-    await prisma.certificate.deleteMany({ where: { courseId: id } });
-    await prisma.review.deleteMany({ where: { courseId: id } });
-    await prisma.announcement.deleteMany({ where: { courseId: id } });
-    await prisma.paymentRequest.deleteMany({ where: { courseId: id } });
-    await prisma.enrollment.deleteMany({ where: { courseId: id } });
-    await prisma.assignment.deleteMany({ where: { courseId: id } });
-    await prisma.zoomMeeting.deleteMany({ where: { courseId: id } });
-    if (quizIds.length) await prisma.quiz.deleteMany({ where: { courseId: id } });
+    await step('resource', () => prisma.resource.deleteMany({ where: { courseId: id } }));
+    await step('certificate', () => prisma.certificate.deleteMany({ where: { courseId: id } }));
+    await step('review', () => prisma.review.deleteMany({ where: { courseId: id } }));
+    await step('announcement', () => prisma.announcement.deleteMany({ where: { courseId: id } }));
+    await step('paymentRequest', () => prisma.paymentRequest.deleteMany({ where: { courseId: id } }));
+    await step('enrollment', () => prisma.enrollment.deleteMany({ where: { courseId: id } }));
+    await step('assignment', () => prisma.assignment.deleteMany({ where: { courseId: id } }));
+    await step('zoomMeeting', () => prisma.zoomMeeting.deleteMany({ where: { courseId: id } }));
+
+    if (quizIds.length) {
+      await step('quiz', () => prisma.quiz.deleteMany({ where: { courseId: id } }));
+    }
     if (moduleIds.length) {
-      await prisma.lesson.deleteMany({ where: { moduleId: { in: moduleIds } } });
+      await step('lesson', () => prisma.lesson.deleteMany({ where: { moduleId: { in: moduleIds } } }));
     }
-    await prisma.module.deleteMany({ where: { courseId: id } });
-
-    // Finally delete the course itself
-    await prisma.course.delete({ where: { id } });
+    await step('module', () => prisma.module.deleteMany({ where: { courseId: id } }));
+    await step('course', () => prisma.course.delete({ where: { id } }));
 
     sendSuccess(res, 'Course deleted successfully.');
   }),

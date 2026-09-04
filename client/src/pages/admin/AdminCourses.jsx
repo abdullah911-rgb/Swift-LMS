@@ -149,7 +149,8 @@ const AdminCourses = () => {
       setCourses((prev) => prev.filter((c) => c.id !== courseId));
       toast.success('Course deleted successfully.');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to delete course.');
+      const msg = err.response?.data?.message || err.message || 'Failed to delete course.';
+      toast.error(msg, { duration: 6000 });
     } finally {
       setActionId(null);
     }
