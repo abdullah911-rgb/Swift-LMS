@@ -308,37 +308,42 @@ const AdminCourses = () => {
                     </div>
                   )}
 
-                  {/* Actions */}
-                  <div className="flex items-center gap-2 pt-2 border-t border-slate-50">
-                    <Link to={`/admin/courses/${course.id}/manage`} className="flex-1">
-                      <button className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 transition-all cursor-pointer">
-                        Manage
-                      </button>
-                    </Link>
-                    <button
-                      onClick={() => isReassigning ? setReassignCourseId(null) : openReassign(course.id)}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold border border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100 transition-all cursor-pointer"
-                    >
-                      <IoSwapHorizontalOutline size={13} /> {isUnassigned ? 'Assign' : 'Reassign'}
-                    </button>
-                    {!isUnassigned && (
+                  {/* Actions - Row 1: Manage + Reassign */}
+                  <div className="space-y-2 pt-2 border-t border-slate-50">
+                    <div className="flex items-center gap-2">
+                      <Link to={`/admin/courses/${course.id}/manage`} className="flex-1">
+                        <button className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 transition-all cursor-pointer">
+                          Manage
+                        </button>
+                      </Link>
                       <button
-                        onClick={() => handleUnassign(course.id)}
-                        title="Unassign instructor from this course"
-                        className="px-3 py-1.5 rounded-lg text-xs font-bold border border-rose-200 text-rose-700 bg-rose-50 hover:bg-rose-100 transition-all cursor-pointer"
+                        onClick={() => isReassigning ? setReassignCourseId(null) : openReassign(course.id)}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold border border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100 transition-all cursor-pointer"
                       >
-                        Unassign
+                        <IoSwapHorizontalOutline size={13} /> {isUnassigned ? 'Assign' : 'Reassign'}
                       </button>
-                    )}
-                    <button
-                      onClick={() => handleDeleteCourse(course.id, course.title)}
-                      disabled={actionId === course.id}
-                      title="Delete this course permanently"
-                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-red-600 hover:bg-red-700 text-white transition-all cursor-pointer disabled:opacity-50 shrink-0"
-                    >
-                      <IoTrashOutline size={13} />
-                      <span>Delete</span>
-                    </button>
+                    </div>
+                    {/* Row 2: Unassign + Delete */}
+                    <div className="flex items-center gap-2">
+                      {!isUnassigned ? (
+                        <button
+                          onClick={() => handleUnassign(course.id)}
+                          className="flex-1 py-1.5 rounded-lg text-xs font-bold border border-rose-200 text-rose-700 bg-rose-50 hover:bg-rose-100 transition-all cursor-pointer"
+                        >
+                          Unassign
+                        </button>
+                      ) : (
+                        <div className="flex-1" />
+                      )}
+                      <button
+                        onClick={() => handleDeleteCourse(course.id, course.title)}
+                        disabled={actionId === course.id}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold bg-red-600 hover:bg-red-700 text-white transition-all cursor-pointer disabled:opacity-50"
+                      >
+                        <IoTrashOutline size={13} />
+                        <span>{actionId === course.id ? 'Deleting...' : 'Delete'}</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </Card>
