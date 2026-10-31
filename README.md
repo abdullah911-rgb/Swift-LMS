@@ -60,8 +60,6 @@ The system combines a modern React frontend with a Node.js and Express backend, 
 
 The interface is designed with a modern, responsive layout, intuitive navigation, and a clean user experience across different devices.
 
-**Live Preview:** https://lms-swift.vercel.app/
-
 ---
 
 ## 🎯 Project Objectives
@@ -674,73 +672,6 @@ The deployment environment requires appropriate environment variables, database 
 **Live Application:** https://lms-swift.vercel.app/
 
 ---
-
-## 📸 Screenshots
-
-Add screenshots of your actual application in the following directory:
-
-```text
-screenshots/
-```
-
-Use the following suggested organization:
-
-```text
-screenshots/
-│
-├── home-page.png
-├── login-page.png
-├── registration-page.png
-│
-├── student-dashboard.png
-├── student-courses.png
-├── student-assignments.png
-├── student-quiz.png
-├── student-progress.png
-├── student-certificate.png
-│
-├── instructor-dashboard.png
-├── instructor-courses.png
-├── instructor-assignments.png
-├── instructor-quiz-management.png
-├── instructor-live-classes.png
-│
-├── admin-dashboard.png
-├── admin-users.png
-└── live-class.png
-```
-
-### Application Preview
-
-**Homepage**
-
-![Homepage](screenshots/home-page.png)
-
-**Student Dashboard**
-
-![Student Dashboard](screenshots/student-dashboard.png)
-
-**Instructor Dashboard**
-
-![Instructor Dashboard](screenshots/instructor-dashboard.png)
-
-**Admin Dashboard**
-
-![Admin Dashboard](screenshots/admin-dashboard.png)
-
-**Course Management**
-
-![Course Management](screenshots/student-courses.png)
-
-**Quiz and Assessment**
-
-![Quiz Assessment](screenshots/student-quiz.png)
-
-**Certificate**
-
-![Certificate](screenshots/student-certificate.png)
-
-> Replace the screenshot placeholders with actual screenshots from your application. GitHub will automatically display images when the referenced files exist in the repository.
 
 ---
 
